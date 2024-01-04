@@ -1,0 +1,6 @@
+[submodule "lib/30log"]
+	path = lib/30log
+	url = https://github.com/Yonaba/30log.git
+[submodule "lib/pprint"]
+	path = lib/pprint
+	url = https://github.com/jagt/pprint.lua
