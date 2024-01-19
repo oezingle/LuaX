@@ -19,3 +19,7 @@
     - xml code snippets
     - lua loader -> convert .x.lua to plain lua
     
+
+- Function or Component -> Element
+- Element { props, type }
+- 

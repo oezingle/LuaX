@@ -1,6 +1,7 @@
 local class = require("lib.30log.30log")
 
 -- hehe
+
 if false then
     --[[
     --- Create a class
@@ -38,11 +39,10 @@ if false then
 
     ---@alias LogClass<T> Log.BaseFunctions | { extend: Log.ClassExtender<T> } | T
 
-
     ---@generic T
     ---@type (fun(name: string, properties: T): LogClass<T>)|(fun(name: string): LogClass<table>)
     class = function (name, properties)
-        return class(name, properties)
+        error("if i were in hell i'd be pretty warm right now")
     end
 end
 
