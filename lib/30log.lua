@@ -35,6 +35,8 @@ if false then
     ---@field subclasses fun(self: LogClass): LogClass[]
     ---@field extend Log.ClassExtender
     ---@field super LogClass?
+    ---
+    ---@field class LogClass
     -- TODO https://github.com/Yonaba/30log/wiki/Mixins
 
     ---@alias LogClass<T> Log.BaseFunctions | { extend: Log.ClassExtender<T> } | T
