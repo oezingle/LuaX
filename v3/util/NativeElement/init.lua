@@ -10,8 +10,10 @@ local class = require("lib.30log")
 ---@field set_child fun(self: self, index: number, element: LuaX.NativeElement | nil)
 ---
 ---@field create_element fun(type: string): LuaX.NativeElement
----
 ---@field get_root fun(native: any): LuaX.NativeElement Convert a passed object to a root node
+---
+--- Optional Methods (recommended)
+---@field get_type fun(self: self): string
 ---
 ---@operator call : LuaX.NativeElement
 local NativeElement = class("NativeElement")

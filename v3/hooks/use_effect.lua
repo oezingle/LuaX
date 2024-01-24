@@ -1,5 +1,5 @@
 
-local table_equals = require("src.util.table_equals")
+local table_equals = require("v3.util.table_equals")
 
 ---@alias LuaX.UseEffectState { deps: any[]?, on_remove: function? }
 
@@ -10,11 +10,17 @@ local function use_effect (callback, deps)
 
     local index = hookstate:get_index()
 
-    local old_value = hookstate:get_value(index) or {} --[[@as UseEffectState]]
+    local old_value = hookstate:get_value(index) or {} --[[@as LuaX.UseEffectState]]
     local old_deps = old_value.deps
     local on_remove = old_value.on_remove
 
     if not deps or not table_equals(deps, old_deps, false) then
+        -- removed: seems to have no effect
+        -- set deps initially to stop this hook from refiring
+        -- hookstate:set_value_silent(index, {
+        --     deps = deps,
+        -- })
+        
         if on_remove then
             on_remove()
         end

@@ -1,8 +1,13 @@
-local class = require("lib.30log")
-local ipairs_with_nil = require("v3.util.ipairs_with_nil")
-local FunctionComponentInstance = require("v3.util.FunctionComponentInstance")
+local class                     = require("lib.30log")
+local ipairs_with_nil           = require("v3.util.ipairs_with_nil")
+local create_element            = require("v3.create_element")
 
-local DefaultWorkLoop = require("v3.util.WorkLoop.Default")
+local FunctionComponentInstance = require("v3.util.FunctionComponentInstance")
+local DefaultWorkLoop           = require("v3.util.WorkLoop.Default")
+
+-- defines LuaX global ( needed for hooks )
+-- TODO if Renderer.envhacks = true, don't use LuaX global
+require("v3.types.LuaX")
 
 --- Determine if this is a class or an instance
 ---
@@ -112,21 +117,33 @@ function Renderer:render_nth_child(element, container, index)
 
             local component_instance = FunctionComponentInstance(component)
 
-            -- TODO do prop changes propogate? idk!
             component_instance:on_change(function()
-                self:render_pure_component(element, container, index)
+                self.workloop:add(function()
+                    local rendered = element._component:render(element.props)
+
+                    self:render_nth_child(rendered, container, index)
+                end)
             end)
 
             element._component = component_instance
         end
 
-        -- TODO this code block assumes that this component returns a pure component, instead of possibly another function component
-        self:render_pure_component(element._component:render(element.props), container, index)
+        local rendered = element._component:render(element.props)
+        self:render_nth_child(rendered, container, index)
     else
         local component_type = type(element.type)
 
-        error(string.format("Cannot render component of type '%s'", component_type))
+        local err_string = string.format("Cannot render component of type '%s'", component_type)
+
+        if container.get_type then
+            err_string = err_string .. string.format(" (rendered by %s)", container:get_type())
+        end
+
+        error(err_string)
     end
+
+    -- start workloop in case there's shit to do and it's stopped
+    self.workloop:start()
 end
 
 ---@param component LuaX.ElementNode
@@ -142,5 +159,7 @@ function Renderer:get_render()
         return self:render(component, container)
     end
 end
+
+Renderer.create_element = create_element
 
 return Renderer

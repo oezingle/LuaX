@@ -3,13 +3,14 @@ local class = require("lib.30log")
 
 local SomeClass = class("SomeClass")
 
+local instance_count = 0
+
 function SomeClass:init()
-    print("Instance!")
+    instance_count = instance_count + 1
 end
 
 local instance = SomeClass()
 
--- print(SomeClass.class)
--- print(instance.class)
-
 local instance_two = instance.class()
+
+assert.equal(2, instance_count)

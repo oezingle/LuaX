@@ -4,9 +4,11 @@
 --- but it only is in worst-case scenarios.
 ---@param a any
 ---@param b any
----@param shallow boolean
+---@param shallow boolean?
 ---@return boolean
 local function table_equals(a, b, shallow)
+    shallow = shallow or false
+
     -- could happen
     if a == b then
         return true

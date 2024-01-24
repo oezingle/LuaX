@@ -1,5 +1,5 @@
 ---@meta
 
 ---@class LuaX
----@field _hookstate HookState
+---@field _hookstate LuaX.HookState
 LuaX = {}

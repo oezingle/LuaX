@@ -10,9 +10,11 @@ local colors = {
 local function color_warn(...)
     io.stdout:write(colors.YELLOW)
 
-    print(...)
+    -- print(...)
 
-    io.stdout:write(colors.RESET)
+    io.stdout:write(table.concat(table.pack(...), "\t"))
+
+    io.stdout:write(colors.RESET, "\n")
 end
 
 local function replace_warn()

@@ -1,4 +1,5 @@
 local class = require("lib.30log")
+local ipairs_with_nil = require("v3.util.ipairs_with_nil")
 
 ---@alias LuaX.HookState.Listener fun(index: number, value: any)
 
@@ -59,6 +60,33 @@ end
 ---@param listener LuaX.HookState.Listener
 function HookState:add_listener(listener)
     table.insert(self.listeners, listener)
+end
+
+-- TODO serialization library would be neat
+function HookState:__tostring()
+    local hooks = {}
+
+    for _, hook in ipairs_with_nil(self.values, self.index) do
+        local hook_str = nil
+
+        if type(hook) == "table" then
+            local hook_values = {}
+
+            for key, hook_value in ipairs(hook) do
+                local fmt = string.format("%s=%s", key, tostring(hook_value))
+
+                table.insert(hook_values, fmt)
+            end
+
+            hook_str = "{ " .. table.concat(hook_values, ", ") .. " }"
+        else
+            hook_str = tostring(hook)
+        end
+        
+        table.insert(hooks, "\t" .. tostring(hook_str))
+    end
+
+    return string.format("HookState {\n%s\n}", table.concat(hooks, "\n"))
 end
 
 return HookState

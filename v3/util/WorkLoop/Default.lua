@@ -17,9 +17,10 @@ end
 function DefaultWorkLoop:add(cb)
     self:list_enqueue(cb)
 
-    if not self.is_running then
-        self:start()
-    end
+    -- removed - recursively calls itself 
+    --if not self.is_running then
+    --    self:start()
+    --end
 end
 
 function DefaultWorkLoop:start()

@@ -22,4 +22,10 @@
 
 - Function or Component -> Element
 - Element { props, type }
-- 
+
+### divider
+- FRAGMENTS
+- returning array of children works in React so I have to make it work.
+
+- I could do a neat thing using a setfenv analog to (unsafely) monitor state without expensive waste (i think)
+- i like the idea of a text child being forced to be a special element w/ type "TEXT_STRING"

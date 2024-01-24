@@ -39,7 +39,7 @@ function FunctionComponentInstance:on_change(cb)
     table.insert(self.handlers, cb)
 end
 
--- TODO on_change handlers take rendered instances
+-- TODO FIXME use_effect unmount
 
 -- TODO yeah cache
 function FunctionComponentInstance:render(props)
@@ -50,10 +50,6 @@ function FunctionComponentInstance:render(props)
     local component = self.component
 
     local element =  component(props)
-
-    for _, handler in ipairs(self.handlers) do
-        handler(element)
-    end
 
     LuaX._hookstate = nil
 

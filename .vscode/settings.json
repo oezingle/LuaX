@@ -1,6 +1,7 @@
 {
     "Lua.workspace.library": [
-        "${3rd}/luassert/library"
+        "${3rd}/luassert/library",
+        "/home/zingle/.config/Code/User/globalStorage/sumneko.lua/addonManager/addons/busted/module/library"
     ],
     "Lua.workspace.checkThirdParty": false
 }

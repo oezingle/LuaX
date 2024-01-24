@@ -26,6 +26,10 @@ function XMLElement.get_root(xml)
     return XMLElement(xml)
 end
 
+function XMLElement:get_type()
+    return self.native.type
+end
+
 -- This is NOT a good xml serializer
 function XMLElement:__tostring()
     local type = self.native.type

@@ -17,7 +17,7 @@ local Element = require("src.util.type.Element")
 ---@alias Component.Node<Props> { type: Component<Props>, props: table<Props, any> }
 
 ---@class ComponentInstance : Log.BaseFunctions
----@field hookstate HookState
+---@field hookstate LuaX.HookState
 ---@field element Element
 ---@field children ComponentInstance[]
 ---@field last_render any

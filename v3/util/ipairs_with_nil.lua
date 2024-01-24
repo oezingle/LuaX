@@ -1,9 +1,10 @@
 
 ---@generic T
 ---@param list T[]
+---@param length integer?
 ---@return fun(): (number, T)
-local function ipairs_with_nil (list)
-    local max = #list
+local function ipairs_with_nil (list, length)
+    local max = length or #list
 
     local index = 0
 

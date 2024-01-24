@@ -1,4 +1,4 @@
-local Renderer = require("v3.util.Renderer")
+local Renderer = require("v3.Renderer")
 local XMLElement = require("v3.util.NativeElement.XMLElement")
 
 require("v3.util.replace_warn")
