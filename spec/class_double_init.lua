@@ -9,4 +9,7 @@ end
 
 local instance = SomeClass()
 
+-- print(SomeClass.class)
+-- print(instance.class)
+
 local instance_two = instance.class()
