@@ -3,12 +3,17 @@ local WorkLoop = require("v3.util.WorkLoop.init")
 ---@class LuaX.DefaultWorkLoop : LuaX.WorkLoop
 local DefaultWorkLoop = WorkLoop:extend("DefaultWorkLoop")
 
-function DefaultWorkLoop:init()
-    warn(
-        "LuaX Renderer is using a default work loop! " ..
-        "This is not recommended as it will freeze " ..
-        "the main thread until rendering is done."
-    )
+---@param opts { supress_warning?: boolean }
+function DefaultWorkLoop:init(opts)
+    opts = opts or {}
+
+    if not opts.supress_warning then
+        warn(
+            "LuaX Renderer is using a default work loop! " ..
+            "This is not recommended as it will freeze " ..
+            "the main thread until rendering is done."
+        )            
+    end
     
     ---@diagnostic disable-next-line:undefined-field
     self.super:init()
@@ -16,11 +21,6 @@ end
 
 function DefaultWorkLoop:add(cb)
     self:list_enqueue(cb)
-
-    -- removed - recursively calls itself 
-    --if not self.is_running then
-    --    self:start()
-    --end
 end
 
 function DefaultWorkLoop:start()

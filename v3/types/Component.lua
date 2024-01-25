@@ -1,9 +1,9 @@
 
 ---@meta 
 
---- TODO FIXME class that extends Log.BaseFunctions as a type?
+--- TODO Component class that extends Log.BaseFunctions?
 
----@alias LuaX.Generic.FunctionComponent<Props> fun(props: Props): (LuaX.ElementNode | nil)
+---@alias LuaX.Generic.FunctionComponent<Props> fun(props: Props): (LuaX.ElementNode | LuaX.ElementNode[] | nil)
 ---@alias LuaX.FunctionComponent LuaX.Generic.FunctionComponent<LuaX.Props>
 
 ---@alias LuaX.Generic.Component<Props> string | LuaX.Generic.FunctionComponent<Props>

@@ -1,6 +1,5 @@
 local class                     = require("lib.30log")
 local ipairs_with_nil           = require("v3.util.ipairs_with_nil")
-local create_element            = require("v3.create_element")
 
 local FunctionComponentInstance = require("v3.util.FunctionComponentInstance")
 local DefaultWorkLoop           = require("v3.util.WorkLoop.Default")
@@ -25,26 +24,16 @@ end
 ---@class LuaX.Renderer : Log.BaseFunctions
 ---@field workloop LuaX.WorkLoop instance of a workloop
 ---@field native_element LuaX.NativeElement class here, not instance
+---@field set_workloop fun (self: self, workloop: LuaX.WorkLoop): self set workloop using either a class or an instance
+---
+---@field get_render fun (self: self): fun(element: LuaX.ElementNode, container: LuaX.NativeElement)
 ---
 ---@operator call: LuaX.Renderer
 local Renderer = class("Renderer")
 
 function Renderer:init(workloop)
-    -- self:set_native_element(native_element)
-
     self:set_workloop(workloop)
 end
-
---[[
----@param native_element LuaX.NativeElement
-function Renderer:set_native_element(native_element)
-    if is_instance(native_element) then
-        native_element = native_element.class
-    end
-
-    self.native_element = native_element
-end
-]]
 
 --- Takes a class, instance, or nil
 ---@param workloop LuaX.WorkLoop | nil
@@ -58,6 +47,16 @@ function Renderer:set_workloop(workloop)
 
     return self
 end
+
+--[[
+TODO add child by key
+    - keys set by create_element
+    - keys on function component should propogate to all its children
+
+function components can't just check own children, they need to check all children not passed as props.
+]]
+
+-- TODO can function components return strings?
 
 ---@param component LuaX.ElementNode | nil
 ---@param container LuaX.NativeElement
@@ -77,7 +76,12 @@ function Renderer:render_pure_component(component, container, index)
         error("NativeElement cannot render non-pure component")
     end
 
-    local node = NativeElementImplementation.create_element(component_type)
+    local node = nil
+    if component.type == "LITERAL_NODE" and NativeElementImplementation.create_literal then
+        node = NativeElementImplementation.create_literal(component.props.value)
+    else
+        node = NativeElementImplementation.create_element(component_type)
+    end
 
     for prop, value in pairs(component.props) do
         if prop ~= "children" then
@@ -85,6 +89,7 @@ function Renderer:render_pure_component(component, container, index)
         end
     end
 
+    
 
     -- handle children using workloop
     local children = component.props['children']
@@ -111,7 +116,7 @@ function Renderer:render_nth_child(element, container, index)
     if not element or type(element.type) == "string" then
         self:render_pure_component(element, container, index)
     elseif type(element.type) == "function" then
-        -- TODO not sure about this one.
+        
         if not element._component then
             local component = element.type
 
@@ -121,7 +126,9 @@ function Renderer:render_nth_child(element, container, index)
                 self.workloop:add(function()
                     local rendered = element._component:render(element.props)
 
-                    self:render_nth_child(rendered, container, index)
+                    if not element._component.requests_rerender then
+                        self:render_nth_child(rendered, container, index)
+                    end
                 end)
             end)
 
@@ -129,7 +136,10 @@ function Renderer:render_nth_child(element, container, index)
         end
 
         local rendered = element._component:render(element.props)
-        self:render_nth_child(rendered, container, index)
+
+        if not element._component.requests_rerender then
+            self:render_nth_child(rendered, container, index)
+        end
     else
         local component_type = type(element.type)
 
@@ -159,7 +169,5 @@ function Renderer:get_render()
         return self:render(component, container)
     end
 end
-
-Renderer.create_element = create_element
 
 return Renderer

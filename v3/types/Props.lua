@@ -5,4 +5,4 @@
 ---@alias LuaX.Props { [string]: any }
 
 --- Analagous to React's
----@alias LuaX.PropsWithChildren<Props> { children: LuaX.Component | LuaX.Component[] } | Props
+---@alias LuaX.PropsWithChildren<Props> { children: LuaX.ElementNode | LuaX.ElementNode[] } | Props

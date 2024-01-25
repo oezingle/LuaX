@@ -2,9 +2,11 @@ local class = require("lib.30log")
 -- local ipairs_with_nil = require("v3.util.ipairs_with_nil")
 -- local FunctionComponentInstance = require("v3.util.FunctionComponentInstance")
 
---- TODO this class needs to handle rendering, or outsource rendering to render() - watch changes on components
-
 ---@class LuaX.NativeElement : Log.BaseFunctions
+---@field protected _key integer
+---@field set_key fun(self: self, key: integer)
+---@field get_key fun(self: self): integer
+---
 --- Abstract Methods
 ---@field set_prop fun(self: self, prop: string, value: any)
 ---@field set_child fun(self: self, index: number, element: LuaX.NativeElement | nil)
@@ -12,14 +14,28 @@ local class = require("lib.30log")
 ---@field create_element fun(type: string): LuaX.NativeElement
 ---@field get_root fun(native: any): LuaX.NativeElement Convert a passed object to a root node
 ---
+--- TODO switch to insert_child(index) and delete_child(indexes) in order to allow element key stuff. 
+--- TODO should be a table.insert(list, item, pos) in most cases
+---
 --- Optional Methods (recommended)
 ---@field get_type fun(self: self): string
+---@field create_literal fun(value: string): LuaX.NativeElement TODO special rules here?
+---
+---@field get_children fun(self: self): LuaX.NativeElement[]
 ---
 ---@operator call : LuaX.NativeElement
 local NativeElement = class("NativeElement")
 
 function NativeElement:init(native)
     self.native = native
+end
+
+function NativeElement:set_key(key)
+    self._key = key
+end
+
+function NativeElement:get_key()
+    return self._key
 end
 
 function NativeElement.create_element(element_type)

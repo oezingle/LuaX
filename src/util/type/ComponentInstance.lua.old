@@ -1,3 +1,4 @@
+
 local class = require("lib.30log")
 local table_equals = require("src.util.table_equals")
 local HookState = require("src.util.type.HookState")

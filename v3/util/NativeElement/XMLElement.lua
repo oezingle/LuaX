@@ -32,6 +32,10 @@ end
 
 -- This is NOT a good xml serializer
 function XMLElement:__tostring()
+    if self.native.type == "LITERAL_NODE" then
+        return tostring(self.native.props.value)
+    end
+
     local type = self.native.type
 
     local props = {}
