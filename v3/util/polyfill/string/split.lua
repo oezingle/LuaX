@@ -1,6 +1,8 @@
 
 -- https://stackoverflow.com/questions/1426954/split-string-in-lua
 
+---@param inputstr string
+---@param sep string? the seperator pattern
 local function split (inputstr, sep)
     if sep == nil then
             sep = "%s"

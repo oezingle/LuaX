@@ -27,10 +27,9 @@
 - no more key in ElementNode? seems unnecessary as of now.
 
 ### divider
-- FRAGMENTS
-- returning array of children works in React so I have to make it work.
 - contexts
 - I could do a neat thing using a setfenv analog to (unsafely) monitor state without expensive waste (i think)
+    - definitely can get rid of the LuaX global using setfenv
 
 - TODO test FC that sometimes returns Fragment and sometimes returns single child - how does NativeElement respond?
 
