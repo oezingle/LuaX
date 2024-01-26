@@ -1,4 +1,4 @@
-local Renderer   = require("v3.ProfiledRenderer")
+local Renderer   = require("v3.util.Renderer.Profiled")
 local XMLElement = require("v3.util.NativeElement.XMLElement")
 local use_effect = require("v3.hooks.use_effect")
 local use_state  = require("v3.hooks.use_state")
@@ -8,6 +8,8 @@ require("v3.util.replace_warn")
 
 local renderer = Renderer()
 local render = renderer:get_render()
+
+-- TODO if these both have default=false, then the second one returns first!!
 
 local function outer_function_component(props)
     local should_render, set_should_render = use_state(props.default or false)
@@ -22,12 +24,11 @@ local function outer_function_component(props)
         return nil
     end
 
-    -- TODO returning props.children should work.
     return props.children[1]
 end
 
-local function inner_function_component()
-    return create_element("inner", {})
+local function inner_function_component(props)
+    return create_element("inner", { index = props.index })
 end
 
 local element = create_element("div", {
@@ -36,13 +37,13 @@ local element = create_element("div", {
         create_element(outer_function_component, {
             default = false,
             children = {
-                create_element(inner_function_component, {})
+                create_element(inner_function_component, { index = 1})
             }            
         }),
         create_element(outer_function_component, {
             default = true,
             children = {
-                create_element(inner_function_component, {})
+                create_element(inner_function_component, { index = 2 })
             }
         }),
     }

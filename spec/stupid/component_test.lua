@@ -1,4 +1,4 @@
-local Renderer       = require("v3.Renderer")
+local Renderer       = require("v3.util.Renderer")
 local XMLElement     = require("v3.util.NativeElement.XMLElement")
 local use_effect     = require("v3.hooks.use_effect")
 local use_memo       = require("v3.hooks.use_memo")

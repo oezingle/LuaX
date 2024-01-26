@@ -1,5 +1,9 @@
 local class                     = require("lib.30log")
 local ipairs_with_nil           = require("v3.util.ipairs_with_nil")
+local key_add                   = require("v3.util.key.key_add")
+local get_element_name          = require("v3.util.Renderer.helper.get_element_name")
+local create_native_element     = require("v3.util.Renderer.helper.create_native_element")
+local table_equals              = require("v3.util.table_equals")
 
 local FunctionComponentInstance = require("v3.util.FunctionComponentInstance")
 local DefaultWorkLoop           = require("v3.util.WorkLoop.Default")
@@ -58,38 +62,30 @@ function components can't just check own children, they need to check all childr
 
 -- TODO can function components return strings?
 
+-- TODO CHECK OLD CHILDREN SO YOU DON'T WASTE RENDERS FUCK
+
+-- TODO add index prop - check list of children by same key at that index to see if can be reused.
+-- TODO reuse child if it exists
 ---@param component LuaX.ElementNode | nil
 ---@param container LuaX.NativeElement
----@param index number
-function Renderer:render_pure_component(component, container, index)
+---@param key LuaX.Key
+function Renderer:render_pure_component(component, container, key)
     if component == nil then
-        container:set_child(index, nil)
+        -- container:set_child(index, nil)
+        container:delete_children_by_key(key)
 
         return
     end
 
-    local NativeElementImplementation = container:get_class()
-
-    local component_type = component.type
-
-    if type(component_type) ~= "string" then
-        error("NativeElement cannot render non-pure component")
-    end
-
-    local node = nil
-    if component.type == "LITERAL_NODE" and NativeElementImplementation.create_literal then
-        node = NativeElementImplementation.create_literal(component.props.value)
-    else
-        node = NativeElementImplementation.create_element(component_type)
-    end
+    local node = create_native_element(component, container)
 
     for prop, value in pairs(component.props) do
-        if prop ~= "children" then
-            node:set_prop(prop, value)
+        if prop ~= "children" and not table_equals(value, node:get_prop(prop)) then
+            node:set_prop_safe(prop, value)
         end
     end
 
-    
+
 
     -- handle children using workloop
     local children = component.props['children']
@@ -99,24 +95,42 @@ function Renderer:render_pure_component(component, container, index)
 
         for index, child in ipairs_with_nil(children) do
             workloop:add(function()
-                self:render_nth_child(child, node, index)
+                self:render_keyed_child(child, node, { index })
             end)
         end
 
         workloop:start()
     end
 
-    container:set_child(index, node)
+    container:insert_child_by_key(key, node)
+end
+
+---@param element LuaX.ElementNode
+---@param container LuaX.NativeElement
+---@param key LuaX.Key
+function Renderer:_render_function_component(element, container, key)
+    local rendered = element._component:render(element.props)
+
+    if not element._component.requests_rerender then
+        -- Function components are allowed to return lists of children
+        -- (not really -- this isn't good behaviour but fixes Fragments and is React compatible)
+        if type(rendered) == "table" and not rendered.type then
+            for i, child in ipairs_with_nil(rendered) do
+                self:render_keyed_child(child, container, key_add(key, i))
+            end
+        else
+            self:render_keyed_child(rendered, container, key)
+        end
+    end
 end
 
 ---@param element LuaX.ElementNode | nil
 ---@param container LuaX.NativeElement
----@param index number
-function Renderer:render_nth_child(element, container, index)
+---@param key LuaX.Key
+function Renderer:render_keyed_child(element, container, key)
     if not element or type(element.type) == "string" then
-        self:render_pure_component(element, container, index)
+        self:render_pure_component(element, container, key)
     elseif type(element.type) == "function" then
-        
         if not element._component then
             local component = element.type
 
@@ -124,32 +138,22 @@ function Renderer:render_nth_child(element, container, index)
 
             component_instance:on_change(function()
                 self.workloop:add(function()
-                    local rendered = element._component:render(element.props)
-
-                    if not element._component.requests_rerender then
-                        self:render_nth_child(rendered, container, index)
-                    end
+                    self:_render_function_component(element, container, key)
                 end)
             end)
 
             element._component = component_instance
         end
 
-        local rendered = element._component:render(element.props)
-
-        if not element._component.requests_rerender then
-            self:render_nth_child(rendered, container, index)
-        end
+        self:_render_function_component(element, container, key)
     else
         local component_type = type(element.type)
 
-        local err_string = string.format("Cannot render component of type '%s'", component_type)
-
-        if container.get_type then
-            err_string = err_string .. string.format(" (rendered by %s)", container:get_type())
-        end
-
-        error(err_string)
+        error(string.format(
+            "Cannot render component of type '%s' (rendered by %s)",
+            component_type,
+            get_element_name(container)
+        ))
     end
 
     -- start workloop in case there's shit to do and it's stopped
@@ -159,7 +163,11 @@ end
 ---@param component LuaX.ElementNode
 ---@param container LuaX.NativeElement
 function Renderer:render(component, container)
-    self:render_nth_child(component, container, 1)
+    -- if not container.get_type then
+    --     warn("This container element does not implement the optional (but useful) function get_type")
+    -- end
+
+    self:render_keyed_child(component, container, { 1 })
 end
 
 function Renderer:get_render()

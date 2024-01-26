@@ -1,5 +1,5 @@
 
-local Renderer = require("v3.Renderer")
+local Renderer = require("v3.util.Renderer")
 
 ---@class LuaX.ProfiledRenderer : LuaX.Renderer
 ---@field calls integer
@@ -12,11 +12,11 @@ function ProfiledRenderer:init(workloop)
     self:set_workloop(workloop)
 end
 
-function ProfiledRenderer:render_nth_child(element, container, index)
+function ProfiledRenderer:render_keyed_child(element, container, index)
     self.calls = self.calls + 1
 
     ---@diagnostic disable-next-line:undefined-field
-    return self.super.render_nth_child(self, element, container, index)
+    return self.super.render_keyed_child(self, element, container, index)
 end
 
 return ProfiledRenderer

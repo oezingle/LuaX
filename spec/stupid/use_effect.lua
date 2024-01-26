@@ -8,6 +8,8 @@ local render = LuaX.render
 
 local has_unmounted = false
 
+-- TODO this test broken
+
 local function component ()
     use_effect(function ()
         return function ()

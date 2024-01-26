@@ -1,4 +1,4 @@
-local Renderer       = require("v3.Renderer")
+local Renderer       = require("v3.util.Renderer")
 local XMLElement     = require("v3.util.NativeElement.XMLElement")
 local create_element = require("v3.create_element")
 

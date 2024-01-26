@@ -2,7 +2,7 @@
 local LuaX = require("v3")()
 local XMLElement = require("v3.util.NativeElement.XMLElement")
 
-local renderer = require("v3.ProfiledRenderer")()
+local renderer = require("v3.util.Renderer.Profiled")()
 local render = renderer:get_render()
 
 local create_element = LuaX.create_element
