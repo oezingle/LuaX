@@ -22,7 +22,7 @@ local get_function_location = require("src.util.Renderer.helper.get_function_loc
 
 
 --- Create, but do not render, an instance of a component.
----@param component LuaX.Component
+---@param component LuaX.Component | string
 ---@param props table
 --- @return LuaX.ElementNode
 local function create_element(component, props)
@@ -33,7 +33,7 @@ local function create_element(component, props)
         local children = props.children
 
         -- single child to children
-        if type(children) ~= "table" or #children == 0 then
+        if type(children) ~= "table" or children.type then
             children = { children }
         end
 

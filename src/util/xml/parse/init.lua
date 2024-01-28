@@ -3,11 +3,12 @@ local get_indent            = require("src.util.xml.parse.get_indent")
 local remove_default_indent = require("src.util.xml.parse.remove_default_indent")
 local replace_fragments     = require("src.util.xml.parse.replace_fragments")
 
-local slaxml                = require("lib.slaxml")
+-- local htmlparser = require("lib.htmlparser")
+local slaxml     = require("lib.slaxml")
 
 --[[
     TODO needs to support this kind of syntax
-    
+
     <Element value={0}>
 
     </Element>

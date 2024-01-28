@@ -7,3 +7,6 @@
 [submodule "lib/slaxml"]
 	path = lib/slaxml
 	url = https://github.com/Phrogz/SLAXML.git
+[submodule "lib/htmlparser"]
+	path = lib/htmlparser
+	url = https://github.com/msva/lua-htmlparser
