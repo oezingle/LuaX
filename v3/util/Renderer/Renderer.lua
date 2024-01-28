@@ -4,6 +4,7 @@ local key_add                   = require("v3.util.key.key_add")
 local get_element_name          = require("v3.util.Renderer.helper.get_element_name")
 local create_native_element     = require("v3.util.Renderer.helper.create_native_element")
 local table_equals              = require("v3.util.table_equals")
+local can_modify_child          = require("v3.util.Renderer.helper.can_modify_child")
 
 local FunctionComponentInstance = require("v3.util.FunctionComponentInstance")
 local DefaultWorkLoop           = require("v3.util.WorkLoop.Default")
@@ -11,6 +12,8 @@ local DefaultWorkLoop           = require("v3.util.WorkLoop.Default")
 -- defines LuaX global ( needed for hooks )
 -- TODO if Renderer.envhacks = true, don't use LuaX global
 require("v3.types.LuaX")
+
+local max = math.max
 
 --- Determine if this is a class or an instance
 ---
@@ -77,9 +80,23 @@ function Renderer:render_pure_component(component, container, key)
         return
     end
 
-    local node = create_native_element(component, container)
+    local can_modify, existing_child = can_modify_child(component, container, key)
+
+    ---@type LuaX.NativeElement
+    local node = nil
+
+    if can_modify then
+        node = existing_child
+    else
+        if existing_child then
+            container:delete_children_by_key(key)
+        end
+
+        node = create_native_element(component, container)
+    end
 
     for prop, value in pairs(component.props) do
+        -- TODO table_equals could check functions for string.dump
         if prop ~= "children" and not table_equals(value, node:get_prop(prop)) then
             node:set_prop_safe(prop, value)
         end
@@ -90,19 +107,33 @@ function Renderer:render_pure_component(component, container, key)
     -- handle children using workloop
     local children = component.props['children']
 
+    local current_children = node:get_children_by_key({}) or {}
+        
     if children then
         local workloop = self.workloop
 
-        for index, child in ipairs_with_nil(children) do
+        local size = max(#current_children, #children)
+        
+        for index, child in ipairs_with_nil(children, size) do
             workloop:add(function()
                 self:render_keyed_child(child, node, { index })
             end)
         end
 
         workloop:start()
+    else
+        -- TODO does this work? (no!)
+
+        -- TODO check for children first - otherwise causes error
+        -- container:delete_children_by_key()
+
+        -- container:insert_child_by_key({}, {} --[[ @as LuaX.NativeElement ]])
     end
 
-    container:insert_child_by_key(key, node)
+    -- Append to parent node
+    if not existing_child then
+        container:insert_child_by_key(key, node)
+    end
 end
 
 ---@param element LuaX.ElementNode
@@ -115,7 +146,12 @@ function Renderer:_render_function_component(element, container, key)
         -- Function components are allowed to return lists of children
         -- (not really -- this isn't good behaviour but fixes Fragments and is React compatible)
         if type(rendered) == "table" and not rendered.type then
-            for i, child in ipairs_with_nil(rendered) do
+            -- TODO does this work? no - breaks!
+            local current_children = container:get_children_by_key(key) or {}
+
+            local size = max(#current_children, #rendered)
+
+            for i, child in ipairs_with_nil(rendered, size) do
                 self:render_keyed_child(child, container, key_add(key, i))
             end
         else
@@ -140,6 +176,10 @@ function Renderer:render_keyed_child(element, container, key)
                 self.workloop:add(function()
                     self:_render_function_component(element, container, key)
                 end)
+
+                -- TODO seems to have some issues
+                -- start workloop if it isn't running
+                self.workloop:start()
             end)
 
             element._component = component_instance

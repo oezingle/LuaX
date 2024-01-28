@@ -1,30 +1,5 @@
 
---- This is the best lua gives us for getting function names, as getinfo will only return a name if we give it a stack depth.
----@param fn function
----@return string
-local function get_function_location (fn)
-    if not debug then
-        return "UNKNOWN (no debug library)"
-    end
-
-    if not debug.getinfo then
-        return "UNKNOWN (no debug.getinfo)"
-    end
-
-    local success, res = pcall(function ()
-        local info = debug.getinfo(fn, "S")
-
-        local location = info.short_src .. ":" .. info.linedefined
-
-        return location
-    end)
-
-    if success then
-        return string.format("Function defined at %s", res)
-    end
-
-    return "UNKNOWN (error calling debug.getinfo)"
-end
+local get_function_location = require("v3.util.Renderer.helper.get_function_location")
 
 ---@param element LuaX.ElementNode | LuaX.NativeElement | nil
 ---@return string
@@ -39,7 +14,7 @@ local function get_element_name (element)
         local t = type(element_type)
 
         if t == "function" then
-            return get_function_location(element_type)
+            return "Function defined at " ..get_function_location(element_type)
         elseif t == "string" then
             return element_type
         else

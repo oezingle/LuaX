@@ -1,7 +1,9 @@
 local class                 = require("lib.30log")
 local count_children_by_key = require("v3.util.NativeElement.helper.count_children_by_key")
 local set_child_by_key      = require("v3.util.NativeElement.helper.set_child_by_key")
+local list_reduce = require("v3.util.polyfill.list.reduce")
 
+-- TODO maybe move text nodes to handle_text_node(parent) ?
 
 -- Helper type
 ---@alias LuaX.NativeElement.ChildrenByKey LuaX.NativeElement  | LuaX.NativeElement.ChildrenByKey[] | LuaX.NativeElement.ChildrenByKey[][]
@@ -13,7 +15,7 @@ local set_child_by_key      = require("v3.util.NativeElement.helper.set_child_by
 ---
 ---@field protected _children_by_key LuaX.NativeElement.ChildrenByKey
 ---@field _get_key_insert_index fun(self: self, key: LuaX.Key): integer Helper function to get index
----@field get_children_by_key fun(self: self, key: LuaX.Key)
+---@field get_children_by_key fun(self: self, key: LuaX.Key): LuaX.NativeElement.ChildrenByKey
 ---@field insert_child_by_key fun(self: self, key: LuaX.Key, child: LuaX.NativeElement)
 ---@field delete_children_by_key fun(self: self, key: LuaX.Key)
 ---
@@ -40,6 +42,22 @@ local NativeElement = class("NativeElement")
 
 function NativeElement:init()
     error("NativeElement must be extended to use for components")
+end
+
+function NativeElement:get_children_by_key(key)
+    local children = self._children_by_key
+
+    -- if children then
+    --     print(self:get_type(), "children", children, #children)
+    -- end
+
+    return list_reduce(key, function (children, key_slice)
+        if not children then
+            return nil
+        end
+        
+        return children[key_slice]
+    end, children or {})
 end
 
 --[[
@@ -102,8 +120,6 @@ function NativeElement:_get_key_insert_index(key)
 end
 
 function NativeElement:insert_child_by_key(key, child)
-    -- child:set_key(key)
-
     local insert_index = self:_get_key_insert_index(key)
 
     -- Insert this child into the key table
@@ -113,12 +129,17 @@ function NativeElement:insert_child_by_key(key, child)
 end
 
 function NativeElement:delete_children_by_key(key)
-    local delete_start = self:_get_key_insert_index(key)
+    -- print(self:get_type(), "delete_children_by_key", table.concat(key, " "))
 
-    local key_children = self._children_by_key[key] or {}
+    local delete_end = count_children_by_key(self._children_by_key, key)
 
-    for i = 0, #key_children - 1 do
-        self:delete_child(delete_start + i)
+    local key_children = self:get_children_by_key(key)
+    local key_child_count = key_children.class and 1 or #key_children
+
+    local delete_start = delete_end - key_child_count + 1
+
+    for i = delete_end, delete_start, -1 do
+        self:delete_child(i)
     end
 
     set_child_by_key(self._children_by_key, key, nil)

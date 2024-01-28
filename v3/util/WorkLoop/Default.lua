@@ -1,4 +1,4 @@
-local WorkLoop = require("v3.util.WorkLoop.init")
+local WorkLoop = require("v3.util.WorkLoop")
 
 ---@class LuaX.DefaultWorkLoop : LuaX.WorkLoop
 local DefaultWorkLoop = WorkLoop:extend("DefaultWorkLoop")
@@ -12,9 +12,9 @@ function DefaultWorkLoop:init(opts)
             "LuaX Renderer is using a default work loop! " ..
             "This is not recommended as it will freeze " ..
             "the main thread until rendering is done."
-        )            
+        )
     end
-    
+
     ---@diagnostic disable-next-line:undefined-field
     self.super:init()
 end
@@ -29,23 +29,23 @@ function DefaultWorkLoop:start()
         return
     end
 
+    self.is_running = true
+
+    while self.is_running do
+        self:run_once()
+    end
+end
+
+function DefaultWorkLoop:run_once()
     if self:list_is_empty() then
         self.is_running = false
 
         return
     end
 
-    self.is_running = true
-
     local cb = self:list_dequue()
 
-    while cb do
-        cb()
-
-        cb = self:list_dequue()
-    end
-
-    self.is_running = false
+    cb()
 end
 
 return DefaultWorkLoop

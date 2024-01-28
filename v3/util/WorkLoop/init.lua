@@ -10,8 +10,10 @@ local LinkedList = require("v3.util.LinkedList")
 ---
 --- Abstract
 ---@field is_running boolean
----@field add fun(self: self, cb: function)
 ---@field start fun(self: self) Must not crash if double-started. write yourself a guard.
+---
+--- Abstract optional
+---@field add fun(self: self, cb: function)
 local WorkLoop = class("WorkLoop")
 
 function WorkLoop:init()
@@ -29,5 +31,10 @@ end
 function WorkLoop:list_is_empty()
     return self.list:is_empty()
 end
+
+function WorkLoop:add(cb)
+    self:list_enqueue(cb)
+end
+
 
 return WorkLoop

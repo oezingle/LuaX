@@ -9,8 +9,6 @@ require("v3.util.replace_warn")
 local renderer = Renderer()
 local render = renderer:get_render()
 
--- TODO if these both have default=false, then the second one returns first!!
-
 local function outer_function_component(props)
     local should_render, set_should_render = use_state(props.default or false)
 

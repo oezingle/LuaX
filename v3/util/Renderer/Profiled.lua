@@ -1,5 +1,6 @@
 
 local Renderer = require("v3.util.Renderer")
+local get_element_name = require("v3.util.Renderer.helper.get_element_name")
 
 ---@class LuaX.ProfiledRenderer : LuaX.Renderer
 ---@field calls integer
@@ -14,6 +15,8 @@ end
 
 function ProfiledRenderer:render_keyed_child(element, container, index)
     self.calls = self.calls + 1
+
+    print("Rendering", get_element_name(element))
 
     ---@diagnostic disable-next-line:undefined-field
     return self.super.render_keyed_child(self, element, container, index)
