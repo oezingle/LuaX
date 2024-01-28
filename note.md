@@ -1,37 +1,15 @@
 
-# The big plan
-
-- write react-like features
-    - function components
-    - use_state, use_effect
-        - maybe contexts?
-    - figure out state management
-    - maybe helper function generates class instance
-        - props as statically checked
-
+### TODO
 - outside state changes somehow
-
-- write library that wraps awful components to this library
-
 - XML support
     - xml code snippets
     - lua loader -> convert .x.lua to plain lua
-    
-
-- Function or Component -> Element
-- Element { props, type }
-
-- render_nth_child should take keys as an array, as does <get/set>_child[ren]_by_key()
-    - FC's pass { ...keys, child_index }
-
-- no more key in ElementNode? seems unnecessary as of now.
-
-### divider
 - contexts
 - I could do a neat thing using a setfenv analog to (unsafely) monitor state without expensive waste (i think)
     - definitely can get rid of the LuaX global using setfenv
-
-- TODO test FC that sometimes returns Fragment and sometimes returns single child - how does NativeElement respond?
+- text parsing option - remove newlines, use only double-newlines as newlines (similar to markdown)
+- test FC that sometimes returns Fragment and sometimes returns single child - how does NativeElement respond?
+- wiki
 
 ### Links
 - [Didact](https://pomb.us/build-your-own-react/)

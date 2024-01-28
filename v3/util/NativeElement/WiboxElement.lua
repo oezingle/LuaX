@@ -67,19 +67,11 @@ function WiboxElement:get_prop(prop)
 end
 
 function WiboxElement:insert_child(index, element)
-    -- wibox.layout.fixed:insert (index, widget)
-    
-    self.wibox:insert(index, element.wibox)
-    
-    --table.insert(self.wibox.children, index, element.wibox)
+    self.wibox:insert(index, element.wibox)    
 end
 
 function WiboxElement:delete_child(index)
-    print("delete_child", index)
-
     self.wibox:remove(index)
-
-    -- table.remove(self.wibox.children, index)
 end
 
 function WiboxElement:get_type()
