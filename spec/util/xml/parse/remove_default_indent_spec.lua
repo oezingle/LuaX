@@ -1,5 +1,5 @@
 
-local remove_default_indent = require("v3.util.xml.remove_default_indent")
+local remove_default_indent = require("src.util.xml.parse.remove_default_indent")
 
 describe("remove_default_indent", function ()
     it("works for a simple string", function ()

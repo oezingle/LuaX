@@ -1,6 +1,6 @@
-local get_element_name = require("v3.util.Renderer.helper.get_element_name")
+local get_element_name = require("src.util.Renderer.helper.get_element_name")
 
-local create_element = require("v3.create_element")
+local create_element = require("src.create_element")
 
 describe("get_element_name", function()
     it("handles string ElementNodes", function()

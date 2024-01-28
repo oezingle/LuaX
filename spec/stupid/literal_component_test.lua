@@ -1,8 +1,8 @@
-local Renderer       = require("v3.util.Renderer")
-local XMLElement     = require("v3.util.NativeElement.XMLElement")
-local create_element = require("v3.create_element")
+local Renderer       = require("src.util.Renderer.init")
+local XMLElement     = require("src.util.NativeElement.XMLElement")
+local create_element = require("src.create_element")
 
-require("v3.util.replace_warn")
+require("src.util.replace_warn")
 
 local renderer = Renderer()
 

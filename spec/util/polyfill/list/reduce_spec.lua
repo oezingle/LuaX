@@ -1,5 +1,5 @@
 
-local list_reduce = require("v3.util.polyfill.list.reduce")
+local list_reduce = require("src.util.polyfill.list.reduce")
 
 describe("list_reduce", function ()
     it("can be used to select deep values from table", function ()

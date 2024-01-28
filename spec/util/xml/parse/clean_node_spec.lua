@@ -1,8 +1,7 @@
 
 
 local slaxml = require("lib.slaxml")
-local pprint = require("lib.pprint")
-local clean_node = require("v3.util.xml.clean_node")
+local clean_node = require("src.util.xml.parse.clean_node")
 
 describe("clean_node", function ()
     it("cleans up nicely", function ()

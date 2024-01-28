@@ -1,5 +1,5 @@
-local key_add = require("v3.util.key.key_add")
-local key_first = require("v3.util.key.key_first")
+local key_add = require("src.util.key.key_add")
+local key_first = require("src.util.key.key_first")
 
 describe("Key helpers", function()
     describe("key_add", function()

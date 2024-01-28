@@ -1,7 +1,7 @@
 -- TODO passing functions to components can be made a bit better using fn_equal perhaps?
 
-local create_element = require("v3.create_element")
-local get_function_location = require("v3.util.Renderer.helper.get_function_location")
+local create_element = require("src.create_element")
+local get_function_location = require("src.util.Renderer.helper.get_function_location")
 
 local function_a = function(component, props)
     ---@diagnostic disable-next-line:undefined-field

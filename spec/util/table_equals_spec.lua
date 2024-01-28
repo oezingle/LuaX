@@ -1,5 +1,5 @@
 
-local table_equals = require("v3.util.table_equals")
+local table_equals = require("src.util.table_equals")
 
 describe("table_equals", function ()
     it("knows true from false", function ()

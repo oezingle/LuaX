@@ -1,10 +1,10 @@
 
-local Fragment = require("v3.components.Fragment")
-local XMLElement = require("v3.util.NativeElement.XMLElement")
-local renderer = require("v3.util.Renderer.Profiled")()
-local create_element = require("v3.create_element")
+local Fragment = require("src.components.Fragment")
+local XMLElement = require("src.util.NativeElement.XMLElement")
+local renderer = require("src.util.Renderer.Profiled")()
+local create_element = require("src.create_element")
 
-require("v3.util.replace_warn")
+require("src.util.replace_warn")
 
 local render = renderer:get_render()
 

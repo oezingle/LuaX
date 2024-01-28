@@ -1,5 +1,5 @@
 
-local ipairs_with_nil = require("v3.util.ipairs_with_nil")
+local ipairs_with_nil = require("src.util.ipairs_with_nil")
 
 describe("ipairs_with_nil", function ()
     it("iterates through normal lists", function ()

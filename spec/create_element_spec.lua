@@ -1,5 +1,5 @@
 
-local create_element = require("v3.create_element")
+local create_element = require("src.create_element")
 
 describe("create_element", function ()
     it("returns an expected lua table", function ()

@@ -1,6 +1,6 @@
 
-local XMLElement = require("v3.util.NativeElement.XMLElement")
-local LuaX = require("v3")()
+local XMLElement = require("src.util.NativeElement.XMLElement")
+local LuaX = require("src.init")()
 
 local create_element = LuaX.create_element
 local use_effect = LuaX.use_effect

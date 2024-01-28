@@ -1,10 +1,10 @@
-local Renderer       = require("v3.util.Renderer")
-local XMLElement     = require("v3.util.NativeElement.XMLElement")
-local use_effect     = require("v3.hooks.use_effect")
-local use_memo       = require("v3.hooks.use_memo")
-local create_element = require("v3.create_element")
+local Renderer       = require("src.util.Renderer.init")
+local XMLElement     = require("src.util.NativeElement.XMLElement")
+local use_effect     = require("src.hooks.use_effect")
+local use_memo       = require("src.hooks.use_memo")
+local create_element = require("src.create_element")
 
-require("v3.util.replace_warn")
+require("src.util.replace_warn")
 
 local renderer = Renderer()
 

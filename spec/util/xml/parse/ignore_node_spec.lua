@@ -1,4 +1,4 @@
-local ignore_node = require("v3.util.xml.ignore_node")
+local ignore_node = require("src.util.xml.parse.ignore_node")
 
 describe("ignore_node", function()
     it("works for comments", function()

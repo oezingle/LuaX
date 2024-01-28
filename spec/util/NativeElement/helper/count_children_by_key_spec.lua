@@ -1,6 +1,6 @@
 
-local count_children_by_key = require('v3.util.NativeElement.helper.count_children_by_key')
-local NativeElement         = require('v3.util.NativeElement')
+local count_children_by_key = require('src.util.NativeElement.helper.count_children_by_key')
+local NativeElement         = require('src.util.NativeElement.init')
 
 local LightNativeElement = NativeElement:extend('LightNativeElement')
 function LightNativeElement:init()
