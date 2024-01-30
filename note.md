@@ -11,6 +11,17 @@
 - text parsing option - remove newlines, use only double-newlines as newlines (similar to markdown)
 - test FC that sometimes returns Fragment and sometimes returns single child - how does NativeElement respond?
 - wiki
+- global LuaX.components -> transpiler
+    - empties itself if a NativeElement implementation doesn't register? i guess?
+        - somehow
+- move spec to spec/src/* so i can write helpers and move stupid out of src/
+- deprecate renderer:get_render()
+
+- write a LuaX parser (libraries keep breaking. Boo!)
+    - TokenStack
+        - needs backslash support
+    - Search for a <, for 
 
 ### Links
 - [Didact](https://pomb.us/build-your-own-react/)
+- [bundle with darklua](https://darklua.com/)

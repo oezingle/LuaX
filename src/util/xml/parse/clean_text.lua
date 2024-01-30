@@ -4,7 +4,7 @@
 ---@param depth integer
 ---@return string
 local function clean_text(text, indent, depth)
-    text = "\n" .. text
+    -- text = "\n" .. text
 
     -- remove indentations up to depth
     local indent_pattern = "\n" .. string.rep(indent, depth)

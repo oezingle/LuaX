@@ -18,18 +18,23 @@ describe("htmlparser", function ()
         assert.equal(expected, root.nodes[1].attributes.onclick)
     end)
 
-    it("parses text nodes", function ()
+    it("parses comments good", function ()
         local root = htmlparser.parse([[
             <div>
-                Hello world!
-
-                <div>
-                    Goodbye world!
-                </div>
+                <!-- I'm a comment! -->
             </div>
         ]])
+        
+        assert.equal(0, #root.nodes[1].nodes)
+    end)
 
+    it("parses should-be illegal tags", function ()
+        local root = htmlparser.parse([[
+            <wibox.widget.textbox
+                value = "Hello world"
+            />
+        ]])
 
-        pprint(root.nodes[1].nodes[1]:gettext())
+        assert.equal("wibox.widget.textbox", root.nodes[1].name)
     end)
 end)

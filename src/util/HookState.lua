@@ -7,6 +7,7 @@ local ipairs_with_nil = require("src.util.ipairs_with_nil")
 ---@field index number
 ---@field values any[]
 ---@field listeners LuaX.HookState.Listener[]
+---@operator call:LuaX.HookState
 local HookState = class("HookState")
 
 function HookState:init()

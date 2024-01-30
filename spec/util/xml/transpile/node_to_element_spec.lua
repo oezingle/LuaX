@@ -67,12 +67,12 @@ describe("transpile_node_to_element", function ()
     it("handles literal props", function ()
         local xml = parse_xml([[
             <div
-                on_click="{function() print("Hello world!") end}"
+                on_click="{function() print('Hello world!') end}"
             />
         ]])
 
         local transpiled = transpile_node_to_element(xml, {}, "local")
-        local expected = 'create_element("div", { ["class"]="container" })'
+        local expected = 'create_element("div", { ["on_click"]=function() print(\'Hello world!\') end })'
 
         assert.equal(expected, transpiled)
     end)

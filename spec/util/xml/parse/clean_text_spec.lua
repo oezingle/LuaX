@@ -22,7 +22,7 @@ describe("clean_text", function ()
             Hello world!
         ]]
 
-        local text = string.rep(indent, 3) .. hello .. "\n" .. string.rep(indent, 2)
+        local text = "\n" .. string.rep(indent, 3) .. hello .. "\n" .. string.rep(indent, 2)
 
         local clean = clean_text(text, indent, 3)
 
@@ -47,7 +47,7 @@ describe("clean_text", function ()
             Hello world!
         ]]
 
-        local text = "\n" .. string.rep(indent, 3) .. hello .. "\n" .. string.rep(indent, 2)
+        local text = "\n\n" .. string.rep(indent, 3) .. hello .. "\n" .. string.rep(indent, 2)
 
         local clean = clean_text(text, indent, 3)
 
@@ -60,7 +60,7 @@ describe("clean_text", function ()
                 Hello world!
         ]]
 
-        local text = string.rep(indent, 4) .. hello .. "\n" .. string.rep(indent, 2)
+        local text = "\n" .. string.rep(indent, 4) .. hello .. "\n" .. string.rep(indent, 2)
 
         local clean = clean_text(text, indent, 3)
 

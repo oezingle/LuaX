@@ -4,9 +4,3 @@
 [submodule "lib/pprint"]
 	path = lib/pprint
 	url = https://github.com/jagt/pprint.lua
-[submodule "lib/slaxml"]
-	path = lib/slaxml
-	url = https://github.com/Phrogz/SLAXML.git
-[submodule "lib/htmlparser"]
-	path = lib/htmlparser
-	url = https://github.com/msva/lua-htmlparser

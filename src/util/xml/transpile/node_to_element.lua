@@ -14,11 +14,11 @@ local transpile_create_element = require("src.util.xml.transpile.create_element"
 ---@param components_mode "local" | "global"
 ---@param name string
 local function component_name(components, components_mode, name)
-    local has_component = components[name]
+    local has_component = not not components[name]
 
     local mode_global = components_mode == "global"
 
-    local is_global = (has_component and mode_global) or (not has_component and not mode_global)
+    local is_global = has_component == mode_global
 
     if is_global then
         return string.format("%q", name)
@@ -28,37 +28,44 @@ local function component_name(components, components_mode, name)
 end
 
 --- Statically convert an XML node to a create_element_call
----@param node SLAXML.Node
+---@param node HTMLParser.Node
 ---@param components table<string, true> hash map for speed
 ---@param components_mode "local" | "global"
 local function transpile_node_to_element(node, components, components_mode)
-    if node.type == "text" then
+    if node.name == "LITERAL_NODE" then
         -- TODO FIXME not so fast buster! any lua code will be interpreted as a static string!
 
-        return transpile_create_element("\"LITERAL_NODE\"", { value = node.value })
+        return transpile_create_element("\"LITERAL_NODE\"", { value = string.format("%q", node.attributes.value) })
     end
 
-    if node.type == "document" then
-        local kids = node.kids
+    if node.name == "root" then
+        local children = node.nodes
 
-        if not kids then
+        if not children then
             return transpile_create_element("nil", {})
         end
 
-        if #kids > 1 then
+        if #children > 1 then
             error("LuaX XML should have only one parent element")
         end
 
-        return transpile_node_to_element(kids[1], components, components_mode)
+        return transpile_node_to_element(children[1], components, components_mode)
     end
 
-    if node.type == "element" then
+    -- Otherwise mode
+    do
         local props = {}
-        for _, attr in pairs(node.attr) do
-            props[attr.name] = attr.value
+        for name, value in pairs(node.attributes) do
+            if value == "" then
+                -- TODO is this line really needed? implicit true is ok with ""
+                ---@type any
+                value = true
+            end
+            
+            props[name] = value
         end
 
-        local kids = node.kids
+        local kids = node.nodes
         if kids and #kids >= 1 then
             local children = {}
 
@@ -75,7 +82,7 @@ local function transpile_node_to_element(node, components, components_mode)
         return transpile_create_element(component, props)
     end
 
-    error(string.format("Can't transpile XML node of type %s", node.type))
+    -- error(string.format("Can't transpile XML node of type %s", node.type))
 end
 
 return transpile_node_to_element
