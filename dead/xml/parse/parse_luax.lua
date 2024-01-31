@@ -2,25 +2,6 @@ local clean_text = require "src.util.xml.parse.clean_text"
 local remove_comments = require "src.util.xml.parse.remove_comments"
 local TokenStack      = require "src.util.xml.parse.TokenStack"
 
----@class LuaX.Language.Base_Node 
----@field props table<string, string>
----@field type string
-
----@class LuaX.Language.Literal : LuaX.Language.Base_Node
----@field type "literal"
----@field value string
-
----@class LuaX.Language.Comment : LuaX.Language.Base_Node
----@field type "comment"
----@field value string
-
----@class LuaX.Language.Element : LuaX.Language.Base_Node
----@field type "element"
----@field name string
----@field children LuaX.Language.Node[]
-
----@alias LuaX.Language.Node LuaX.Language.Literal | LuaX.Language.Comment | LuaX.Language.Element
-
 ---@param value string
 ---@return LuaX.Language.Literal
 local function create_literal (value)
