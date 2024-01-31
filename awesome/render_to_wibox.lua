@@ -8,6 +8,7 @@ local Fragment       = require("src.components.Fragment")
 
 require("src.util.replace_warn")
 
+--[[
 local function toggle_button(props)
     local on, set_on = use_state(false)
 
@@ -23,8 +24,8 @@ local function toggle_button(props)
         end
     })
 end
+]]
 
--- TODO FIXME this guy doesn't hide children (this is not the test's fault but Renderer)
 local function App ()
     local render, set_render = use_state(false)
 

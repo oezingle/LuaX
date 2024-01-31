@@ -210,12 +210,4 @@ function Renderer:render(component, container)
     self:render_keyed_child(component, container, { 1 })
 end
 
-function Renderer:get_render()
-    ---@param component LuaX.ElementNode
-    ---@param container LuaX.NativeElement
-    return function(component, container)
-        return self:render(component, container)
-    end
-end
-
 return Renderer

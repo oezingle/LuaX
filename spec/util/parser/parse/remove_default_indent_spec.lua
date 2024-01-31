@@ -1,5 +1,5 @@
 
-local remove_default_indent = require("src.util.xml.parse.remove_default_indent")
+local remove_default_indent = require("src.util.parser.parse.remove_default_indent")
 
 describe("remove_default_indent", function ()
     it("works for a simple string", function ()
@@ -18,7 +18,7 @@ describe("remove_default_indent", function ()
 
         local unindented = remove_default_indent(str)
 
-        assert.equal(unindented, "Hello world!\nGoodbye world!\n")
+        assert.equal("Hello world!\nGoodbye world!\n", unindented)
     end)
 
     it("works for a given XML string", function ()
@@ -37,8 +37,7 @@ describe("remove_default_indent", function ()
         local unindented = remove_default_indent(xml)
 
         -- The string ends with \t\t, but that's ok because SLAXML ignores it
-        local expected = [[
-<Element>
+        local expected = [[<Element>
     I am text 1!
 
     <Child>

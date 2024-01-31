@@ -1,6 +1,6 @@
 --- Tests are brief here because a very large majority of the work is done by stringify_table
 
-local transpile_create_element = require("src.util.xml.transpile.create_element")
+local transpile_create_element = require("src.util.parser.transpile.create_element")
 local create_element           = require("src.create_element")
 local Fragment                 = require("src.components.Fragment")
 

@@ -1,6 +1,10 @@
-local class        = require("lib.30log")
-local is_cancelled = require("src.util.parser.is_cancelled")
-local TokenStack   = require("src.util.parser.TokenStack")
+local class                 = require("lib.30log")
+local is_cancelled          = require("src.util.parser.parse.is_cancelled")
+local TokenStack            = require("src.util.parser.TokenStack")
+local remove_default_indent = require("src.util.parser.parse.remove_default_indent")
+local get_indent            = require("src.util.parser.parse.get_indent")
+local clean_text            = require("src.util.parser.parse.clean_text")
+local node_to_element       = require("src.util.parser.transpile.node_to_element")
 
 ---@class LuaX.Language.Base_Node
 ---@field props table<string, string>
@@ -35,7 +39,11 @@ local LuaXParser = class("LuaXParser")
 function LuaXParser:init(text)
     -- self.pos = 1
 
-    self.text = text
+    local unindented = remove_default_indent(text)
+
+    self.indent = get_indent(unindented)
+
+    self.text = unindented
 end
 
 --[[
@@ -195,8 +203,11 @@ end
 
 --- Parse a tag
 ---@param pos integer
+---@param depth integer?
 ---@return LuaX.Language.Element element, integer pos
-function LuaXParser:parse_tag(pos)
+function LuaXParser:parse_tag(pos, depth)
+    depth = depth or 0
+
     local tag_and_more = self.text:sub(pos)
 
     ---@type string
@@ -223,7 +234,7 @@ function LuaXParser:parse_tag(pos)
         -- TODO this causes this function's performance to be O(2n) instead of O(n)
         local children_text_len = find_ending_tag(self.text:sub(pos))
 
-        children = self:parse_string(pos, children_text_len)
+        children = self:parse_string(pos, children_text_len, depth + 1)
 
         pos = pos + children_text_len
 
@@ -253,7 +264,9 @@ end
 
 ---@param nodes LuaX.Language.Node[]
 ---@param value string
-local function add_literal(nodes, value)
+---@param indent string
+---@param depth integer
+local function add_literal(nodes, value, indent, depth)
     if value:match("^%s*$") then
         return
     end
@@ -261,18 +274,19 @@ local function add_literal(nodes, value)
     ---@type LuaX.Language.Literal
     local node = {
         type = "literal",
-        value = value
+        value = clean_text(value, indent, depth)
     }
 
     table.insert(nodes, node)
 end
 
--- TODO FIXME re-add old indent features.
-
 ---@param start integer
 ---@param length integer
+---@param depth integer?
 ---@return LuaX.Language.Node[]
-function LuaXParser:parse_string(start, length)
+function LuaXParser:parse_string(start, length, depth)
+    depth = depth or 0
+
     local text = self.text:sub(start, start + length - 1)
 
     local nodes = {}
@@ -291,9 +305,9 @@ function LuaXParser:parse_string(start, length)
 
             if current == "<" then
                 -- move current text into a literal
-                add_literal(nodes, text:sub(last_literal_start, pos - 1))
+                add_literal(nodes, text:sub(last_literal_start, pos - 1), self.indent, depth)
 
-                local element, new_pos = self:parse_tag(start + pos - 1)
+                local element, new_pos = self:parse_tag(start + pos - 1, depth)
 
                 table.insert(nodes, element)
 
@@ -306,9 +320,34 @@ function LuaXParser:parse_string(start, length)
         tokenstack:run_once()
     end
 
-    add_literal(nodes, text:sub(last_literal_start, pos - 1))
+    add_literal(nodes, text:sub(last_literal_start, pos - 1), self.indent, depth)
 
     return nodes
+end
+
+---@return LuaX.Language.Node
+function LuaXParser:parse_all()
+    local start = self:skip_whitespace()
+
+    -- TODO does this work properly?
+    local nodes = self:parse_string(start, #self.text - start + 1, 0)
+
+    if #nodes > 1 then
+        error("LuaX must have one parent element")
+    end
+
+    return nodes[1]
+end
+
+---@param node LuaX.Language.Node
+---@param locals table<string, true>
+function LuaXParser:transpile(node, locals)
+    return node_to_element(node, locals, "local")
+end
+
+---@param text string
+function LuaXParser:get_locals (text)
+
 end
 
 return LuaXParser

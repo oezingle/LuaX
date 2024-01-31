@@ -1,15 +1,15 @@
 
-local transpile_node_to_element = require("src.util.xml.transpile.node_to_element")
-local parse_xml = require("src.util.xml.parse")
+local transpile_node_to_element = require("src.util.parser.transpile.node_to_element")
+local LuaXParser = require("src.util.parser.LuaXParser")
 
 describe("transpile_node_to_element", function ()
     describe("handles global components", function ()
         local expected = "create_element(\"div\", {  })"
 
         it("in global mode", function ()
-            local xml = parse_xml([[
+            local xml = LuaXParser([[
                 <div />
-            ]])
+            ]]):parse_all()
     
             local transpiled = transpile_node_to_element(xml, { div = true }, "global")
 
@@ -17,9 +17,9 @@ describe("transpile_node_to_element", function ()
         end)
     
         it("in local mode", function ()
-            local xml = parse_xml([[
+            local xml = LuaXParser([[
                 <div />
-            ]])
+            ]]):parse_all()
     
             local transpiled = transpile_node_to_element(xml, {}, "local")
 
@@ -31,9 +31,9 @@ describe("transpile_node_to_element", function ()
         local expected = "create_element(div, {  })"
 
         it("in global mode", function ()
-            local xml = parse_xml([[
+            local xml = LuaXParser([[
                 <div />
-            ]])
+            ]]):parse_all()
     
             local transpiled = transpile_node_to_element(xml, { }, "global")
 
@@ -41,9 +41,9 @@ describe("transpile_node_to_element", function ()
         end)
     
         it("in local mode", function ()
-            local xml = parse_xml([[
+            local xml = LuaXParser([[
                 <div />
-            ]])
+            ]]):parse_all()
     
             local transpiled = transpile_node_to_element(xml, { div = true }, "local")
 
@@ -52,11 +52,11 @@ describe("transpile_node_to_element", function ()
     end)
 
     it("handles string props", function ()
-        local xml = parse_xml([[
+        local xml = LuaXParser([[
             <div
                 class="container"
             />
-        ]])
+        ]]):parse_all()
 
         local transpiled = transpile_node_to_element(xml, {}, "local")
         local expected = 'create_element("div", { ["class"]="container" })'
@@ -65,11 +65,11 @@ describe("transpile_node_to_element", function ()
     end)
 
     it("handles literal props", function ()
-        local xml = parse_xml([[
+        local xml = LuaXParser([[
             <div
                 on_click="{function() print('Hello world!') end}"
             />
-        ]])
+        ]]):parse_all()
 
         local transpiled = transpile_node_to_element(xml, {}, "local")
         local expected = 'create_element("div", { ["on_click"]=function() print(\'Hello world!\') end })'
@@ -78,11 +78,11 @@ describe("transpile_node_to_element", function ()
     end)
 
     it("handles implicit props", function ()
-        local xml = parse_xml([[
+        local xml = LuaXParser([[
             <div
                 container
             />
-        ]])
+        ]]):parse_all()
 
         local transpiled = transpile_node_to_element(xml, {}, "local")
         local expected = 'create_element("div", { ["container"]=true })'

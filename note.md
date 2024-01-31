@@ -15,12 +15,7 @@
     - empties itself if a NativeElement implementation doesn't register? i guess?
         - somehow
 - move spec to spec/src/* so i can write helpers and move stupid out of src/
-- deprecate renderer:get_render()
-
-- write a LuaX parser (libraries keep breaking. Boo!)
-    - TokenStack
-        - needs backslash support
-    - Search for a <, for 
+- https://github.com/thenumbernine/lua-parser/tree/master
 
 ### Links
 - [Didact](https://pomb.us/build-your-own-react/)

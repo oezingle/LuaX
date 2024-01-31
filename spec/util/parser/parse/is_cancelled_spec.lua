@@ -1,5 +1,5 @@
 
-local is_cancelled = require("src.util.parser.is_cancelled")
+local is_cancelled = require("src.util.parser.parse.is_cancelled")
 
 describe("is_cancelled", function ()
     it("knows when chars are cancelled", function ()

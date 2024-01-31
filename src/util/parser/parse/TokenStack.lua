@@ -1,5 +1,5 @@
 local class = require("lib.30log")
-local is_cancelled = require("src.util.parser.is_cancelled")
+local is_cancelled = require("src.util.parser.parse.is_cancelled")
 
 -- TODO different environments if in string or in literal
 --      - in string: ignore ()[] and other string tags 

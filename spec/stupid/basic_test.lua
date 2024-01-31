@@ -1,11 +1,9 @@
-local Renderer = require("src.util.Renderer.init")
+local Renderer = require("src.util.Renderer")
 local XMLElement = require("src.util.NativeElement.XMLElement")
 
 require("src.util.replace_warn")
 
 local renderer = Renderer()
-
-local render = renderer:get_render()
 
 local element = {
     type = "div",
@@ -22,6 +20,6 @@ local root = XMLElement.get_root({
     children = {}
 })
 
-render(element, root)
+renderer:render(element, root)
 
 print(root)

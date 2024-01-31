@@ -6,8 +6,6 @@ require("src.util.replace_warn")
 
 local renderer = Renderer()
 
-local render = renderer:get_render()
-
 local element = create_element("div", {
     class = "container",
     children = "Hello World!"
@@ -18,6 +16,6 @@ local root = XMLElement.get_root({
     children = {}
 })
 
-render(element, root)
+renderer:render(element, root)
 
 print(root)

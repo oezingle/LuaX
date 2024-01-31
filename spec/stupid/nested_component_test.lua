@@ -7,7 +7,6 @@ local create_element = require("src.create_element")
 require("src.util.replace_warn")
 
 local renderer = Renderer()
-local render = renderer:get_render()
 
 local function outer_function_component(props)
     local should_render, set_should_render = use_state(props.default or false)
@@ -52,7 +51,7 @@ local root = XMLElement.get_root({
     children = {}
 })
 
-render(element, root)
+renderer:render(element, root)
 
 print(root)
 

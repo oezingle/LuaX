@@ -1,5 +1,5 @@
 
-local clean_text = require("src.util.xml.parse.clean_text")
+local clean_text = require("src.util.parser.parse.clean_text")
 
 -- 4 spaces here, vs code default.
 local indent = "    "

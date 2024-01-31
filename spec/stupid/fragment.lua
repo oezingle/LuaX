@@ -6,8 +6,6 @@ local create_element = require("src.create_element")
 
 require("src.util.replace_warn")
 
-local render = renderer:get_render()
-
 -- TODO test how Fragment performs on unmonut
 
 local element = create_element("div", {
@@ -29,7 +27,7 @@ local root = XMLElement.get_root({
     children = {}
 })
 
-render(element, root)
+renderer:render(element, root)
 
 print(root)
 

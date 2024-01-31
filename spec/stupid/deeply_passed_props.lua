@@ -3,7 +3,6 @@ local LuaX = require("src.init")()
 local XMLElement = require("src.util.NativeElement.XMLElement")
 
 local renderer = require("src.util.Renderer.Profiled")()
-local render = renderer:get_render()
 
 local create_element = LuaX.create_element
 -- local render = LuaX.render
@@ -47,7 +46,7 @@ local root = XMLElement.get_root({
     children = {}
 })
 
-render(element, root)
+renderer:render(element, root)
 
 print(root)
 

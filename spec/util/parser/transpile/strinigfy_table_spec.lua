@@ -1,5 +1,5 @@
 
-local stringify_table = require("src.util.xml.transpile.stringify_table")
+local stringify_table = require("src.util.parser.transpile.stringify_table")
 
 describe("stringify_table", function ()
     it("stringifies simple table", function ()
