@@ -75,6 +75,7 @@ end
 
 local PROP_PARSE_MAX = 1000
 
+-- this implementation is kinda grimey.
 ---@param text string
 ---@param pos integer
 ---@return table<string, string> props, integer pos, boolean has_children
@@ -87,8 +88,8 @@ local function get_props(text, pos)
     while true do
         local props_and_more = text:sub(pos)
 
+        -- skip whitespaces
         local whitespaces = 1
-
         while props_and_more:sub(whitespaces, whitespaces):match("%s") do
             whitespaces = whitespaces + 1
         end
@@ -96,38 +97,47 @@ local function get_props(text, pos)
 
         props_and_more = props_and_more:sub(whitespaces)
 
+        -- check for early return
         if props_and_more:match("^/>") then
             pos = pos + 2
             has_children = false
 
             break
         end
-
         if props_and_more:match("^>") then
             pos = pos + 1
 
             break
         end
 
-        -- TODO FIXME doesn't match implicit props
-        local prop_name = props_and_more:match("^(%S+)=")
-        pos = pos + #prop_name + 1
+        local implicit_prop = props_and_more:match("^([^%s=]+)%s")
 
-        local tokenstack = TokenStack(text:sub(pos))
+        if implicit_prop then
+            -- move forward the length of that prop
+            pos = pos + #implicit_prop
 
-        tokenstack:run_once()
-        tokenstack:run_until_empty()
+            props[implicit_prop] = "{true}"
+        else
+            local prop_name = props_and_more:match("^(%S+)=")
+            -- move forward the length of that prop and "="
+            pos = pos + #prop_name + 1
 
-        local prop_value = text:sub(pos, pos + tokenstack.pos - 2)
+            local tokenstack = TokenStack(text:sub(pos))
 
-        pos = pos + tokenstack.pos - 1
+            tokenstack:run_once()
+            tokenstack:run_until_empty()
 
-        -- remove quotes
-        if prop_value:match("^\".*\"$") then
-            prop_value = prop_value:sub(2, -2)
+            local prop_value = text:sub(pos, pos + tokenstack.pos - 2)
+
+            pos = pos + tokenstack.pos - 1
+
+            -- remove quotes
+            if prop_value:match("^\".*\"$") then
+                prop_value = prop_value:sub(2, -2)
+            end
+
+            props[prop_name] = prop_value
         end
-
-        props[prop_name] = prop_value
 
         if loop_panic >= PROP_PARSE_MAX then
             error("LOOP PANIC: loop got stuck while collecting props")

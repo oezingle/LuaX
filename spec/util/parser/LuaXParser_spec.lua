@@ -81,5 +81,17 @@ describe("LuaXParser", function ()
         local node = parser:parse_tag(start)
 
         assert.equal(1, #node.children)
+
+        -- TODO check child literal, and its value (after indent fixes)
+    end)
+
+    it("parses implicit props", function ()
+        local parser = LuaXParser([[ <div container /> ]])
+
+        local start = parser:skip_whitespace()
+
+        local node = parser:parse_tag(start)
+
+        assert.equal("{true}", node.props.container)
     end)
 end)
