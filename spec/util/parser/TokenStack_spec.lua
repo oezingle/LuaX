@@ -44,4 +44,15 @@ describe("TokenStack", function()
 
         assert.equal(39, tokenstack.pos)
     end)
+
+    it("ignores tokens in strings", function ()
+        local text = "\"({[\""
+
+        local tokenstack = TokenStack(text)
+
+        tokenstack:run_once()
+        tokenstack:run_until_empty()
+
+        assert.truthy(tokenstack:is_empty())
+    end)
 end)

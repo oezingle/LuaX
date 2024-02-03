@@ -4,3 +4,9 @@
 [submodule "lib/pprint"]
 	path = lib/pprint
 	url = https://github.com/jagt/pprint.lua
+[submodule "lib/lua-parser"]
+	path = lib/lua-parser
+	url = https://github.com/thenumbernine/lua-parser.git
+[submodule "lib/lua-ext"]
+	path = lib/lua-ext
+	url = https://github.com/thenumbernine/lua-ext.git

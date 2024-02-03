@@ -34,6 +34,7 @@ end
 ---@field pos integer
 ---@field text string
 ---@field tokens table<string, true>
+---@field requires_literal boolean
 ---@operator call:LuaX.TokenStack
 local TokenStack = class("TokenStack")
 
@@ -46,6 +47,8 @@ function TokenStack:init(text)
     self.text = text
 
     self.tokens = get_tokens()
+
+    self.requires_literal = false
 end
 
 ---@param pos integer
@@ -98,6 +101,21 @@ function TokenStack:is_empty()
     return #self.stack == 0
 end
 
+--[[
+function TokenStack:is_in_literal()
+    return self.text:match("{")
+end
+
+function TokenStack:is_in_string()
+    return self.text:match("['\"]") or self.text:match("%[%[")
+end
+]]
+
+-- collect char if:
+--      first char(s) is string (LuaXParser props collection)
+--      first char(s) is literal (LuaXParser props collection / literal parsing)
+-- TODO LuaXParser:parse_string would fail if it finds a 'string' with no end
+
 --- Advance one character
 function TokenStack:run_once()
     local char = self.text:sub(self.pos, self.pos)
@@ -108,7 +126,11 @@ function TokenStack:run_once()
         if self.get_opposite(char) == last_token then
             self.stack = self.stack:sub(1, -2)
         else
-            self.stack = self.stack .. char
+            if not self.stack:match("[\"']$") and not self.stack:match("%[%[$") then
+                if not self.requires_literal or self.stack:match("^{") or char == "{" then
+                    self.stack = self.stack .. char
+                end
+            end
         end
     end
 
@@ -118,6 +140,10 @@ end
 function TokenStack:run_until_empty()
     while not self:is_empty() do
         self:run_once()
+
+        if self.pos > #self.text + 1 then
+            error("TokenStack out of text bounds")
+        end
     end
 end
 

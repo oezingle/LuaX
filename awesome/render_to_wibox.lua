@@ -63,7 +63,6 @@ end
 
 local function render_to_wibox(container)
     local renderer = Renderer(GearsWorkLoop)
-    local render = renderer:get_render()
 
     --[[
     local element = create_element("wibox.layout.flex.horizontal", {
@@ -79,7 +78,7 @@ local function render_to_wibox(container)
 
     local root = WiboxElement.get_root(container)
 
-    render(element, root)
+    renderer:render(element, root)
 end
 
 return render_to_wibox

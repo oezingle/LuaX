@@ -1,5 +1,6 @@
 
 local transpile_create_element = require("src.util.parser.transpile.create_element")
+local split_literals           = require("src.util.parser.transpile.split_literals")
 
 --[[
     TODO I don't love this implementation. debug.getlocal could be an option but that's not recommended by Lua maintainers.
@@ -28,15 +29,18 @@ local function component_name(components, components_mode, name)
     end
 end
 
---- Statically convert an XML node to a create_element_call
+--- Statically convert an XML node to a create_element() call
 ---@param node LuaX.Language.Node
 ---@param components table<string, true> hash map for speed
 ---@param components_mode "local" | "global"
-local function transpile_node_to_element(node, components, components_mode)
+---@param create_element string
+---@return string
+local function transpile_node_to_element(node, components, components_mode, create_element)
     if node.type == "literal" then
-        -- TODO FIXME not so fast buster! any lua code will be interpreted as a static string!
+        local value = split_literals(node.value)
 
-        return transpile_create_element("\"LITERAL_NODE\"", { value = string.format("%q", node.props.value) })
+        -- TOOD this feels hacky.
+        return transpile_create_element(create_element, "\"LITERAL_NODE\"", { value = "{" .. value .. "}" })
     end
 
     --[[
@@ -58,7 +62,7 @@ local function transpile_node_to_element(node, components, components_mode)
     -- Otherwise mode
     if node.type == "element" then
         ---@type table<string, string|table>
-        local props = node.props
+        local props = node.props or {}
         --[[
         for name, value in pairs(node.props) do
             if value == "" then
@@ -76,7 +80,7 @@ local function transpile_node_to_element(node, components, components_mode)
             local children = {}
 
             for i, kid in ipairs(kids) do
-                children[i] = transpile_node_to_element(kid, components, components_mode)
+                children[i] = "{" .. transpile_node_to_element(kid, components, components_mode, create_element) .. "}"
             end
 
             props.children = children
@@ -85,7 +89,7 @@ local function transpile_node_to_element(node, components, components_mode)
         local name = node.name
         local component = component_name(components, components_mode, name)
 
-        return transpile_create_element(component, props)
+        return transpile_create_element(create_element, component, props)
     end
 
     error(string.format("Can't transpile XML node of type %s", node.type))

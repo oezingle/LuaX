@@ -1,7 +1,9 @@
 local class                 = require("lib.30log")
 local count_children_by_key = require("src.util.NativeElement.helper.count_children_by_key")
 local set_child_by_key      = require("src.util.NativeElement.helper.set_child_by_key")
-local list_reduce = require("src.util.polyfill.list.reduce")
+local list_reduce           = require("src.util.polyfill.list.reduce")
+
+require("src.types.LuaX")
 
 -- TODO maybe move text nodes to handle_text_node(parent) ?
 
@@ -37,6 +39,7 @@ local list_reduce = require("src.util.polyfill.list.reduce")
 ---
 ---@field get_prop fun(self: self, prop: string): any
 ---
+---@field components string[]? class static property - components implemented by this class.
 ---@operator call : LuaX.NativeElement
 local NativeElement = class("NativeElement")
 
@@ -51,11 +54,11 @@ function NativeElement:get_children_by_key(key)
     --     print(self:get_type(), "children", children, #children)
     -- end
 
-    return list_reduce(key, function (children, key_slice)
+    return list_reduce(key, function(children, key_slice)
         if not children then
             return nil
         end
-        
+
         return children[key_slice]
     end, children or {})
 end

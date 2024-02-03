@@ -1,5 +1,4 @@
 local LuaXParser = require("src.util.parser.LuaXParser")
-local pprint     = require("lib.pprint")
 
 describe("LuaXParser", function()
     it("parses tags with neither children nor props nicely", function()
@@ -82,7 +81,7 @@ describe("LuaXParser", function()
         local node = parser:parse_tag(start)
 
         assert.equal("element", node.type)
-        assert.equal("Fragment", node.name)
+        assert.equal(LuaXParser.FRAGMENT_AUTO_IMPORT_NAME, node.name)
 
         assert.equal(1, #node.children)
 
@@ -102,26 +101,87 @@ describe("LuaXParser", function()
         assert.equal("{true}", node.props.container)
     end)
 
-    it("runs parse_all without issue", function ()
-        local xml = LuaXParser([[
+    it("runs parse_all without issue", function()
+        local node = LuaXParser([[
 
 
             <div meep />
         ]]):parse_all()
 
-        assert.equal("div", xml.name)
-        assert.equal("{true}", xml.props.meep)
+        assert.equal("div", node.name)
+        assert.equal("{true}", node.props.meep)
     end)
 
-    it("fails parse_all with multiple parents", function ()
-        local success = pcall(function ()
+    it("fails parse_all with multiple parents", function()
+        local success = pcall(function()
             LuaXParser([[
                 <div meep />
-    
+
                 end text
-            ]]):parse_all()                
+            ]]):parse_all()
         end)
 
         assert.False(success)
+    end)
+
+    it("parses literal children", function()
+        local parser = LuaXParser([[
+            <>
+                {props.message}
+            </>
+        ]])
+
+        local start = parser:skip_whitespace()
+
+        local node = parser:parse_tag(start)
+
+        assert.equal("{props.message}", node.children[1].value)
+    end)
+
+    it("parses literal children", function()
+        local parser = LuaXParser([[
+            <>
+                {props.message}
+            </>
+        ]])
+
+        local start = parser:skip_whitespace()
+
+        local node = parser:parse_tag(start)
+
+        assert.equal("{props.message}", node.children[1].value)
+    end)
+
+    it("parses wholeass files", function()
+        -- require("src.util.replace_warn")
+
+        -- TODO FIXME whitespace issues.
+        local transpiled = LuaXParser([[
+            local Fragment = require("src.components.Fragment")
+
+            local function Component (props)
+                return (
+                    <>
+                        {props.message}
+                    </>
+                )
+            end
+
+            return Component
+        ]]):parse_file()
+
+        -- print(transpiled)
+
+        local run_transpiled, err = load(transpiled, "transpiled LuaX")
+
+        if not run_transpiled then
+            error(err)
+        end
+
+        local Component = run_transpiled()
+
+        local element = Component({ message = "a string!" })
+
+        assert.equal("a string!", element.props.children[1].props.value)
     end)
 end)

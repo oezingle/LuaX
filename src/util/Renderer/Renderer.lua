@@ -72,7 +72,8 @@ function components can't just check own children, they need to check all childr
 ---@param component LuaX.ElementNode | nil
 ---@param container LuaX.NativeElement
 ---@param key LuaX.Key
-function Renderer:render_pure_component(component, container, key)
+---@param caller LuaX.ElementNode?
+function Renderer:render_pure_component(component, container, key, caller)
     if component == nil then
         -- container:set_child(index, nil)
         container:delete_children_by_key(key)
@@ -107,28 +108,26 @@ function Renderer:render_pure_component(component, container, key)
     -- handle children using workloop
     local children = component.props['children']
 
-    local current_children = node:get_children_by_key({}) or {}
-        
-    if children then
-        local workloop = self.workloop
+    if not caller or not caller.props['children'] or caller.props['children'] ~= children then
+        local current_children = node:get_children_by_key({}) or {}
 
-        local size = max(#current_children, #children)
-        
-        for index, child in ipairs_with_nil(children, size) do
-            workloop:add(function()
-                self:render_keyed_child(child, node, { index })
-            end)
+        if children then
+            local workloop = self.workloop
+
+            local size = max(#current_children, #children)
+
+            for index, child in ipairs_with_nil(children, size) do
+                workloop:add(function()
+                    self:render_keyed_child(child, node, { index })
+                end)
+            end
+
+            workloop:start()
+        else
+            -- TODO FIXME does there exist a scenario where a pure component's children will change? probably!
         end
-
-        workloop:start()
-    else
-        -- TODO does this work? (no!)
-
-        -- TODO check for children first - otherwise causes error
-        -- container:delete_children_by_key()
-
-        -- container:insert_child_by_key({}, {} --[[ @as LuaX.NativeElement ]])
     end
+
 
     -- Append to parent node
     if not existing_child then
@@ -163,9 +162,10 @@ end
 ---@param element LuaX.ElementNode | nil
 ---@param container LuaX.NativeElement
 ---@param key LuaX.Key
-function Renderer:render_keyed_child(element, container, key)
+---@param caller LuaX.ElementNode?
+function Renderer:render_keyed_child(element, container, key, caller)
     if not element or type(element.type) == "string" then
-        self:render_pure_component(element, container, key)
+        self:render_pure_component(element, container, key, caller)
     elseif type(element.type) == "function" then
         if not element._component then
             local component = element.type

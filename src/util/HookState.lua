@@ -1,6 +1,8 @@
 local class = require("lib.30log")
 local ipairs_with_nil = require("src.util.ipairs_with_nil")
 
+---@alias LuaX.HookState.Context table<table, table>
+
 ---@alias LuaX.HookState.Listener fun(index: number, value: any)
 
 ---@class LuaX.HookState : Log.BaseFunctions
@@ -15,8 +17,35 @@ function HookState:init()
 
     self.listeners = {}
 
+    -- TODO FIXME only need to inherit one context table? i think!
+
+    --[[
+    self.context_inherit = {}
+    self.context = setmetatable({}, {
+        __index = function (_, key) 
+            for _, inherited in ipairs(self.context_inherit) do
+                if inherited[key] then
+                    return inherited[key]
+                end
+            end
+        end
+    })
+    ]]
+
     self.index = 1
 end
+
+--[[
+---@param context LuaX.Context
+function HookState:get_context(context)
+    return self.context[context]
+end
+
+---@param contexts LuaX.HookState.Context[]
+function HookState:inherit_contexts(contexts)
+
+end
+]]
 
 function HookState:reset()
     self.index = 1
@@ -52,7 +81,7 @@ end
 
 ---@param index number
 ---@param value any
-function HookState:modified (index, value)
+function HookState:modified(index, value)
     for _, listener in pairs(self.listeners) do
         listener(index, value)
     end
@@ -83,7 +112,7 @@ function HookState:__tostring()
         else
             hook_str = tostring(hook)
         end
-        
+
         table.insert(hooks, "\t" .. tostring(hook_str))
     end
 

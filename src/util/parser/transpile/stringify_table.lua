@@ -1,3 +1,5 @@
+-- TODO lua-ext also provides table stringification - probably does it better.
+
 ---@param input any
 ---@return string
 local stringify = function(input)
