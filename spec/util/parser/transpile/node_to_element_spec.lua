@@ -11,7 +11,7 @@ describe("transpile_node_to_element", function ()
                 <div />
             ]]):parse_all()
     
-            local transpiled = transpile_node_to_element(xml, { div = true }, "global")
+            local transpiled = transpile_node_to_element(xml, { div = true }, "global", "create_element")
 
             assert.equal(expected, transpiled)
         end)
@@ -21,7 +21,7 @@ describe("transpile_node_to_element", function ()
                 <div />
             ]]):parse_all()
     
-            local transpiled = transpile_node_to_element(xml, {}, "local")
+            local transpiled = transpile_node_to_element(xml, {}, "local", "create_element")
 
             assert.equal(expected, transpiled)
         end)
@@ -35,7 +35,7 @@ describe("transpile_node_to_element", function ()
                 <div />
             ]]):parse_all()
     
-            local transpiled = transpile_node_to_element(xml, { }, "global")
+            local transpiled = transpile_node_to_element(xml, { }, "global", "create_element")
 
             assert.equal(expected, transpiled)
         end)
@@ -45,7 +45,7 @@ describe("transpile_node_to_element", function ()
                 <div />
             ]]):parse_all()
     
-            local transpiled = transpile_node_to_element(xml, { div = true }, "local")
+            local transpiled = transpile_node_to_element(xml, { div = true }, "local", "create_element")
 
             assert.equal(expected, transpiled)
         end)
@@ -58,7 +58,7 @@ describe("transpile_node_to_element", function ()
             />
         ]]):parse_all()
 
-        local transpiled = transpile_node_to_element(xml, {}, "local")
+        local transpiled = transpile_node_to_element(xml, {}, "local", "create_element")
         local expected = 'create_element("div", { ["class"]="container" })'
 
         assert.equal(expected, transpiled)
@@ -71,7 +71,7 @@ describe("transpile_node_to_element", function ()
             />
         ]]):parse_all()
 
-        local transpiled = transpile_node_to_element(xml, {}, "local")
+        local transpiled = transpile_node_to_element(xml, {}, "local", "create_element")
         local expected = 'create_element("div", { ["on_click"]=function() print(\'Hello world!\') end })'
 
         assert.equal(expected, transpiled)
@@ -84,7 +84,7 @@ describe("transpile_node_to_element", function ()
             />
         ]]):parse_all()
 
-        local transpiled = transpile_node_to_element(xml, {}, "local")
+        local transpiled = transpile_node_to_element(xml, {}, "local", "create_element")
         local expected = 'create_element("div", { ["container"]=true })'
 
         assert.equal(expected, transpiled)

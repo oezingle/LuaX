@@ -12,6 +12,14 @@ local imports = {
     use_memo = "src.hooks.use_memo"
 }
 
+--[[
+if not ... then
+    error("this file must be require()'d")
+end
+
+local folder_of_this_file = (...):match("(.-)%.[^%.]+$") or ""
+]]
+
 return setmetatable({}, {
     __index = function(_, key)
         local src = imports[key]

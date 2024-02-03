@@ -7,3 +7,5 @@
 local function create_context (default)
     return {} or default
 end
+
+return create_context

@@ -1,8 +1,6 @@
 local class = require("lib.30log")
 local ipairs_with_nil = require("src.util.ipairs_with_nil")
 
----@alias LuaX.HookState.Context table<table, table>
-
 ---@alias LuaX.HookState.Listener fun(index: number, value: any)
 
 ---@class LuaX.HookState : Log.BaseFunctions

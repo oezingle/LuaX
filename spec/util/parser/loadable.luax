@@ -1,0 +1,10 @@
+
+local function Component ()
+    return (
+        <>
+
+        </>
+    )
+end
+
+return Component
