@@ -63,16 +63,6 @@ function NativeElement:get_children_by_key(key)
     end, children or {})
 end
 
---[[
--- TODO does storing these values actually matter?
-function NativeElement:set_key(key)
-    self._key = key
-end
-function NativeElement:get_key()
-    return self._key
-end
-]]
-
 function NativeElement:set_prop_virtual(prop, value)
     self._virtual_props = self._virtual_props or {}
 

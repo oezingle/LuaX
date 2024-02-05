@@ -1,3 +1,4 @@
+---@nospec
 
 ---@type LuaX.Generic.FunctionComponent<LuaX.PropsWithChildren<{}>>
 local function Fragment (props)

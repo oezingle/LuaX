@@ -9,7 +9,7 @@ function DefaultWorkLoop:init(opts)
 
     if not opts.supress_warning then
         warn(
-            "LuaX Renderer is using a default work loop! " ..
+            "LuaX Renderer is using a default (synchronous) work loop! " ..
             "This is not recommended as it will freeze " ..
             "the main thread until rendering is done."
         )

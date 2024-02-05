@@ -1,4 +1,4 @@
-local NativeElement = require("src.util.NativeElement")
+local NativeElement = require("src.util.NativeElement.NativeElement")
 local split         = require("src.util.polyfill.string.split")
 
 ---@class LuaX.XMLElement : LuaX.NativeElement

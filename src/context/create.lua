@@ -1,11 +1,11 @@
 
----@alias LuaX.Context table
+local Context = require("src.context.Context")
 
----@generic T : LuaX.Context
+---@generic T
 ---@param default T?
----@return T
+---@return LuaX.Context<T>
 local function create_context (default)
-    return {} or default
+    return Context(default)
 end
 
 return create_context

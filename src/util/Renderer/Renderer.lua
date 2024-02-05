@@ -108,7 +108,8 @@ function Renderer:render_pure_component(component, container, key, caller)
     -- handle children using workloop
     local children = component.props['children']
 
-    if not caller or not caller.props['children'] or caller.props['children'] ~= children then
+    -- TODO this kind of optimization would be nice but can't work as of rn.
+    -- if not caller or caller.props['children'] ~= children then
         local current_children = node:get_children_by_key({}) or {}
 
         if children then
@@ -118,7 +119,7 @@ function Renderer:render_pure_component(component, container, key, caller)
 
             for index, child in ipairs_with_nil(children, size) do
                 workloop:add(function()
-                    self:render_keyed_child(child, node, { index })
+                    self:render_keyed_child(child, node, { index }, caller)
                 end)
             end
 
@@ -126,8 +127,7 @@ function Renderer:render_pure_component(component, container, key, caller)
         else
             -- TODO FIXME does there exist a scenario where a pure component's children will change? probably!
         end
-    end
-
+    -- end
 
     -- Append to parent node
     if not existing_child then
@@ -141,20 +141,20 @@ end
 function Renderer:_render_function_component(element, container, key)
     local rendered = element._component:render(element.props)
 
+    -- ignore rendering if the component is destined for a re-render
     if not element._component.requests_rerender then
         -- Function components are allowed to return lists of children
         -- (not really -- this isn't good behaviour but fixes Fragments and is React compatible)
         if type(rendered) == "table" and not rendered.type then
-            -- TODO does this work? no - breaks!
             local current_children = container:get_children_by_key(key) or {}
 
             local size = max(#current_children, #rendered)
 
             for i, child in ipairs_with_nil(rendered, size) do
-                self:render_keyed_child(child, container, key_add(key, i))
+                self:render_keyed_child(child, container, key_add(key, i), element)
             end
         else
-            self:render_keyed_child(rendered, container, key)
+            self:render_keyed_child(rendered, container, key, element)
         end
     end
 end
@@ -171,6 +171,13 @@ function Renderer:render_keyed_child(element, container, key, caller)
             local component = element.type
 
             local component_instance = FunctionComponentInstance(component)
+
+            -- Attach parent contexts
+            if caller and caller._component then
+                local inherit = caller._component:get_contexts()
+
+                component_instance:inherit_contexts(inherit)
+            end
 
             component_instance:on_change(function()
                 self.workloop:add(function()

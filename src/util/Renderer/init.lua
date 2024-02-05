@@ -1,3 +1,4 @@
+---@nospec
 
 -- see decisions/no_code_init.md
 

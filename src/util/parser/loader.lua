@@ -2,9 +2,10 @@
 
 local LuaXParser = require("src.util.parser.LuaXParser")
 
+local sep = require("src.util.polyfill.path.sep")
+
 ---@param modulename string
 local function luax_loader(modulename)
-    local sep = package.config:sub(1, 1)
 
     local modulepath = string.gsub(modulename, "%.", sep)
 
@@ -20,7 +21,7 @@ local function luax_loader(modulename)
 
             local transpiled = LuaXParser(content):parse_file()
 
-            local get_module, err = load(transpiled, modulename)
+            local get_module, err = load(transpiled, filename)
 
             if not get_module then
                 error(err)

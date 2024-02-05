@@ -14,6 +14,8 @@
 
 - https://luals.github.io/wiki/plugins/
 
+- how the fuck do context consumers work
+
 ### Links
 - [Didact](https://pomb.us/build-your-own-react/)
 - [bundle with darklua](https://darklua.com/)

@@ -6,6 +6,8 @@ local ipairs_with_nil = require("src.util.ipairs_with_nil")
 
 ---@class LuaX.ComponentInstance : Log.BaseFunctions
 ---@field handlers LuaX.ComponentInstance.ChangeHandler[]
+---@field get_contexts fun(self: self): table<LuaX.Context, table>
+---@field inherit_contexts fun(self: self, contexts: table<LuaX.Context, table>)
 ---
 --- flag set for if the renderer is going to be called again, in which case returend children are ignored
 ---@field requests_rerender boolean
@@ -66,14 +68,22 @@ function FunctionComponentInstance:render(props)
     return element
 end
 
-function FunctionComponentInstance:__gc ()
+function FunctionComponentInstance:get_contexts()
+    return self.hookstate:get_contexts()
+end
+
+function FunctionComponentInstance:inherit_contexts(contexts)
+    self.hookstate:inherit_contexts(contexts)
+end
+
+function FunctionComponentInstance:__gc()
     local hooks = self.hookstate.values
     local length = self.hookstate.index
 
     for _, hook in ipairs_with_nil(hooks, length) do
         if hook.on_remove then
             hook.on_remove()
-        end 
+        end
     end
 end
 

@@ -1,3 +1,4 @@
+---@nospec
 
 local class = require("lib.30log")
 local LinkedList = require("src.util.LinkedList")
