@@ -18,7 +18,7 @@ describe("get_element_name", function()
 
         local name = get_element_name(element)
 
-        assert.truthy(name:match("Function defined at"))
+        assert.truthy(name:match("function_component"))
     end)
 
     

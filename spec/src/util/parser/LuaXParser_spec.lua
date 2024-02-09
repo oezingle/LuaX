@@ -124,7 +124,7 @@ describe("LuaXParser", function()
         assert.False(success)
     end)
 
-    it("parses literal children", function()
+    it("parses lua block children", function()
         local parser = LuaXParser([[
             <>
                 {props.message}
@@ -135,27 +135,12 @@ describe("LuaXParser", function()
 
         local node = parser:parse_tag(start)
 
-        assert.equal("{props.message}", node.children[1].value)
+        assert.equal("{props.message}", node.children[1].props.value)
     end)
 
-    it("parses literal children", function()
-        local parser = LuaXParser([[
-            <>
-                {props.message}
-            </>
-        ]])
-
-        local start = parser:skip_whitespace()
-
-        local node = parser:parse_tag(start)
-
-        assert.equal("{props.message}", node.children[1].value)
-    end)
+    -- TODO FIXME test lua block props
 
     it("parses wholeass files", function()
-        -- require("src.util.replace_warn")
-
-        -- TODO FIXME whitespace issues.
         local transpiled = LuaXParser([[
             local Fragment = require("src.components.Fragment")
 

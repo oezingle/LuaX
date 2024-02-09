@@ -8,6 +8,7 @@ local find_ending_tag       = require("src.util.parser.find_ending_tag")
 local collect_locals        = require("src.util.parser.transpile.collect_locals")
 local node_to_element       = require("src.util.parser.transpile.node_to_element")
 local NativeElement         = require("src.util.NativeElement")
+local warn_once             = require("src.util.warn_once")
 
 local require_path          = (...)
 
@@ -38,11 +39,12 @@ local require_path          = (...)
 -- ---@field pos integer
 ---@field text string
 ---@field indent string
+---@field imports table<"fragment" | "luablock", boolean>
 ---@operator call:LuaX.Parser
 local LuaXParser = class("LuaXParser")
 
 LuaXParser.FRAGMENT_AUTO_IMPORT_NAME = "_LuaX_Fragment"
-
+LuaXParser.LUA_BLOCK_AUTO_IMPORT_NAME = "_LuaX_Lua_Block"
 LuaXParser.CREATE_ELEMENT_IMPORT_NAME = "_LuaX_create_element"
 
 
@@ -53,6 +55,8 @@ function LuaXParser:init(text)
     local unindented = remove_default_indent(text)
 
     self.indent = get_indent(unindented)
+
+    self.imports = {}
 
     self.text = unindented
 end
@@ -192,6 +196,10 @@ function LuaXParser:parse_tag(pos, depth)
         do
             pos = self:skip_whitespace(pos)
 
+            local tag_is_auto_fragment = tag_name == self.FRAGMENT_AUTO_IMPORT_NAME
+
+            self.imports.fragment = tag_is_auto_fragment or self.imports.fragment
+
             local end_tag = self.text:sub(pos):match("^</%s*" .. escape_pattern(tag_name) .. "%s*>") or
                 -- match fragment ends </>
                 tag_name == self.FRAGMENT_AUTO_IMPORT_NAME and self.text:sub(pos):match("^</%s*>")
@@ -213,23 +221,76 @@ function LuaXParser:parse_tag(pos, depth)
 end
 
 ---@param nodes LuaX.Language.Node[]
+---@param slice string
+---@param is_luablock boolean
+function LuaXParser:luablock_handle_slice(nodes, slice, is_luablock)
+    if is_luablock then
+        self.imports.luablock = true
+
+        ---@type LuaX.Language.Element
+        local element = {
+            type = "element",
+            name = LuaXParser.LUA_BLOCK_AUTO_IMPORT_NAME,
+            children = {},
+            props = { value = "{" .. slice .. "}" }
+        }
+
+        table.insert(nodes, element)
+    else
+        if #slice == 0 then
+            return
+        end
+
+        table.insert(nodes, {
+            type = "literal",
+            value = slice
+        })
+    end
+end
+
+--- Handle literal values, splitting into LuaBlocks if necessary.
+---@param nodes LuaX.Language.Node[]
+---@param text string
+function LuaXParser:split_luablocks(nodes, text)
+    local tokenstack = TokenStack(text)
+    tokenstack.requires_literal = true
+
+    local last_is_literal = false
+    local last_start = 1
+
+    while tokenstack.pos <= #text + 1 do
+        tokenstack:run_once()
+
+        local is_literal = not tokenstack:is_empty()
+
+        if is_literal ~= last_is_literal then
+            local slice = text:sub(last_start, tokenstack.pos - 2)
+
+            self:luablock_handle_slice(nodes, slice, not is_literal)
+
+            last_start = tokenstack.pos
+
+            last_is_literal = is_literal
+        end
+    end
+
+    -- TODO can i assume this isn't a literal? seems like it!
+    local slice = text:sub(last_start, tokenstack.pos - 2)
+    self:luablock_handle_slice(nodes, slice, false)
+end
+
+---@param nodes LuaX.Language.Node[]
 ---@param value string
 ---@param indent string
 ---@param depth integer
-local function add_literal(nodes, value, indent, depth)    
+function LuaXParser:add_literal(nodes, value, indent, depth)
     if value:match("^%s*$") then
-        return ""
+        return
     end
 
     local cleaned = clean_text(value, indent, depth)
-    
-    ---@type LuaX.Language.Literal
-    local node = {
-        type = "literal",
-        value = cleaned
-    }
 
-    table.insert(nodes, node)
+    self:split_luablocks(nodes, cleaned)
 end
 
 --- TODO FIXME fails with literal in here.
@@ -258,7 +319,7 @@ function LuaXParser:parse_string(start, length, depth)
 
             if current == "<" then
                 -- move current text into a literal
-                add_literal(nodes, text:sub(last_literal_start, pos - 1), self.indent, depth)
+                self:add_literal(nodes, text:sub(last_literal_start, pos - 1), self.indent, depth)
 
                 local element, new_pos = self:parse_tag(start + pos - 1, depth)
 
@@ -273,7 +334,7 @@ function LuaXParser:parse_string(start, length, depth)
         tokenstack:run_once()
     end
 
-    add_literal(nodes, text:sub(last_literal_start, pos - 1), self.indent, depth)
+    self:add_literal(nodes, text:sub(last_literal_start, pos - 1), self.indent, depth)
 
     -- TODO return pos
     return nodes, pos
@@ -305,24 +366,52 @@ end
 -- TODO don't love this approach but it might be the best we have
 local luax_root = require_path:gsub("%.util%.parser%.LuaXParser$", "")
 
---- Check if any nodes use the implicit fragment notation (<>...</>)
----@param node LuaX.Language.Node
-local function find_uses_fragment(node)
-    if node.type == "element" and node.name == LuaXParser.FRAGMENT_AUTO_IMPORT_NAME then
-        return true
-    end
+function LuaXParser.collect_global_components()
+    -- Check if we can safely use global mode for component names
+    local globals = {}
 
-    if node.children then
-        for _, child in ipairs(node.children) do
-            if find_uses_fragment(child) then
-                return true
+    ---@type LuaX.NativeElement[]
+    local subclasses_of_native_element = NativeElement:subclasses()
+
+    if #subclasses_of_native_element > 0 then
+        for _, NativeElementImplementation in ipairs(subclasses_of_native_element) do
+            -- saves some memory to do this here, as every string from this class in globals will be the same
+            local implementation_name = tostring(NativeElementImplementation)
+
+            if not NativeElementImplementation.components then
+                warn_once(string.format(
+                    "LuaX Parser: NativeElement subclass %s does not have a component registry list - defaulting to local variable lookup",
+                    implementation_name
+                ))
+
+                return nil
+            end
+
+            for _, component_name in ipairs(NativeElementImplementation.components) do
+                if globals[component_name] then
+                    warn_once(string.format(
+                        "LuaX Parser: Multiple NativeElement implementations implement the element '%s'. Ignoring from %s, using existing from %s",
+                        component_name, implementation_name, globals[component_name]
+                    ))
+                end
+
+                -- so that we can look up which implementation uses this
+                globals[component_name] = implementation_name
             end
         end
+    else
+        warn_once(
+            "LuaX Parser: NativeElement has not been extended yet - defaulting to local variable lookup" .. '\n' ..
+            "to use global mode, import your NativeElement implementation before any LuaX files"
+        )
+
+        return nil
     end
 
-    return false
+    return globals
 end
 
+-- TODO match calls to LuaX([[ ...tag... ]])
 -- TODO needs to match function call ie render(<aApp />)
 -- TODO needs to match no child
 -- TODO needs to match array element { <App> }
@@ -337,53 +426,10 @@ function LuaXParser:parse_file()
         self.text
 
     -- Check if we can safely use global mode for component names
-    local globals = {}
-    local global_mode = true
-
-    ---@type LuaX.NativeElement[]
-    local subclasses_of_native_element = NativeElement:subclasses()
-
-    if #subclasses_of_native_element > 0 then
-        for _, NativeElementImplementation in ipairs(subclasses_of_native_element) do
-            -- saves some memory to do this here, as every string from this class in globals will be the same
-            local implementation_name = tostring(NativeElementImplementation)
-
-            if not NativeElementImplementation.components then
-                warn(string.format(
-                    "NativeElement subclass %s does not have a component registry list - defaulting to local variable lookup",
-                    implementation_name
-                ))
-
-                global_mode = false
-
-                break
-            end
-
-            for _, component_name in ipairs(NativeElementImplementation.components) do
-                if globals[component_name] then
-                    warn(string.format(
-                        "Multiple NativeElement implementations implement the element '%s'. Ignoring from %s, using existing from %s",
-                        component_name, implementation_name, globals[component_name]
-                    ))
-                end
-
-                -- so that we can look up which implementation uses this
-                globals[component_name] = implementation_name
-            end
-        end
-    else
-        warn(
-            "NativeElement has not been extended yet - defaulting to local variable lookup" .. '\n' ..
-            "to use global mode, import your NativeElement implementation before any LuaX files"
-        )
-
-        global_mode = false
-    end
+    local globals = LuaXParser.collect_global_components()
 
 
     local locals = collect_locals(self.text)
-
-    local uses_fragment = false
 
     repeat
         local _, multiline_match = self.text:find("%(%s*<")
@@ -398,20 +444,23 @@ function LuaXParser:parse_file()
 
         local _, endpos = self:parse_tag(match)
 
-        -- TODO this is super wasteful
+        -- TODO this is super wasteful ( ok for now - wastes time but transpile is ok )
         -- new instance here to fix whitespace issues (this is an awful fix!)
         local parser = LuaXParser(self.text:sub(match, endpos))
         local parsed = parser:parse_tag(1)
 
-        if not uses_fragment then
-            uses_fragment = find_uses_fragment(parsed)
-        end
+        self.imports.fragment = parser.imports.fragment or self.imports.fragment
+        self.imports.luablock = parser.imports.luablock or self.imports.luablock
 
-        if uses_fragment then
+        if self.imports.fragment then
             locals[self.FRAGMENT_AUTO_IMPORT_NAME] = true
         end
 
-        local transpiled = global_mode and
+        if self.imports.luablock then
+            locals[self.LUA_BLOCK_AUTO_IMPORT_NAME] = true
+        end
+
+        local transpiled = globals and
             node_to_element(parsed, globals, "global", self.CREATE_ELEMENT_IMPORT_NAME) or
             node_to_element(parsed, locals, "local", self.CREATE_ELEMENT_IMPORT_NAME)
 
@@ -419,9 +468,16 @@ function LuaXParser:parse_file()
         self.text = insert_at(self.text, transpiled, match, endpos)
     until false
 
-    if uses_fragment then
+    if self.imports.fragment then
         self.text =
             string.format("local %s = require(%q).Fragment", self.FRAGMENT_AUTO_IMPORT_NAME, luax_root) ..
+            "\n" ..
+            self.text
+    end
+
+    if self.imports.luablock then
+        self.text =
+            string.format("local %s = require(%q).LuaBlock", self.LUA_BLOCK_AUTO_IMPORT_NAME, luax_root) ..
             "\n" ..
             self.text
     end

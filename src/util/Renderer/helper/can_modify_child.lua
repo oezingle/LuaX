@@ -5,7 +5,6 @@
 ---@param container LuaX.NativeElement
 ---@param key LuaX.Key
 local function can_modify_child (child, container, key)
-    -- TODO might need to include a pcall fail catcher - what if a deep child tries to check this function?
     local existing_children = container:get_children_by_key(key)
 
     -- This child currently is nil

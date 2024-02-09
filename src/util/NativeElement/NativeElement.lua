@@ -5,7 +5,10 @@ local list_reduce           = require("src.util.polyfill.list.reduce")
 
 require("src.types.LuaX")
 
--- TODO maybe move text nodes to handle_text_node(parent) ?
+--[[
+    - count_children_by_key seems like it could have performance issues.
+        - pretty much any key function is probably disaterously slow
+]]
 
 -- Helper type
 ---@alias LuaX.NativeElement.ChildrenByKey LuaX.NativeElement  | LuaX.NativeElement.ChildrenByKey[] | LuaX.NativeElement.ChildrenByKey[][]
@@ -27,21 +30,26 @@ require("src.types.LuaX")
 ---
 --- Abstract Methods
 ---@field set_prop fun(self: self, prop: string, value: any)
----@field insert_child fun(self: self, index: number, element: LuaX.NativeElement)
----@field delete_child fun(self: self, index: number)
+---@field insert_child fun(self: self, index: number, element: LuaX.NativeElement, is_text: boolean)
+---@field delete_child fun(self: self, index: number, is_text: boolean)
 ---
 ---@field create_element fun(type: string): LuaX.NativeElement
 ---@field get_root fun(native: any): LuaX.NativeElement Convert a passed object to a root node
 ---
 --- Optional Methods (recommended)
 ---@field get_type  nil | fun(self: self): string
----@field create_literal nil | fun(value: string): LuaX.NativeElement TODO special rules here?
+---@field create_literal nil | fun(value: string, parent: LuaX.NativeElement): LuaX.NativeElement TODO special rules here?
 ---
 ---@field get_prop fun(self: self, prop: string): any
 ---
 ---@field components string[]? class static property - components implemented by this class.
 ---@operator call : LuaX.NativeElement
 local NativeElement = class("NativeElement")
+
+NativeElement._dependencies = {}
+
+---@type LuaX.NativeTextElement
+NativeElement._dependencies.NativeTextElement = nil
 
 function NativeElement:init()
     error("NativeElement must be extended to use for components")
@@ -50,14 +58,17 @@ end
 function NativeElement:get_children_by_key(key)
     local children = self._children_by_key
 
-    -- if children then
-    --     print(self:get_type(), "children", children, #children)
-    -- end
-
     return list_reduce(key, function(children, key_slice)
         if not children then
             return nil
         end
+
+        -- TODO could be a nice warning?
+        --[[
+        if children.class then
+            warn("Child NativeElement but expected keyed")
+        end
+        ]]
 
         return children[key_slice]
     end, children or {})
@@ -81,7 +92,7 @@ function NativeElement:set_prop_safe(prop, value)
         self.class.set_prop_safe = self.set_prop_virtual
     end
 
-    -- magic
+    -- magicially replaced
     self:set_prop_safe(prop, value)
 end
 
@@ -99,40 +110,60 @@ function NativeElement:_get_key_insert_index(key)
 
     local count = count_children_by_key(self._children_by_key, key)
 
-    --[[
-    io.stdout:write("key =")
-    for _, value in ipairs_with_nil(key) do
-        io.stdout:write(value, " ")
-    end
-    print()
-
-    print("count =", count)
-    ]]
-
     return count + 1
 end
 
+-- TODO this block is probably part of the reason only 1 literal can be rendered
 function NativeElement:insert_child_by_key(key, child)
     local insert_index = self:_get_key_insert_index(key)
+
+    local NativeTextElement = self._dependencies.NativeTextElement
+
+    local is_text = NativeTextElement and NativeTextElement:classOf(child.class) or false
+
+    -- print(self:get_type(), "adding native child", insert_index)
 
     -- Insert this child into the key table
     set_child_by_key(self._children_by_key, key, child)
 
-    self:insert_child(insert_index, child)
+    self:insert_child(insert_index, child, is_text)
 end
 
+-- TODO does key_children work here for Fragment(Fragment(..elements..)) ?
 function NativeElement:delete_children_by_key(key)
     -- print(self:get_type(), "delete_children_by_key", table.concat(key, " "))
 
     local delete_end = count_children_by_key(self._children_by_key, key)
 
     local key_children = self:get_children_by_key(key)
-    local key_child_count = key_children.class and 1 or #key_children
 
-    local delete_start = delete_end - key_child_count + 1
+    -- already no child here
+    if not key_children then
+        return
+    end
 
-    for i = delete_end, delete_start, -1 do
-        self:delete_child(i)
+    -- enforce table
+    if key_children.class then
+        key_children = { key_children }
+    end
+
+    local delete_start = delete_end - #key_children
+
+    -- iterate backwards
+    for i = #key_children, 1, -1 do
+        local child_index = delete_start + i
+
+        -- print(self:get_type(), "deleting native child", child_index)
+
+        local child = key_children[i]
+
+        -- TODO unmount handler
+
+        local NativeTextElement = self._dependencies.NativeTextElement
+
+        local is_text = NativeTextElement and NativeTextElement:classOf(child.class) or false
+
+        self:delete_child(child_index, is_text)
     end
 
     set_child_by_key(self._children_by_key, key, nil)

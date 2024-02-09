@@ -11,18 +11,13 @@ local function create_native_element(component, container)
         error("NativeElement cannot render non-pure component")
     end
 
-    local node = nil
-    if component.type == "LITERAL_NODE" and NativeElementImplementation.create_literal then
-        print(component.props.value)
+    if component.type == "LITERAL_NODE" and NativeElementImplementation.create_literal then        
+        local value = component.props.value
 
-        error("I need to handle literals much better.")
-        
-        --node = NativeElementImplementation.create_literal(component.props.value)
+        return NativeElementImplementation.create_literal(value, container)
     else
-        node = NativeElementImplementation.create_element(component_type)
+        return NativeElementImplementation.create_element(component_type)
     end
-
-    return node
 end
 
 return create_native_element

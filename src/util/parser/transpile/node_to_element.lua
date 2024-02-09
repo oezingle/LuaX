@@ -1,13 +1,5 @@
 
 local transpile_create_element = require("src.util.parser.transpile.create_element")
-local split_literals           = require("src.util.parser.transpile.split_literals")
-
---[[
-    TODO I don't love this implementation. debug.getlocal could be an option but that's not recommended by Lua maintainers.
-        - components return string_create_element
-        - string_create_element checks get_local_named (see spec/stupid/get_local.lua)
-        - if that local exists (and is a valid component), use it as a component
-]]
 
 --- Return the component's name as a string, either for a lua local,
 --- or quoted as a component for NativeElement to use
@@ -37,43 +29,14 @@ end
 ---@return string
 local function transpile_node_to_element(node, components, components_mode, create_element)
     if node.type == "literal" then
-        local value = split_literals(node.value)
-
         -- TOOD this feels hacky.
-        return transpile_create_element(create_element, "\"LITERAL_NODE\"", { value = "{" .. value .. "}" })
+        return transpile_create_element(create_element, "\"LITERAL_NODE\"", { value = node.value })
     end
-
-    --[[
-    if node.type == "root" then
-        local children = node.children
-
-        if not children then
-            return transpile_create_element("nil", {})
-        end
-
-        if #children > 1 then
-            error("LuaX XML should have only one parent element")
-        end
-
-        return transpile_node_to_element(children[1], components, components_mode)
-    end
-    ]]
 
     -- Otherwise mode
     if node.type == "element" then
         ---@type table<string, string|table>
         local props = node.props or {}
-        --[[
-        for name, value in pairs(node.props) do
-            if value == "" then
-                -- TODO is this line really needed? implicit true is ok with ""
-                ---@type any
-                value = true
-            end
-
-            props[name] = value
-        end
-        ]]
 
         local kids = node.children
         if kids and #kids >= 1 then
@@ -92,7 +55,7 @@ local function transpile_node_to_element(node, components, components_mode, crea
         return transpile_create_element(create_element, component, props)
     end
 
-    error(string.format("Can't transpile XML node of type %s", node.type))
+    error(string.format("Can't transpile LuaX node of type %s", node.type))
 end
 
 return transpile_node_to_element

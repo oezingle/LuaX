@@ -1,11 +1,21 @@
 local get_function_location = require("src.util.Renderer.helper.get_function_location")
+local get_function_name     = require("src.util.Renderer.helper.get_function_name")
 
 ---@param component LuaX.Component
 local function get_component_name(component)
     local t = type(component)
 
     if t == "function" then
-        return "Function defined at " .. get_function_location(component)
+        local location = get_function_location(component)
+        local name = get_function_name(location)
+
+        if name ~= location then
+            return string.format("%s (%s)", name, location)
+        else
+            -- fallback to just location
+            return "Function defined at " .. location
+        end
+
     elseif t == "string" then
         return component
     else

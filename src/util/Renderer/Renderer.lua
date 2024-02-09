@@ -55,20 +55,6 @@ function Renderer:set_workloop(workloop)
     return self
 end
 
---[[
-TODO add child by key
-    - keys set by create_element
-    - keys on function component should propogate to all its children
-
-function components can't just check own children, they need to check all children not passed as props.
-]]
-
--- TODO can function components return strings?
-
--- TODO CHECK OLD CHILDREN SO YOU DON'T WASTE RENDERS FUCK
-
--- TODO add index prop - check list of children by same key at that index to see if can be reused.
--- TODO reuse child if it exists
 ---@param component LuaX.ElementNode | nil
 ---@param container LuaX.NativeElement
 ---@param key LuaX.Key
@@ -96,6 +82,7 @@ function Renderer:render_pure_component(component, container, key, caller)
         node = create_native_element(component, container)
     end
 
+    -- set props
     for prop, value in pairs(component.props) do
         -- TODO table_equals could check functions for string.dump
         if prop ~= "children" and not table_equals(value, node:get_prop(prop)) then
@@ -104,29 +91,28 @@ function Renderer:render_pure_component(component, container, key, caller)
     end
 
 
-
     -- handle children using workloop
     local children = component.props['children']
 
     -- TODO this kind of optimization would be nice but can't work as of rn.
     -- if not caller or caller.props['children'] ~= children then
-        local current_children = node:get_children_by_key({}) or {}
+    local current_children = node:get_children_by_key({}) or {}
 
-        if children then
-            local workloop = self.workloop
+    if children then
+        local workloop = self.workloop
 
-            local size = max(#current_children, #children)
+        local size = max(#current_children, #children)
 
-            for index, child in ipairs_with_nil(children, size) do
-                workloop:add(function()
-                    self:render_keyed_child(child, node, { index }, caller)
-                end)
-            end
-
-            workloop:start()
-        else
-            -- TODO FIXME does there exist a scenario where a pure component's children will change? probably!
+        for index, child in ipairs_with_nil(children, size) do
+            workloop:add(function()
+                self:render_keyed_child(child, node, { index }, caller)
+            end)
         end
+
+        workloop:start()
+    else
+        -- TODO FIXME does there exist a scenario where a pure component's children will change? probably!
+    end
     -- end
 
     -- Append to parent node
@@ -143,6 +129,15 @@ function Renderer:_render_function_component(element, container, key)
 
     -- ignore rendering if the component is destined for a re-render
     if not element._component.requests_rerender then
+
+        -- TODO this works but causes flickers
+        -- Check if a pure component is sitting in this key, in which case we have to destroy it.
+        local existing = container:get_children_by_key(key)
+
+        if existing and existing.class then
+            container:delete_children_by_key(key)
+        end
+
         -- Function components are allowed to return lists of children
         -- (not really -- this isn't good behaviour but fixes Fragments and is React compatible)
         if type(rendered) == "table" and not rendered.type then

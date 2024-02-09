@@ -7,7 +7,10 @@
 ---@param shallow boolean?
 ---@return boolean
 local function table_equals(a, b, shallow)
-    shallow = shallow or false
+    -- I haven't done any tests, but this is probably faster?
+    local shallow = shallow or false
+    local a = a
+    local b = b
 
     -- could happen
     if a == b then

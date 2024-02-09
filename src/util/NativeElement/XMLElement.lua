@@ -1,6 +1,8 @@
 local NativeElement = require("src.util.NativeElement.NativeElement")
 local split         = require("src.util.polyfill.string.split")
 
+-- TODO either fix up or move to dead/
+
 ---@class LuaX.XMLElement : LuaX.NativeElement
 ---@field native { type: string, props: table<string, any>, children: LuaX.XMLElement[] }
 ---@operator call:LuaX.XMLElement

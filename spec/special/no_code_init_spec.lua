@@ -4,7 +4,7 @@ describe("Putting no code in init.lua", function()
     it("saves memory", function ()
         local memory_initial = collectgarbage("count")
 
-        local NativeElement1 = require("src.util.NativeElement.init")
+        local NativeElement1 = require("src.util.NativeElement")
 
         local memory_first_require = collectgarbage("count")
 

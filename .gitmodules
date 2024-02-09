@@ -10,3 +10,6 @@
 [submodule "lib/lua-ext"]
 	path = lib/lua-ext
 	url = https://github.com/thenumbernine/lua-ext.git
+[submodule "lib/argparse"]
+	path = lib/argparse
+	url = https://github.com/mpeterv/argparse.git

@@ -7,7 +7,7 @@ local function set_child_by_key(children_by_key, key, child)
     local first, restkey = key_first(key)
 
     if children_by_key.class then
-        error("children_by_key found a NativeElement when it expected an array!")
+        error("set_child_by_key found a NativeElement when it expected an array!")
     end
 
     if #restkey == 0 then

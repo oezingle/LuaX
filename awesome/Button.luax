@@ -1,0 +1,16 @@
+
+local function Button (props)
+    local function press (widget, lx, ly, button, mods, metadata)
+        if button ~= 4 and button ~= 5 then
+            props.onclick(widget, lx, ly, button, mods, metadata)
+        end
+    end
+
+    return (
+        <wibox.widget.textbox signal::button::press={press}>
+            {props.children}
+        </wibox.widget.textbox>
+    )
+end
+
+return Button

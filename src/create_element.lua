@@ -20,6 +20,7 @@ local get_function_location = require("src.util.Renderer.helper.get_function_loc
 ---@alias LuaX.CreateElement.Child LuaX.ElementNode | string | nil
 ---@alias LuaX.CreateElement.Children LuaX.CreateElement.Child | LuaX.CreateElement.Child[]
 
+-- TODO guard children elsewhere?
 
 --- Create, but do not render, an instance of a component.
 ---@param component LuaX.Component | string
