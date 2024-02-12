@@ -18,7 +18,6 @@ NativeTextElement.components = {}
 
 
 function NativeTextElement:init (value, parent)
-
     self.parent = parent
 
     self:set_value(value)

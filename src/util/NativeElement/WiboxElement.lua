@@ -117,6 +117,15 @@ function WiboxText:set_value(value)
     self.parent:_reload_text()
 end
 
+-- TODO seems like it might not working.
+function WiboxText:get_prop(prop) 
+    if prop ~= "value" then
+       return nil 
+    end
+
+    return self.value
+end
+
 ---@param value string
 ---@param parent WiboxElement
 function WiboxElement.create_literal(value, parent)

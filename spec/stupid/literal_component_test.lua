@@ -1,4 +1,4 @@
-local Renderer       = require("src.util.Renderer.init")
+local Renderer       = require("src.util.Renderer")
 local XMLElement     = require("src.util.NativeElement.XMLElement")
 local create_element = require("src.create_element")
 

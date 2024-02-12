@@ -1,5 +1,5 @@
 
-local LuaX = require("src.init")()
+local LuaX = require("src.init")
 local XMLElement = require("src.util.NativeElement.XMLElement")
 
 local renderer = require("src.util.Renderer.Profiled")()
@@ -9,7 +9,6 @@ local create_element = LuaX.create_element
 
 local use_state = LuaX.use_state
 local use_effect = LuaX.use_effect
-
 
 local function inner_function_component (props)
     return create_element("innest", {

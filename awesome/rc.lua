@@ -589,6 +589,8 @@ do
         width = 300,
         height = 300,
         ontop = true,
+        x = 20,
+        y = 20,
         -- screen = mouse.screen,
 
         visible = true,

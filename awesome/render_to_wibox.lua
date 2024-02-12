@@ -1,5 +1,5 @@
 local WiboxElement   = require("src.util.NativeElement.WiboxElement")
-local Renderer       = require("src.util.Renderer")
+local Renderer       = require("src.util.Renderer.Profiled")
 local GearsWorkLoop  = require("src.util.WorkLoop.Gears")
 local use_state      = require("src.hooks.use_state")
 local create_element = require("src.create_element")
@@ -7,7 +7,10 @@ local Fragment       = require("src.components.Fragment")
 
 require("src.util.replace_warn")
 
-local LuaX = require("src")
+---@diagnostic disable-next-line:lowercase-global
+awesome = awesome or {}
+
+local LuaX = require("src.init")
 
 LuaX.register()
 
@@ -55,6 +58,9 @@ local function App()
                         "Or don't."
                     }
                 }) or create_element("LITERAL_NODE", { value = "Click me" })
+            }),
+            create_element(Button, {
+                children = "I'm static!"
             })
         }
     })
@@ -63,11 +69,24 @@ end
 local function render_to_wibox(container)
     local renderer = Renderer(GearsWorkLoop)
 
+    --[[
+    renderer.profiler:ignore_path(
+        "^/usr/share/lua/5%.3/lgi",
+        "^/usr/share/awesome/lib"
+    )
+    ]]
+
     local element = create_element(App, {})
 
     local root = WiboxElement.get_root(container)
 
     renderer:render(element, root)
+
+    awesome.connect_signal("exit", function ()
+        renderer:dump("callgrind.out.awesome.txt")
+    end)
+
+    --  kcachegrind callgrind.out.awesome.txt
 end
 
 --[[
