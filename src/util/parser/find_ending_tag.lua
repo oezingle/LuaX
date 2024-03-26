@@ -15,9 +15,12 @@ local function find_ending_tag(text)
         local pos = tokenstack.pos
 
         if pos > #text then
-            error("HTML end tag not found")
+            -- TODO FIXME change this error so hard
+            error("LuaX Transpiler: Cannot find ending tag")
         end
 
+        -- TODO TokenStack needs to silently account for tags - they cancel literals.
+        -- TODO this means that most of my parser is broken. Big broken.
         if tokenstack:is_empty() and not is_cancelled(text, pos) then
             local current = text:sub(pos, pos)
 

@@ -18,7 +18,9 @@ local function luax_loader(modulename)
         if file then
             local content = file:read("a")
 
-            local transpiled = LuaXParser(content):parse_file()
+            local parser = LuaXParser()
+
+            local transpiled = parser:transpile_file(content)
 
             -- TODO FIXME provide ... global
             local get_module, err = load(transpiled, filename)

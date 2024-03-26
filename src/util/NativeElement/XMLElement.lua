@@ -1,5 +1,6 @@
 local NativeElement = require("src.util.NativeElement.NativeElement")
 local split         = require("src.util.polyfill.string.split")
+local ElementNode   = require("src.util.ElementNode")
 
 -- TODO either fix up or move to dead/
 
@@ -46,7 +47,7 @@ end
 
 -- This is NOT a good xml serializer
 function XMLElement:__tostring()
-    if self.type == "LITERAL_NODE" then
+    if self.type == ElementNode.LITERAL_NODE then
         return tostring(self.props.value)
     end
 

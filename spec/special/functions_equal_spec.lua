@@ -1,7 +1,10 @@
 -- TODO passing functions to components can be made a bit better using fn_equal perhaps?
 
+-- TODO FIXME remove?
+
 local create_element = require("src.create_element")
 local get_function_location = require("src.util.Renderer.helper.get_function_location")
+local ElementNode           = require("src.util.ElementNode")
 
 local function_a = function(component, props)
     ---@diagnostic disable-next-line:undefined-field
@@ -24,7 +27,7 @@ local function_a = function(component, props)
                     ))
                 end
 
-                child = create_element("LITERAL_NODE", { value = tostring(child) })
+                child = create_element(ElementNode.LITERAL_NODE, { value = tostring(child) })
             end
 
             -- TODO NO BAD NO
@@ -63,7 +66,7 @@ local function_b = function(component, props)
                     ))
                 end
 
-                child = create_element("LITERAL_NODE", { value = tostring(child) })
+                child = create_element(ElementNode.LITERAL_NODE, { value = tostring(child) })
             end
 
             -- TODO NO BAD NO

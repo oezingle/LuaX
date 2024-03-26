@@ -72,6 +72,8 @@ function HookState:get_value(index)
     return self.values[index or self.index]
 end
 
+-- TODO FIXME API for something like set_check_value which uses table_equals
+
 ---@param index number
 ---@param value any
 function HookState:set_value(index, value)

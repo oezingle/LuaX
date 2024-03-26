@@ -1,6 +1,10 @@
 
 local stringify_table = require("src.util.parser.transpile.stringify_table")
 
+-- spec changed here recently and i feel i should give reason 
+-- passing nil into create_element by index doesn't work as expected!
+-- as such, indexed properties are just tossed into the table in order.
+
 describe("stringify_table", function ()
     it("stringifies simple table", function ()
         local list = {}
@@ -15,7 +19,7 @@ describe("stringify_table", function ()
         local list = { 1, 2, 3 }
 
         local stringified = stringify_table(list)
-        local expected = "{ [1]=1, [2]=2, [3]=3 }"
+        local expected = "{ 1, 2, 3 }"
 
         assert.equal(expected, stringified)
     end)
@@ -24,7 +28,7 @@ describe("stringify_table", function ()
         local list = { "a", "b", "c" }
 
         local stringified = stringify_table(list)
-        local expected = "{ [1]=\"a\", [2]=\"b\", [3]=\"c\" }"
+        local expected = "{ \"a\", \"b\", \"c\" }"
 
         assert.equal(expected, stringified)
     end)
@@ -51,7 +55,7 @@ describe("stringify_table", function ()
         local gross_list = { "{function () error('evil shit') end}" }
 
         local stringified = stringify_table(gross_list)
-        local expected = "{ [1]=function () error('evil shit') end }"
+        local expected = "{ function () error('evil shit') end }"
 
         assert.equal(expected, stringified)
     end)

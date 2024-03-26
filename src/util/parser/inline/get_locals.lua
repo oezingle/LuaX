@@ -1,18 +1,16 @@
+local function assert_can_get_local()
+    assert(debug, "Cannot use inline parser: debug global does not exist")
 
-local function assert_can_get_local ()
-    if not debug then
-        error("Cannot use inline parser: debug global does not exist")
-    end
+    assert(debug.getlocal, "Cannot use inline parser: debug.getlocal does not exist")
 
-    assert(debug.getlocal,"Cannot use inline parser: debug.getlocal does not exist")
-
-    assert(type(debug.getlocal) == "function","Cannot use inline parser: debug.getlocal is not a function")
+    assert(type(debug.getlocal) == "function", "Cannot use inline parser: debug.getlocal is not a function")
 
     local im_a_local = "Hello World!"
 
     local name, value = debug.getlocal(1, 1)
 
-    assert(name == "im_a_local" and value == "Hello World!", "Cannot use inline parser: debug.getlocal API spec has changed")
+    assert(name == "im_a_local" and value == "Hello World!",
+        "Cannot use inline parser: debug.getlocal API changed")
 end
 
 assert_can_get_local()
@@ -35,6 +33,12 @@ local function get_locals(stack)
 
         index = index + 1
     end
+
+    --[[
+    for k, v in pairs(locals) do
+        print(k, v)
+    end
+    ]]
 
     return locals
 end

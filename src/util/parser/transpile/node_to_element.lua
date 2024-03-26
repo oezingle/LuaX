@@ -21,7 +21,7 @@ local function component_name(components, components_mode, name)
     end
 end
 
---- Statically convert an XML node to a create_element() call
+--- Statically convert a LuaX language node to a create_element() call
 ---@param node LuaX.Language.Node
 ---@param components table<string, true> hash map for speed
 ---@param components_mode "local" | "global"
@@ -29,7 +29,8 @@ end
 ---@return string
 local function transpile_node_to_element(node, components, components_mode, create_element)
     if node.type == "literal" then
-        -- TOOD this feels hacky.
+        -- TODO this feels hacky.
+        -- TODO FIXME LITERAL_NODE here has to come from ElementNode?
         return transpile_create_element(create_element, "\"LITERAL_NODE\"", { value = node.value })
     end
 
@@ -42,8 +43,13 @@ local function transpile_node_to_element(node, components, components_mode, crea
         if kids and #kids >= 1 then
             local children = {}
 
-            for i, kid in ipairs(kids) do
-                children[i] = "{" .. transpile_node_to_element(kid, components, components_mode, create_element) .. "}"
+            for i, kid in ipairs(kids) do                
+                if type(kid) == "string" then
+                    children[i] = "{" .. kid .. "}"
+
+                else
+                    children[i] = "{" .. transpile_node_to_element(kid, components, components_mode, create_element) .. "}"
+                end
             end
 
             props.children = children

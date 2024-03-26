@@ -134,16 +134,26 @@ function TokenStack:run_once()
         end
     end
 
+    self:safety_check()
+
     self.pos = self.pos + 1
+end
+
+function TokenStack:get_current() 
+    return self.text:sub(self.pos, self.pos)
+end
+
+function TokenStack:safety_check ()
+    if self.pos > #self.text + 1 then
+        error("TokenStack out of text bounds")
+    end
 end
 
 function TokenStack:run_until_empty()
     while not self:is_empty() do
         self:run_once()
 
-        if self.pos > #self.text + 1 then
-            error("TokenStack out of text bounds")
-        end
+        self:safety_check()
     end
 end
 

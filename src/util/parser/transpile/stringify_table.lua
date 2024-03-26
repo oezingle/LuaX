@@ -1,3 +1,4 @@
+local ipairs_with_nil = require "src.util.ipairs_with_nil"
 -- TODO lua-ext also provides table stringification - probably does it better.
 
 ---@param input any
@@ -9,21 +10,30 @@ end
 --- Try really really hard to stringify a table safely.
 --- Obviously this table has to be serializable
 ---
---- Don't take this stringifier as a good implementation
---- of a general stringifier - it only wants to make XML into Lua
+--- Don't take this stringifier for a good implementation,
+--- it's only really bothered with LuaX
 ---
 ---@param input table
 ---@return string
 local function stringify_table(input)
     local elements = {}
 
+    -- number keys need to be handled differently to others, because of the way LuaX works.
     for k, v in pairs(input) do
-        local key = stringify(k)
+        if type(k) ~= "number" then
+            local key = stringify(k)
+            local value = stringify(v)
+
+            local format = string.format("[%s]=%s", key, value)
+
+            table.insert(elements, format)
+        end
+    end
+
+    for _, v in ipairs_with_nil(input) do
         local value = stringify(v)
 
-        local format = string.format("[%s]=%s", key, value)
-
-        table.insert(elements, format)
+        table.insert(elements, value)
     end
 
     return string.format("{ %s }", table.concat(elements, ", "))
@@ -40,7 +50,7 @@ stringify = function(input)
         if input:match("^{.*}$") then
             -- parse a literal
             return input:sub(2, -2)
-        else 
+        else
             return string.format("%q", input)
         end
     end

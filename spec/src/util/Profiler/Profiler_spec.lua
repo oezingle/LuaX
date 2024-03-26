@@ -1,5 +1,8 @@
 
+-- TODO FIXME what the fuck is this. it isn't a test
+
 local Profiler = require("src.util.Profiler.Profiler")
+local ElementNode = require("src.util.ElementNode")
 
 local profiler = Profiler()
 
@@ -12,7 +15,7 @@ local Fragment = require("src.components.Fragment")
 local function main ()
     local element = create_element(Fragment, {
         children = {
-            create_element("LITERAL_NODE", {
+            create_element(ElementNode.LITERAL_NODE, {
                 value = "Hello World!"
             })
         }

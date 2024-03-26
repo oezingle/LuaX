@@ -1,147 +1,178 @@
 local LuaXParser = require("src.util.parser.LuaXParser")
+local pprint     = require("lib.pprint")
 
-describe("LuaXParser", function()
-    it("parses tags with neither children nor props nicely", function()
-        local parser = LuaXParser([[
-            <br />
-        ]])
+-- local pprint = require("lib.pprint")
 
-        local start = parser:skip_whitespace()
+describe("LuaXParser (v2)", function()
+    it("parses fragments", function()
+        local parser = LuaXParser()
 
-        local node = parser:parse_tag(start)
+        local code = "<></>"
 
-        assert.equal("br", node.name)
+        local node, end_pos = parser:parse_tag(code, 0)
+
+        assert.equal(LuaXParser.imports.auto.FRAGMENT.name, node.name)
+        assert.equal(#code, end_pos)
     end)
 
-    it("parsse tags with no props", function()
-        local parser = LuaXParser([[
-            <br></br>
-        ]])
+    it("parses tags that don't have props", function()
+        local parser = LuaXParser()
 
-        local start = parser:skip_whitespace()
+        local code = "<wibox.widget.textbox></wibox.widget.textbox>"
 
-        local node = parser:parse_tag(start)
-
-        assert.equal("br", node.name)
-    end)
-
-    it("parses tags with no children nicely", function()
-        local parser = LuaXParser([[
-            <wibox.widget.textbox text="Hello world"/>
-        ]])
-
-        local start = parser:skip_whitespace()
-
-        local node = parser:parse_tag(start)
+        local node, end_pos = parser:parse_tag(code, 0)
 
         assert.equal("wibox.widget.textbox", node.name)
-
-        assert.equal("Hello world", node.props.text)
+        assert.equal(#code, end_pos)
     end)
 
-    it("parses tags with children nicely", function()
-        local parser = LuaXParser([[
-            <wibox.layout.margin margin={2}>
-                <wibox.widget.textbox signal::button::press={function () print("Hello world!") end}>
-                    I am a text!
-                </wibox.widget.textbox>
-            </wibox.layout.margin>
-        ]])
+    it("parses literals in quotes", function ()
+        local parser = LuaXParser()
 
-        local start = parser:skip_whitespace()
+        local code = "<div class=\"{variable}\"></div>"
 
-        local node = parser:parse_tag(start)
+        local node, end_pos = parser:parse_tag(code, 0)
 
-        assert.equal("wibox.layout.margin", node.name)
+        assert.equal("{variable}", node.props.class)
+        assert.equal(#code, end_pos)
 
-        -- this is a string because the Parser by default is static.
-        assert.equal('{2}', node.props.margin)
-        assert.equal(1, #node.children)
-
-        local textbox = node.children[1]
-
-        assert.equal([[{function () print("Hello world!") end}]], textbox.props["signal::button::press"])
-
-        assert.equal(1, #textbox.children)
-
-        local text = textbox.children[1]
-
-        assert.equal("I am a text!", text.value)
     end)
 
-    it("parses fragments", function()
-        local parser = LuaXParser([[
-            <>
-                Hello world!
-            </>
-        ]])
+    it("parses tags with explicit props", function()
+        local parser = LuaXParser()
 
-        local start = parser:skip_whitespace()
+        local code = "<div class=\"a-class\"></div>"
 
-        local node = parser:parse_tag(start)
+        local node, end_pos = parser:parse_tag(code, 0)
 
-        assert.equal("element", node.type)
-        assert.equal(LuaXParser.FRAGMENT_AUTO_IMPORT_NAME, node.name)
-
-        assert.equal(1, #node.children)
-
-        local text = node.children[1]
-
-        assert.equal("literal", text.type)
-        assert.equal("Hello world!", text.value)
+        assert.equal("a-class", node.props.class)
+        assert.equal(#code, end_pos)
     end)
 
-    it("parses implicit props", function()
-        local parser = LuaXParser([[ <div container /> ]])
+    it("parses tags with implicit props", function()
+        local parser = LuaXParser()
 
-        local start = parser:skip_whitespace()
+        local code = "<Box container></Box>"
 
-        local node = parser:parse_tag(start)
+        local node, end_pos = parser:parse_tag(code, 0)
 
-        assert.equal("{true}", node.props.container)
+        assert.True(node.props.container)
+        assert.equal(#code, end_pos)
     end)
 
-    it("runs parse_all without issue", function()
-        local node = LuaXParser([[
+    it("Parses tags with no children with no whitespace", function ()
+        local parser = LuaXParser()
 
+        local code = "<Box/>"
 
-            <div meep />
-        ]]):parse_all()
+        local node, end_pos = parser:parse_tag(code, 0)
 
-        assert.equal("div", node.name)
-        assert.equal("{true}", node.props.meep)
+        assert.equal(0, #node.children)
+        assert.equal(#code, end_pos)
     end)
 
-    it("fails parse_all with multiple parents", function()
-        local success = pcall(function()
-            LuaXParser([[
-                <div meep />
+    -- TODO doesn't track whitespace here goodly.
+    it("Parses tags with no children", function()
+        local parser = LuaXParser()
 
-                end text
-            ]]):parse_all()
-        end)
+        local code = "<Box />"
 
-        assert.False(success)
+        local node, end_pos = parser:parse_tag(code, 0)
+
+        assert.equal(0, #node.children)
+        assert.equal(#code, end_pos)
     end)
 
-    it("parses lua block children", function()
-        local parser = LuaXParser([[
-            <>
-                {props.message}
-            </>
-        ]])
+    it("parses Fragments that could have children, but do not", function()
+        local parser = LuaXParser()
 
-        local start = parser:skip_whitespace()
+        local code = [[<>
 
-        local node = parser:parse_tag(start)
+        </>]]
 
-        assert.equal("{props.message}", node.children[1].props.value)
+        local node, end_pos = parser:parse_tag(code, 0)
+
+        assert.equal(0, #node.children)
+        assert.equal(LuaXParser.imports.auto.FRAGMENT.name, node.name)
+
+        assert.equal(#code, end_pos)
     end)
 
-    -- TODO FIXME test lua block props
+    it("parses tags that could have children, but do not", function()
+        local parser = LuaXParser()
 
-    it("parses wholeass files", function()
-        local transpiled = LuaXParser([[
+        local code = [[<Box>
+
+        </Box>]]
+
+        local node, end_pos = parser:parse_tag(code, 0)
+
+        assert.equal(0, #node.children)
+        assert.equal("Box", node.name)
+
+        assert.equal(#code, end_pos)
+    end)
+
+    it("parses children", function()
+        local parser = LuaXParser()
+
+        local code = [[<>
+                <Box />
+
+                This is a text!
+            </>]]
+
+        local node, end_pos = parser:parse_tag(code, 0)
+
+        assert.equal(2, #node.children)
+        assert.equal(LuaXParser.imports.auto.FRAGMENT.name, node.name)
+        assert.equal(#code, end_pos)
+
+        -- pprint(node.children[2])
+
+        assert.equal("literal", node.children[2].type)
+    end)
+
+    it("splits literals", function()
+        local parser = LuaXParser()
+
+        parser.indent = "    "
+        -- parser.default_indent = ""
+
+        local code = [[<>
+    Hello {location}!
+        </>]]
+
+        local node, end_pos = parser:parse_tag(code, 0)
+
+        assert.equal(3, #node.children)
+
+        -- pprint(node.children)
+
+        assert.equal("Hello ", node.children[1].value)
+        assert.equal("location", node.children[2])
+        assert.equal("!", node.children[3].value)
+    end)
+
+    it("transpiles strings", function()
+        local parser = LuaXParser()
+
+        local code = [[<>
+
+        </>]]
+
+        local transpiled = parser:transpile_tag(code, 1, {
+            [parser.imports.auto.FRAGMENT.name] = true,
+            div = true
+        }, "local")
+
+        assert.equal("_LuaX_create_element(_LuaX_Fragment, {  })", transpiled)
+    end)
+
+    it("transpiles files", function()
+        local parser = LuaXParser()
+
+        local transpiled = parser:transpile_file([[
             local Fragment = require("src.components.Fragment")
 
             local function Component (props)
@@ -153,9 +184,7 @@ describe("LuaXParser", function()
             end
 
             return Component
-        ]]):parse_file()
-
-        -- print(transpiled)
+        ]])
 
         local run_transpiled, err = load(transpiled, "transpiled LuaX")
 
@@ -169,4 +198,38 @@ describe("LuaXParser", function()
 
         assert.equal("a string!", element.props.children[1].props.value)
     end)
+
+    it("parses complex props", function()
+        local parser = LuaXParser()
+
+        local code = [[<wibox.widget.textbox
+                signal::button::press={function ()
+                    set_render(function (render) return not render end)
+                end}
+            >
+                {render and "Rendering children (click)" or "Not rendering children (click)"}
+
+                I'm not lua!
+            </wibox.widget.textbox>]]
+
+        parser.indent = "    "
+
+        local node, end_pos = parser:parse_tag(code, 3)
+
+        assert.Truthy(node.props['signal::button::press'])
+
+        assert.equal(#code, end_pos)
+    end)
+
+    it("parses literal children", function ()
+        local parser = LuaXParser()
+
+        local code = [[<text>{message}</text>]]
+
+        local node = parser:parse_tag(code, 0)
+
+        assert.equal('message', node.children[1])
+    end)
+
+    -- TODO FIXME - spec for parsing comment literals - eg {--[[ Hello World! ]]}
 end)

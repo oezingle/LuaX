@@ -15,7 +15,11 @@ function cache.find (code, env)
         return nil
     end
 
+    -- TODO because this is slow as fuck we should 
+    -- - check inner, then outer locals
+    -- - (probably) ignore _G - load_cache.get() should just build a new table which inherits inner, outer, then _G
     for k, v in pairs(env) do
+        -- TODO FIXME this seems slow. maybe take locals not env?
         if not table_equals(v, cached.env[k]) then
             return nil
         end
@@ -47,6 +51,9 @@ function cache.get (code, env)
     local get_output, err = load(code, "inline LuaX code", nil, env)
 
     if not get_output then
+        warn("Code passed in:")
+        print(code)
+        
         error(err)
     end
 

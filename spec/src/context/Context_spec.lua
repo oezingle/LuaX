@@ -3,7 +3,6 @@ local Context = require("src.context.Context")
 local use_context = require("src.hooks.use_context")
 local create_element = require("src.create_element")
 local static_render  = require("spec.helpers.static_render")
--- local pprint         = require("lib.pprint")
 
 describe("Context", function ()
     it("passes data deeply", function ()
@@ -13,7 +12,6 @@ describe("Context", function ()
         local function DeepChild ()
             local context = use_context(MessageContext)
         
-
             return create_element("p", { children = context.message })
         end
 

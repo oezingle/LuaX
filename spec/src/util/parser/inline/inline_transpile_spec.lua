@@ -1,35 +1,36 @@
-
 local inline_transpile = require("src.util.parser.inline.inline_transpile")
+local Fragment = require("src.components.Fragment")
 
-describe("inline_transpile", function ()
-    it("works nicely first time", function ()
-        local a = "Hello World"
-        
-        local node = inline_transpile([[
-            <>
-                Local variable "a": {a}
-            </>
-        ]])
-
-        assert.equal("Hello World", node.props.children[2].props.value)
-    end)
-
-    it("caches load results", function ()
+describe("inline_transpile", function()
+    it("takes strings", function()
         local code = [[
             <>
                 Hello World!
             </>
         ]]
 
-        local function closure_that_represents_a_component ()
-            local node = inline_transpile(code)
+        local element = inline_transpile(code)
 
-            return node
+        assert.equal("Hello World!", element.props.children[1].props.value)
+    end)
+
+    it("takes components", function()
+        local OuterComponent = Fragment
+
+        local Component = inline_transpile(function()
+            return [[
+                <OuterComponent>
+                    Hello World!
+                </OuterComponent>
+            ]]
+        end)
+
+        local element = Component({})
+
+        if not element then
+            error("no element!")
         end
 
-        local node1 = closure_that_represents_a_component()
-        local node2 = closure_that_represents_a_component()
-
-        assert.equal(node1, node2)
+        assert.equal("Hello World!", element.props.children[1].props.value)
     end)
 end)

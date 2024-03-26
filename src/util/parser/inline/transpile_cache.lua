@@ -1,9 +1,9 @@
 local LuaXParser      = require("src.util.parser.LuaXParser")
-local node_to_element = require("src.util.parser.transpile.node_to_element")
+-- local node_to_element = require("src.util.parser.transpile.node_to_element")
 
 local transpile_cache = {}
 
-local cache = {}
+local cache           = {}
 
 ---@param tag string
 function cache.find(tag)
@@ -16,8 +16,16 @@ function cache.set(tag, output)
     transpile_cache[tag] = output
 end
 
+local parser = LuaXParser()
+-- parser.verbose = true
+
+--- Get a value from either parsing or the cache, depending on if tag is saved.
+---
+--- Locals' values don't need to be tracked - the parser
+--- only needs to know which variables are local, not their content.
 ---@param tag string
 ---@param locals table<string, any>
+---@return string
 function cache.get(tag, locals)
     local cached = cache.find(tag)
 
@@ -25,15 +33,15 @@ function cache.get(tag, locals)
         return cached
     end
 
-    local parser = LuaXParser(tag)
+    local _, init = tag:find("^%s*<")
 
-    local start = parser:skip_whitespace()
+    -- TODO condiitonals need to be transpiled seperately.
+    local inner_transpiled = parser:transpile_text(tag, locals, "local")
 
-    local node = parser:parse_tag(start)
+    local transpiled = "return " .. parser:transpile_tag(inner_transpiled, init, locals, "local")
 
-    -- return here removes the task of string concat from future calls
-    local transpiled = "return " .. node_to_element(node, locals, "local", LuaXParser.CREATE_ELEMENT_IMPORT_NAME)
-    
+    -- print(transpiled)
+
     cache.set(tag, transpiled)
 
     return transpiled

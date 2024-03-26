@@ -21,6 +21,13 @@ describe("get_element_name", function()
         assert.truthy(name:match("function_component"))
     end)
 
-    
-    -- TODO test NativeElements
+    it("handles literal nodes", function ()
+        local element = create_element("root", { children = "Hello World!" })
+
+        local name = get_element_name(element.props.children[1])
+
+        assert.equal("Literal node", name)
+    end)
+
+    -- TODO test Components / NativeElements
 end)

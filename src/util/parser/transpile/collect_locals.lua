@@ -1,11 +1,11 @@
-
 local Parser = require("lib.lua-parser")
 local find_ending_tag = require("src.util.parser.find_ending_tag")
+local keywords = require("src.util.parser.keywords")
 
 ---@generic T
 ---@param list T[]
 ---@return table<T, true>
-local function list_to_map (list)
+local function list_to_map(list)
     local map = {}
 
     for _, item in pairs(list) do
@@ -19,7 +19,7 @@ end
 --- Recursively collect locals given a lua-parser tree
 ---@param vars string[]
 ---@param node Lua-Parser.Exprs
-local function collect_vars (vars, node)
+local function collect_vars(vars, node)
     for _, expression in ipairs(node) do
         --[[
         print(expression)
@@ -35,7 +35,7 @@ local function collect_vars (vars, node)
         end
 
         if expression.vars then
-            for _, var in ipairs(expression.vars) do 
+            for _, var in ipairs(expression.vars) do
                 table.insert(vars, var.name)
             end
         end
@@ -48,7 +48,7 @@ end
 
 ---@param text string
 ---@return table<string, true>
-local collect_locals = function (text)
+local collect_locals = function(text)
     -- TODO this is a sorry excuse for parsing functionality
     --[[
     text = text
@@ -62,9 +62,14 @@ local collect_locals = function (text)
 
         local _, assign_tag_start = text:find("=%s*<")
 
-        local _, return_tag_start = text:find("return%s+<")
+        local _, keyword_tag_start = nil, nil
+        for _, keyword in ipairs(keywords) do
+            _, keyword_tag_start = text:find(keyword .. "%s+<")
+
+            if keyword_tag_start then break end
+        end
         
-        local pos = multiline_end or assign_tag_start or return_tag_start
+        local pos = multiline_end or assign_tag_start or keyword_tag_start
 
         if not pos then
             break
@@ -79,7 +84,7 @@ local collect_locals = function (text)
         local _, tag_end = end_tag_etc:find("^</.->")
 
         local tag_content = text:sub(pos, pos + length + tag_end)
-        
+
         if multiline_start then
             tag_content = "(" .. tag_content .. ")"
         end

@@ -4,12 +4,15 @@ local string_split = require("src.util.polyfill.string.split")
 local list_reduce = require("src.util.polyfill.list.reduce")
 local wibox = require("wibox")
 
+-- TODO FIXME text is not working too well
 
 ---@class WiboxElement : LuaX.NativeElement
 ---@field texts WiboxText[]
 local WiboxElement = NativeElement:extend("WiboxElement")
 
 function WiboxElement:init(native, type)
+    -- print(type, "create")
+
     self.wibox = native
 
     self.texts = {}
@@ -22,6 +25,8 @@ end
 ---@param prop string
 ---@param value any
 function WiboxElement:set_prop(prop, value)
+    -- print(self:get_type(), "set prop", prop, value)
+
     local wibox = self.wibox
 
     if prop:match("^signal::") then
@@ -38,11 +43,9 @@ function WiboxElement:set_prop(prop, value)
         end
 
         self.signal_handlers[prop] = value
-
-        return
+    else
+        wibox[prop] = value
     end
-
-    wibox[prop] = value
 end
 
 function WiboxElement:get_prop(prop)
@@ -59,7 +62,17 @@ function WiboxElement:insert_child(index, element, is_text)
 
         self:_reload_text()
     else
-        self.wibox:insert(index, element.wibox)
+        if self.wibox.insert then
+            self.wibox:insert(index, element.wibox)
+        elseif self.wibox.get_children and self.wibox.set_children then
+            local children = self.wibox:get_children()
+
+            table.insert(children, element.wibox)
+
+            self.wibox:set_children(children)
+        else
+            error(string.format("Unable to insert child with wibox %s", self.wibox))
+        end
     end
 end
 
@@ -67,7 +80,17 @@ function WiboxElement:delete_child(index, is_text)
     if is_text then
         table.remove(self.texts, index)
     else
-        self.wibox:remove(index)
+        if self.wibox.remove then
+            self.wibox:remove(index)
+        elseif self.wibox.get_children and self.wibox.set_children then
+            local children = self.wibox:get_children()
+
+            table.remove(children, index)
+
+            self.wibox:set_children(children)
+        else
+            error(string.format("Unable to insert child with wibox %s", self.wibox))
+        end
     end
 end
 
@@ -94,6 +117,7 @@ function WiboxElement.get_root(native)
     return WiboxElement(native, "UNKNOWN (root element)")
 end
 
+-- TODO FIXME this does NOT work!
 function WiboxElement:_reload_text()
     local texts = {}
 
@@ -118,9 +142,9 @@ function WiboxText:set_value(value)
 end
 
 -- TODO seems like it might not working.
-function WiboxText:get_prop(prop) 
+function WiboxText:get_prop(prop)
     if prop ~= "value" then
-       return nil 
+        return nil
     end
 
     return self.value

@@ -235,6 +235,10 @@ function LinkedList:filter(filter)
     return list
 end
 
+function LinkedList:__pairs()
+    return self:iterator()
+end
+
 function LinkedList:iterator()
     local i = 0;
 

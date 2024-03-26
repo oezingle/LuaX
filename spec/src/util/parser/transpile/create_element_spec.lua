@@ -3,6 +3,7 @@
 local transpile_create_element = require("src.util.parser.transpile.create_element")
 local create_element           = require("src.create_element")
 local Fragment                 = require("src.components.Fragment")
+local ElementNode              = require("src.util.ElementNode")
 
 describe("transpile_create_element", function()
     it("converts nicely", function()
@@ -46,7 +47,7 @@ describe("transpile_create_element", function()
 
         local element = get_element()
 
-        assert.equal("LITERAL_NODE", element.type)
+        assert.equal(ElementNode.LITERAL_NODE, element.type)
         assert.equal("Hello World!", element.props.value)
     end)
 end)

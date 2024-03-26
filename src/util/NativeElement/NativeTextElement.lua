@@ -1,5 +1,6 @@
 
 local NativeElement = require("src.util.NativeElement")
+local ElementNode   = require("src.util.ElementNode")
 
 ---@class LuaX.NativeTextElement : LuaX.NativeElement
 ---@field protected parent LuaX.NativeElement
@@ -45,7 +46,7 @@ function NativeTextElement:delete_child()
 end
 
 function NativeTextElement:get_type()
-    return "LITERAL_NODE"
+    return ElementNode.LITERAL_NODE
 end
 
 return NativeTextElement

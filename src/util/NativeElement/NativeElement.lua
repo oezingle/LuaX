@@ -3,7 +3,7 @@ local count_children_by_key = require("src.util.NativeElement.helper.count_child
 local set_child_by_key      = require("src.util.NativeElement.helper.set_child_by_key")
 local list_reduce           = require("src.util.polyfill.list.reduce")
 
-require("src.types.LuaX")
+local pprint = require("lib.pprint")
 
 --[[
     - count_children_by_key seems like it could have performance issues.
@@ -54,6 +54,10 @@ NativeElement._dependencies.NativeTextElement = nil
 function NativeElement:init()
     error("NativeElement must be extended to use for components")
 end
+
+function NativeElement:get_type_safe ()
+    return self.get_type and self:get_type() or "UNKNOWN"
+end 
 
 function NativeElement:get_children_by_key(key)
     local children = self._children_by_key
@@ -133,6 +137,13 @@ end
 function NativeElement:delete_children_by_key(key)
     -- print(self:get_type(), "delete_children_by_key", table.concat(key, " "))
 
+    -- print(debug.traceback())
+    
+    -- No need to delete anything
+    if not self._children_by_key then
+        self._children_by_key = {}
+    end
+
     local delete_end = count_children_by_key(self._children_by_key, key)
 
     local key_children = self:get_children_by_key(key)
@@ -190,6 +201,39 @@ function NativeElement:set_props(props)
             self:set_prop(prop, value)
         end
     end
+end
+
+---@param children LuaX.NativeElement.ChildrenByKey
+function NativeElement.recursive_children_string (children)
+    if type(children) ~= "table" then
+        return tostring(children)
+    end
+    
+    if #children ~= 0 then
+        local children_strs = {}
+
+        for index, child in ipairs(children) do
+            table.insert(children_strs, NativeElement.recursive_children_string(child))
+        end
+
+        return string.format("{ %s }", table.concat(children_strs, ", "))
+    else
+        --[[
+        for k, v in pairs(children) do
+            print("", k, v)
+        end
+        ]]
+
+        return "Child " .. tostring(children)
+    end
+end
+
+function NativeElement:__tostring()
+    local component = self:get_type_safe()
+
+    local children = NativeElement.recursive_children_string(self._children_by_key)
+
+    return component .. " " .. children
 end
 
 return NativeElement

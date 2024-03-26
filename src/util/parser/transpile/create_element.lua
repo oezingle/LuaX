@@ -1,7 +1,7 @@
 
 local stringify_table = require("src.util.parser.transpile.stringify_table")
 
---- Return a string of a call to create_element for transpiling XML
+--- Return a string of a call to create_element for transpiling LuaX
 --- Strings here for everything, as they're interpreted as Lua literals
 --- 
 ---@param create_element string? the local name for create_element

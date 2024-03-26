@@ -12,7 +12,7 @@ local function parse_file(path)
 
     local content = file:read("a")
 
-    local transpiled = LuaXParser(content):parse_file()
+    local transpiled = LuaXParser():transpile_file(content)
 
     return transpiled
 end

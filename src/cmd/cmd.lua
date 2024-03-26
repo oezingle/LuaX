@@ -3,6 +3,7 @@ local argparse   = require("lib.argparse")
 local parse_file = require("src.cmd.parse_file")
 
 
+-- I genuinely hate the args available as of right now.
 local function cmd()
     -- TODO FIXME https://github.com/mpeterv/argparse
     local parser = argparse("LuaX")

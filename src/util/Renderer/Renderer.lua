@@ -5,16 +5,17 @@ local get_element_name          = require("src.util.Renderer.helper.get_element_
 local create_native_element     = require("src.util.Renderer.helper.create_native_element")
 local table_equals              = require("src.util.table_equals")
 local can_modify_child          = require("src.util.Renderer.helper.can_modify_child")
+local ElementNode               = require("src.util.ElementNode")
 
 local FunctionComponentInstance = require("src.util.FunctionComponentInstance")
 local DefaultWorkLoop           = require("src.util.WorkLoop.Default")
 
--- defines LuaX global ( needed for hooks )
+-- TODO FIXME what the hell does this mean.
 -- TODO if Renderer.envhacks = true, don't use LuaX global
-require("src.types.LuaX")
 
 local max = math.max
 
+--- TODO FIXME this code CANNOT go to prod
 --- Determine if this is a class or an instance
 ---
 ---@param t Log.BaseFunctions
@@ -33,7 +34,8 @@ end
 ---@field native_element LuaX.NativeElement class here, not instance
 ---@field set_workloop fun (self: self, workloop: LuaX.WorkLoop): self set workloop using either a class or an instance
 ---
----@field get_render fun (self: self): fun(element: LuaX.ElementNode, container: LuaX.NativeElement)
+---@field protected _render_function_component fun(self: self, element: LuaX.ElementNode, container: LuaX.NativeElement, key: LuaX.Key)
+---@field protected render_pure_component fun(self: self, component: LuaX.ElementNode | nil, container: LuaX.NativeElement, key: LuaX.Key, caller?: LuaX.ElementNode)
 ---
 ---@operator call: LuaX.Renderer
 local Renderer = class("Renderer")
@@ -55,6 +57,13 @@ function Renderer:set_workloop(workloop)
     return self
 end
 
+--[[
+    TODO FIXME Renderer:delete_children_by_key(container, key)
+        - for all children, call child._component:unmount()
+]]
+
+-- TODO FIXME refuses to keep any old elements around!! wtf!!
+
 ---@param component LuaX.ElementNode | nil
 ---@param container LuaX.NativeElement
 ---@param key LuaX.Key
@@ -68,6 +77,8 @@ function Renderer:render_pure_component(component, container, key, caller)
     end
 
     local can_modify, existing_child = can_modify_child(component, container, key)
+
+    -- print(container:get_type(), "can_modify", existing_child, can_modify)
 
     ---@type LuaX.NativeElement
     local node = nil
@@ -90,19 +101,16 @@ function Renderer:render_pure_component(component, container, key, caller)
         end
     end
 
-
     -- handle children using workloop
     local children = component.props['children']
 
     -- TODO this kind of optimization would be nice but can't work as of rn.
     -- if not caller or caller.props['children'] ~= children then
     local current_children = node:get_children_by_key({}) or {}
-
     if children then
         local workloop = self.workloop
 
         local size = max(#current_children, #children)
-
         for index, child in ipairs_with_nil(children, size) do
             workloop:add(function()
                 self:render_keyed_child(child, node, { index }, caller)
@@ -124,33 +132,19 @@ end
 ---@param element LuaX.ElementNode
 ---@param container LuaX.NativeElement
 ---@param key LuaX.Key
-function Renderer:_render_function_component(element, container, key)
+function Renderer:_render_function_component(element, container, key)    
     local rendered = element._component:render(element.props)
-
+    
     -- ignore rendering if the component is destined for a re-render
     if not element._component.requests_rerender then
-
-        -- TODO this works but causes flickers
         -- Check if a pure component is sitting in this key, in which case we have to destroy it.
-        local existing = container:get_children_by_key(key)
+        -- local existing = container:get_children_by_key(key)
 
-        if existing and existing.class then
-            container:delete_children_by_key(key)
-        end
+        -- if existing and existing.class then
+        --     container:delete_children_by_key(key)
+        -- end
 
-        -- Function components are allowed to return lists of children
-        -- (not really -- this isn't good behaviour but fixes Fragments and is React compatible)
-        if type(rendered) == "table" and not rendered.type then
-            local current_children = container:get_children_by_key(key) or {}
-
-            local size = max(#current_children, #rendered)
-
-            for i, child in ipairs_with_nil(rendered, size) do
-                self:render_keyed_child(child, container, key_add(key, i), element)
-            end
-        else
-            self:render_keyed_child(rendered, container, key, element)
-        end
+        self:render_keyed_child(rendered, container, key, element)
     end
 end
 
@@ -161,10 +155,39 @@ end
 function Renderer:render_keyed_child(element, container, key, caller)
     if not element or type(element.type) == "string" then
         self:render_pure_component(element, container, key, caller)
-    elseif type(element.type) == "function" then
-        if not element._component then
-            local component = element.type
+    elseif type(element) == "table" and element.element_node ~= ElementNode then
+        -- lists of children are valid children
 
+        local current_children = container:get_children_by_key(key) or {}
+
+        if current_children.class and class.isClass(current_children.class) then
+            container:delete_children_by_key(key)
+
+            current_children = {}
+        end
+
+        local size = max(#current_children, #element)
+
+        for i, child in ipairs_with_nil(element, size) do
+            local newkey = key_add(key, i)
+
+            self:render_keyed_child(child, container, newkey, caller)
+        end
+    elseif type(element.type) == "function" then
+        -- local new_key = key_add(key, 1)
+
+        -- TODO FIXME do FunctionComponentInstances even matter? do some thinking on it.
+        if not element._component then
+            -- print("Creating new FunctionComponentInstance for", get_element_name(element))
+
+            element = ElementNode.inherit_props(element, {
+                __luax_internal = {
+                    renderer = self,
+                    container = container,
+                }
+            })
+
+            local component = element.type
             local component_instance = FunctionComponentInstance(component)
 
             -- Attach parent contexts
@@ -179,7 +202,6 @@ function Renderer:render_keyed_child(element, container, key, caller)
                     self:_render_function_component(element, container, key)
                 end)
 
-                -- TODO seems to have some issues
                 -- start workloop if it isn't running
                 self.workloop:start()
             end)
@@ -198,6 +220,8 @@ function Renderer:render_keyed_child(element, container, key, caller)
         ))
     end
 
+    -- TODO need to return promise that is resolved when all children have rendered :(
+
     -- start workloop in case there's shit to do and it's stopped
     self.workloop:start()
 end
@@ -205,10 +229,6 @@ end
 ---@param component LuaX.ElementNode
 ---@param container LuaX.NativeElement
 function Renderer:render(component, container)
-    -- if not container.get_type then
-    --     warn("This container element does not implement the optional (but useful) function get_type")
-    -- end
-
     self:render_keyed_child(component, container, { 1 })
 end
 

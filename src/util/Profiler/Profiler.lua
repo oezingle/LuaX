@@ -1,11 +1,37 @@
 local class = require("lib.30log")
+local find_unused_filename = require("src.util.Profiler.find_unused_filename")
+
+-- this feels like bad pattern but idgaf tbh.
+if not debug or not debug.getinfo then
+    warn("Profiler requires debug.getinfo(). A pass-through implementation will be used instead")
+
+    local FakeProfiler = class("FakeProfiler")
+
+    function FakeProfiler:init() end
+
+    function FakeProfiler:start() end
+
+    function FakeProfiler:stop() end
+
+    function FakeProfiler:dump()
+        warn("FakeProfiler will not generate an output file")
+    end
+
+    return FakeProfiler
+end
 
 --[[
     Adapted from https://jan.kneschke.de/projects/misc/profiling-lua-with-kcachegrind/
 
-    Profiler compatible with kcachegrind
+    Profiler
+        - init(opts) create, with options
+            - sentient: boolean - lets the profiler track itself.
+        - start() start monitoring
+        - stop() stop monitoring
+        - dump(file, format) dump to a file of a given format
 
-    https://www.lua.org/pil/23.2.html
+    Implemented formats
+        - KCacheGrind
 ]]
 
 ---@class LuaX.Profiler.Function.Call
@@ -18,16 +44,18 @@ local class = require("lib.30log")
 
 ---@alias LuaX.Profiler.Function.Event { type: "line", line: LuaX.Profiler.Function.Line } | { type: "call", call: LuaX.Profiler.Function.Call }
 
+
 ---@class LuaX.Profiler.Function
 ---@field short_src string
 ---@field name string
 ---@field linedefined number
 ---@field lastlinedefined number
--- ---@field calls LuaX.Profiler.Function.Call[]
--- ---@field lines LuaX.Profiler.Function.Line[]
 ---@field events LuaX.Profiler.Function.Event[]
 
+
 ---@alias LuaX.Profiler.CallstackItem (debuginfo | { instruction_count: number })
+
+
 
 ---@class LuaX.Profiler : Log.BaseFunctions
 ---
@@ -45,10 +73,10 @@ local class = require("lib.30log")
 ---
 ---@field ignore_paths string[]
 ---
----@operator call: LuaX.Profiler
+---@operator call:LuaX.Profiler
 local Profiler = class("Profiler")
 
----@param opts { sentient: boolean? }?
+---@param opts { sentient: boolean?, ignore: string[]? }?
 function Profiler:init(opts)
     opts = opts or {}
 
@@ -61,8 +89,9 @@ function Profiler:init(opts)
     self.callstack = {}
     self.functions = {}
 
+    self.ignore = {}
+
     if not opts.sentient then
-        self.ignore = {}
         for _, v in pairs(self) do
             if type(v) == "function" then
                 self.ignore[v] = true
@@ -71,10 +100,14 @@ function Profiler:init(opts)
     end
 
     self.ignore_paths = {}
+
+    if opts.ignore then
+        self:ignore_path(table.unpack(opts.ignore))
+    end
 end
 
 ---@param ... string paths to ignore
-function Profiler:ignore_path (...)
+function Profiler:ignore_path(...)
     for _, path in ipairs(table.pack(...)) do
         table.insert(self.ignore_paths, path)
     end
@@ -298,12 +331,19 @@ function Profiler:to_kcachegrind(file)
         end
 
         write_format(file, "\n")
+
+        file:flush()
     end
 end
 
 ---@param filename string
 ---@param format "KCacheGrind"
 function Profiler:dump(filename, format)
+    -- save us from a crazy memory leak
+    self:stop()
+
+    local filename = find_unused_filename(filename)
+
     local format_handler = ({
         KCacheGrind = self.to_kcachegrind
     })[format]
