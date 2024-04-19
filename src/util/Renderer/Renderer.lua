@@ -6,6 +6,7 @@ local create_native_element     = require("src.util.Renderer.helper.create_nativ
 local table_equals              = require("src.util.table_equals")
 local can_modify_child          = require("src.util.Renderer.helper.can_modify_child")
 local ElementNode               = require("src.util.ElementNode")
+local inherit_contexts                   = require("src.context.inherit")
 
 local FunctionComponentInstance = require("src.util.FunctionComponentInstance")
 local DefaultWorkLoop           = require("src.util.WorkLoop.Default")
@@ -184,18 +185,12 @@ function Renderer:render_keyed_child(element, container, key, caller)
                 __luax_internal = {
                     renderer = self,
                     container = container,
+                    context = inherit_contexts(caller)
                 }
             })
 
             local component = element.type
             local component_instance = FunctionComponentInstance(component)
-
-            -- Attach parent contexts
-            if caller and caller._component then
-                local inherit = caller._component:get_contexts()
-
-                component_instance:inherit_contexts(inherit)
-            end
 
             component_instance:on_change(function()
                 self.workloop:add(function()

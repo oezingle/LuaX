@@ -1,12 +1,11 @@
 
--- TODO FIXME this file
 ---@generic T
 ---@param context LuaX.Context<T>
 ---@return T
 local function use_context (context)
-    local hookstate = _G.LuaX._hookstate
+    local contexts = _G.LuaX._context
 
-    return hookstate:get_context(context)
+    return contexts[context]
 end
 
 return use_context

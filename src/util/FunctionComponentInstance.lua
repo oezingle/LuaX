@@ -6,8 +6,6 @@ local ipairs_with_nil = require("src.util.ipairs_with_nil")
 
 ---@class LuaX.ComponentInstance : Log.BaseFunctions
 ---@field handlers LuaX.ComponentInstance.ChangeHandler[]
----@field get_contexts fun(self: self): table<LuaX.Context, table>
----@field inherit_contexts fun(self: self, contexts: table<LuaX.Context, table>)
 ---
 --- flag set for if the renderer is going to be called again, in which case returend children are ignored
 ---@field requests_rerender boolean
@@ -51,29 +49,23 @@ end
 
 -- TODO FIXME use_effect unmount
 
--- TODO yeah cache
 function FunctionComponentInstance:render(props)
     self.requests_rerender = false
 
     self.hookstate:reset()
 
-    LuaX._hookstate = self.hookstate
+    -- TODO optionally use setfenv hack here to set _G.LuaX._context and _G.LuaX._hookstate for only self.component
+    _G.LuaX._context = props.__luax_internal.context
+    _G.LuaX._hookstate = self.hookstate
 
     local component = self.component
 
     local element = component(props)
 
-    LuaX._hookstate = nil
+    _G.LuaX._context = nil
+    _G.LuaX._hookstate = nil
 
     return element
-end
-
-function FunctionComponentInstance:get_contexts()
-    return self.hookstate:get_contexts()
-end
-
-function FunctionComponentInstance:inherit_contexts(contexts)
-    self.hookstate:inherit_contexts(contexts)
 end
 
 function FunctionComponentInstance:__gc()

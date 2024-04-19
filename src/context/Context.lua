@@ -18,16 +18,8 @@ function Context:init(default)
     end
 end
 
--- TODO might not need effect - might even require not effect. Just nice for unmount.
-function Context:GenericProvider (props)        
-    use_effect(function ()
-        -- uses self here as the unique table address.
-        _G.LuaX._hookstate:provide_context(self, props.value or self.default)
-
-        return function ()
-            _G.LuaX._hookstate:provide_context(self, nil)            
-        end
-    end, { props.value })
+function Context:GenericProvider (props)
+    props.__luax_internal.context[self] = props.value or self.default
 
     return props.children
 end

@@ -6,8 +6,6 @@ local ipairs_with_nil = require("src.util.ipairs_with_nil")
 ---@class LuaX.HookState : Log.BaseFunctions
 ---@field index number
 ---@field values any[]
----@field contexts table<LuaX.Context, table>
----@field context_inherit table<LuaX.Context, table>
 ---@field listeners LuaX.HookState.Listener[]
 ---@operator call:LuaX.HookState
 local HookState = class("HookState")
@@ -17,41 +15,7 @@ function HookState:init()
 
     self.listeners = {}
 
-    self.contexts = setmetatable({}, {
-        __index = function (_, key)
-            if not self.context_inherit then
-                return
-            end
-
-            local inherited = self.context_inherit[key]
-
-            if inherited then
-                return inherited
-            end
-        end
-    })
-
     self.index = 1
-end
-
-function HookState:get_contexts()
-    return self.contexts
-end
-function HookState:inherit_contexts(contexts)
-    self.context_inherit = contexts
-end
-
-function HookState:provide_context(key, context)
-    -- Done this way so that if a Context:Provider is rendered with a nil value, it overrides its parent.
-    self.contexts[key] = { contextvalue = context }
-end
-
-function HookState:get_context(key)
-    local context = self.contexts[key]
-    
-    if context then
-        return context.contextvalue
-    end
 end
 
 function HookState:reset()
