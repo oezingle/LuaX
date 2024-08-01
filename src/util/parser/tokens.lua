@@ -1,20 +1,71 @@
-
 ---@nospec too simple to need a test. just a list
 
 local keywords = require("src.util.parser.keywords")
+local escape   = require("src.util.polyfill.string.escape")
 
--- valid tokens that precede LuaX tags
-local tokens = {
-    -- https://hackage.haskell.org/package/language-lua-0.11.0.1/docs/Language-Lua-Token.html
-    "{",
-    "[",
-    "(",
-    ",",
-    "=",
-}
+---@class LuaX.Parser.V2.Token
+---@field pattern string
+---@field replacer string
+---@field end_pattern string
+---@field end_replacer string
 
-for _, keyword in ipairs(keywords) do
-    table.insert(tokens, keyword)
+---@param token any
+---@return LuaX.Parser.V2.Token
+local function ensure_token(token)
+    token.replacer = token.replacer or ""
+    token.end_pattern = token.end_pattern or ""
+    token.end_replacer = token.end_replacer or ""
+
+    return token
 end
 
-return tokens
+-- Generate a list of valid tokens that precede LuaX tags
+local function bake_tokens()
+    ---@type any[]
+    local tokens = {
+        {
+            pattern = "return%s*%[%[%s*<",
+            replacer = "return ",
+            end_pattern = "%s*%]%]",
+            end_replacer = ""
+        },
+        {
+            pattern = "LuaX%s*%(%[%[%s*<",
+            replacer = "",
+            end_pattern = "%s*%]%]%s*%)",
+            end_replacer = ""
+        }
+    }
+
+    for _, keyword in ipairs(keywords) do
+        table.insert(tokens, {
+            pattern = keyword .. "%s*<"
+        })
+    end
+
+    -- https://hackage.haskell.org/package/language-lua-0.11.0.1/docs/Language-Lua-Token.html
+    for token, match in pairs({
+        ["{"] = "}",
+        ["["] = "]",
+        ["("] = ")",
+        [","] = "",
+        ["="] = "",
+    }) do
+        table.insert(tokens, {
+            pattern = escape(token) .. "%s*<",
+            -- Add end_pattern match for matching ending brackets
+            end_pattern = match and ("%s*" .. escape(match))
+        })
+    end
+
+    ---@type LuaX.Parser.V2.Token[]
+    local ret = {}
+
+    for _, token in ipairs(tokens) do
+        table.insert(ret, ensure_token(token))
+    end
+
+    return ret
+end
+
+return bake_tokens()

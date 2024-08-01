@@ -22,6 +22,8 @@ function WiboxElement:init(native, type)
     self.type = type
 end
 
+-- TODO FIXME maybe proxy signals?
+
 ---@param prop string
 ---@param value any
 function WiboxElement:set_prop(prop, value)
@@ -32,14 +34,14 @@ function WiboxElement:set_prop(prop, value)
     if prop:match("^signal::") then
         local signal_name = prop:sub(9)
 
-        if self.signal_handlers[prop] then
-            local signal_handler = self.signal_handlers[prop]
-
-            wibox:disconnect_signal(signal_name, signal_handler)
-        end
+        -- if self.signal_handlers[prop] then
+        --     local signal_handler = self.signal_handlers[prop]
+        -- 
+        --     wibox:disconnect_signal(signal_name, signal_handler)
+        -- end
 
         if value then
-            wibox:connect_signal(signal_name, value)
+            wibox:weak_connect_signal(signal_name, value)
         end
 
         self.signal_handlers[prop] = value

@@ -2,3 +2,5 @@
 .vscode
 
 callgrind.out.*
+
+awesome_dist/

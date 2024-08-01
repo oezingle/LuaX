@@ -33,7 +33,15 @@ assert_can_use_decorator()
 local function inline_transpile_decorator(chunk, stackoffset)
     local stackoffset = stackoffset or 0
 
+    local chunk_src = debug.getinfo(chunk, "S").short_src
+
     local chunk_locals = get_locals(3 + stackoffset)
+
+    -- This is compiled, ignore usage of decorator
+    if chunk_locals[LuaXParser.imports.auto.IS_COMPILED.name] then
+        return chunk
+    end
+
     chunk_locals[LuaXParser.imports.required.CREATE_ELEMENT.name] = create_element
     chunk_locals[LuaXParser.imports.auto.FRAGMENT.name] = Fragment
 
@@ -64,7 +72,7 @@ local function inline_transpile_decorator(chunk, stackoffset)
 
         local element_str = transpile_cache.get(tag, inner_locals)
 
-        local node = load_cache.get(element_str, inner_locals)
+        local node = load_cache.get(element_str, inner_locals, chunk_src)
 
         return node
     end

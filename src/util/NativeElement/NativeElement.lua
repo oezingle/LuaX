@@ -228,6 +228,7 @@ function NativeElement.recursive_children_string (children)
     end
 end
 
+-- TODO maybe strip this? Addresses are important!
 function NativeElement:__tostring()
     local component = self:get_type_safe()
 

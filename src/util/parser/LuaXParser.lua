@@ -45,6 +45,9 @@ LuaXParser.imports = {
             name = "_LuaX_Fragment",
             export = "Fragment",
         },
+        IS_COMPILED = {
+            name = "_LuaX_is_compiled",
+        }
     },
     required = {
         CREATE_ELEMENT = {
@@ -53,27 +56,6 @@ LuaXParser.imports = {
         }
     }
 }
-
---[[
----@param text string
----@return string text, string indent
-function LuaXParser.preprocess(text)
-    -- remove default indent
-    local no_indent = remove_default_indent(text)
-
-    -- figure out what the indent is
-    local indent = get_indent(text)
-
-    return no_indent, indent
-end
-]]
-
---[[
-    parse_file
-        find keyword .. "%s*<"
-        find "[%[%{%(]%s*<"
-        find '=%s*<'
-]]
 
 ---@param text string
 ---@return table<string, string>, integer
@@ -111,7 +93,7 @@ function LuaXParser:parse_props(text)
 
             local prop_value_clean = prop_value
                 :gsub("^[\"'](.*)[\"']$", "%1") -- remove block quotes
-                --:gsub("^[\"'](%{.*%})[\"']$", "%1") -- remove quotes around {} blocks, keeping {}
+            --:gsub("^[\"'](%{.*%})[\"']$", "%1") -- remove quotes around {} blocks, keeping {}
 
             -- print(prop_value)
 
@@ -176,7 +158,7 @@ function LuaXParser:parse_literal(nodes, text, depth)
     local last_start = tokenstack:get_pos()
 
     -- TODO FIXME this is a terrible way to fix this edge case. see above
-    if text:sub(1,1) == "{" then
+    if text:sub(1, 1) == "{" then
         last_start = last_start + 1
     end
 
@@ -434,7 +416,9 @@ function LuaXParser:transpile_tag(text, init, components, components_mode)
 
     local transpiled = node_to_element(node, components, components_mode, self.imports.required.CREATE_ELEMENT.name)
 
-    return text:sub(1, init - 1) .. transpiled .. text:sub(init + end_pos)
+    local text_transpiled = text:sub(1, init - 1) .. transpiled .. text:sub(init + end_pos)
+
+    return text_transpiled, #transpiled
 end
 
 -- TODO cache this work. duh!
@@ -498,38 +482,51 @@ function LuaXParser:add_import(text, import)
     return require_string .. "\n" .. text
 end
 
+---@param text any
+---@param components any
+---@param components_mode any
+---@return boolean continue, string text
+function LuaXParser:replace_once(text, components, components_mode)
+    for _, info in ipairs(tokens) do
+        local pattern = info.pattern
+
+        -- Find from back to front
+        local block_start = text:find(pattern .. ".-")
+
+        local _, luax_start = text:find(pattern, block_start)
+
+        if luax_start then
+            -- remove call to LuaX
+            local text = text:sub(1, block_start - 1) .. info.replacer .. text:sub(luax_start)
+
+            local new_luax_start = block_start + #info.replacer
+            local text, transpiled_length = self:transpile_tag(text, new_luax_start, components, components_mode)
+
+            local luax_end = new_luax_start + transpiled_length
+
+            local _, call_end = text:find(info.end_pattern, luax_end)
+            if not call_end then
+                error("LuaX Parser: Unable to locate end of block")
+            end
+            text = text:sub(1, luax_end) .. info.end_replacer .. text:sub(call_end + 1)
+
+            return true, text
+        end
+    end
+
+    return false, text
+end
+
 --- transpile some arbitrary text
 ---@param text string
 ---@param components table<string, true>
 ---@param components_mode "global" | "local"
 function LuaXParser:transpile_text(text, components, components_mode)
-    while true do
-        local _, luax_start
+    repeat
+        local continue
 
-        for _, token in ipairs(tokens) do
-            local pattern = escape(token) .. "%s*<"
-
-            -- Find from back to front
-            local last_luax_tag = text:find(pattern .. ".-")
-
-            _, luax_start = text:find(pattern, last_luax_tag)
-
-            if luax_start then
-                break
-            end
-        end
-
-        if not luax_start then
-            break
-        end
-
-        -- print(luax_start)
-
-        -- ok now do some shit.
-        text = self:transpile_tag(text, luax_start, components, components_mode)
-
-        -- print(text)
-    end
+        continue, text = self:replace_once(text, components, components_mode)
+    until not continue
 
     return text
 end
@@ -543,12 +540,17 @@ function LuaXParser:transpile_file(text)
     local globals = self.collect_global_components()
 
     local locals = collect_locals(text)
+    locals[self.imports.auto.FRAGMENT.name] = true
 
     text = globals and
         self:transpile_text(text, globals, "global") or
         self:transpile_text(text, locals, "local")
 
     text = self:add_import(text, self.imports.required.CREATE_ELEMENT)
+
+    -- See src/util/parser/inline/decorator.lua:40
+    local compilation_string = string.format("local %s = true", self.imports.auto.IS_COMPILED.name)
+    text = compilation_string .. "\n" .. text
 
     if self.imported.Fragment then
         text = self:add_import(text, self.imports.auto.FRAGMENT)

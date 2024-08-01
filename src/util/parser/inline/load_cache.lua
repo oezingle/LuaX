@@ -40,15 +40,21 @@ end
 
 ---@param code string
 ---@param env table<string, any>
-function cache.get (code, env)
+---@param src_name string?
+function cache.get (code, env, src_name)
     local cached = cache.find(code, env)
 
     if cached then
         return cached
     end
 
+    local chunkname = "inline LuaX code"
+    if src_name then
+        chunkname = chunkname .. " " .. src_name
+    end
+
     -- TODO FIXME provide ... global
-    local get_output, err = load(code, "inline LuaX code", nil, env)
+    local get_output, err = load(code, chunkname, nil, env)
 
     if not get_output then
         warn("Code passed in:")

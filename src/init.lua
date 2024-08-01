@@ -13,6 +13,7 @@ if table.pack(...)[1] ~= (arg or {})[1] then
         Renderer = "src.util.Renderer",
         Fragment = "src.components.Fragment",
         create_element = "src.create_element",
+        clone_element = "src.clone_element",
         use_state = "src.hooks.use_state",
         use_effect = "src.hooks.use_effect",
         use_memo = "src.hooks.use_memo",
@@ -23,7 +24,8 @@ if table.pack(...)[1] ~= (arg or {})[1] then
     ---@class LuaX.Import
     ---@field Renderer LuaX.Renderer
     ---@field Fragment LuaX.Component
-    ---@field create_element fun(type: LuaX.Component, props: table): LuaX.ElementNode
+    ---@field create_element fun(type: LuaX.Component, props: LuaX.Props): LuaX.ElementNode
+    ---@field clone_element (fun(element: LuaX.ElementNode, props: LuaX.Props): LuaX.ElementNode) | (fun(element: LuaX.ElementNode[], props: LuaX.Props): LuaX.ElementNode[])
     -- TODO FIXME types for hooks here.
     ---@field use_state any
     ---@field use_effect any
