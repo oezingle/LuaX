@@ -18,6 +18,18 @@ do
     require_path = (...)
 end
 
+---@class LuaX.Language.Node.Literal
+---@field type "literal"
+---@field value string
+
+---@class LuaX.Language.Node.Element
+---@field type "element"
+---@field name string
+---@field props LuaX.Props
+---@field children LuaX.Language.Node[]
+
+---@alias LuaX.Language.Node LuaX.Language.Node.Literal | LuaX.Language.Node.Element
+
 ---@alias LuaX.Parser.V2.Import { name: string, export: string }
 
 ---@class LuaX.Parser.V2 : Log.BaseFunctions
