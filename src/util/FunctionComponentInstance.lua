@@ -73,7 +73,7 @@ function FunctionComponentInstance:__gc()
     local length = self.hookstate.index
 
     for _, hook in ipairs_with_nil(hooks, length) do
-        if hook.on_remove then
+        if hook and hook.on_remove then
             hook.on_remove()
         end
     end
