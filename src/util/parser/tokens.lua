@@ -24,13 +24,14 @@ local function bake_tokens()
     ---@type any[]
     local tokens = {
         {
-            pattern = "return%s*%[%[%s*<",
+            -- Capture here to keep whitespace & allow indent features to work nicely.
+            pattern = "return%s*%[%[(%s*)<",
             replacer = "return ",
             end_pattern = "%s*%]%]",
             end_replacer = ""
         },
         {
-            pattern = "LuaX%s*%(%[%[%s*<",
+            pattern = "LuaX%s*%(%[%[(%s*)<",
             replacer = "",
             end_pattern = "%s*%]%]%s*%)",
             end_replacer = ""

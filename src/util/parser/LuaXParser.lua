@@ -1,12 +1,13 @@
-local class           = require("lib.30log")
-local escape          = require("src.util.polyfill.string.escape")
-local TokenStack      = require("src.util.parser.TokenStack")
-local node_to_element = require("src.util.parser.transpile.node_to_element")
-local NativeElement   = require("src.util.NativeElement")
-local warn_once       = require("src.util.warn_once")
-local get_indent      = require("src.util.parser.parse.get_indent")
-local tokens          = require("src.util.parser.tokens")
-local collect_locals  = require("src.util.parser.transpile.collect_locals")
+local class              = require("lib.30log")
+local escape             = require("src.util.polyfill.string.escape")
+local TokenStack         = require("src.util.parser.TokenStack")
+local node_to_element    = require("src.util.parser.transpile.node_to_element")
+local NativeElement      = require("src.util.NativeElement")
+local warn_once          = require("src.util.warn_once")
+local get_indent         = require("src.util.parser.parse.get_indent")
+local get_default_indent = require("src.util.parser.parse.get_default_indent")
+local tokens             = require("src.util.parser.tokens")
+local collect_locals     = require("src.util.parser.transpile.collect_locals")
 
 local require_path
 
@@ -51,6 +52,7 @@ function LuaXParser:init()
     self.default_indent = ""
 end
 
+-- TODO make all these auto, and also not necessarily imports (see IS_COMPILED)
 LuaXParser.imports = {
     auto = {
         FRAGMENT = {
@@ -151,6 +153,7 @@ function LuaXParser:handle_literal_slice(nodes, slice, is_luablock)
     end
 end
 
+--- TODO needs a rewrite badly - these loops suck!
 --- Handle literal values, splitting into blocks of lua if necessary.
 ---@param nodes LuaX.Language.Node[]
 ---@param text string
@@ -230,16 +233,11 @@ function LuaXParser:parse_literal(nodes, text, depth)
         end
     end
 
+    -- remove leading whitespace
     slices[1].value = slices[1].value:gsub("^\n", "")
-    slices[#slices].value = slices[#slices].value
-        :gsub("\n%s-$", "")
+    -- remove trailing whitespace
+    slices[#slices].value = slices[#slices].value:gsub("\n%s-$", "")
 
-    -- print("\nslices")
-    -- for _, slice in ipairs(slices) do
-    --     print(slice.value:gsub("\n", "n"))
-    -- end
-
-    -- create nodes
     for _, slice in ipairs(slices) do
         self:handle_literal_slice(nodes, slice.value, slice.is_luablock)
     end
@@ -396,16 +394,6 @@ function LuaXParser:parse_tag(text, depth)
 end
 
 ---@param text string
----@param pos integer
-function LuaXParser:set_default_indent(text, pos)
-    local subtext = text:sub(1, pos)
-
-    local default_indent = subtext:match("^(%s*)<$") or subtext:match("\n(%s*)<$")
-
-    self.default_indent = default_indent or ""
-end
-
----@param text string
 ---@param init integer?
 ---@param components table<string, true>
 ---@param components_mode "global" | "local"
@@ -416,7 +404,7 @@ function LuaXParser:transpile_tag(text, init, components, components_mode)
 
     init = init or 1
 
-    self:set_default_indent(text, init)
+    self.default_indent = get_default_indent(text, init)
 
     local subtext = text:sub(init)
 
@@ -503,15 +491,17 @@ function LuaXParser:replace_once(text, components, components_mode)
         local pattern = info.pattern
 
         -- Find from back to front
-        local block_start = text:find(pattern .. ".-")
+        local block_start, _, captured = text:find(pattern .. ".-")
 
         local _, luax_start = text:find(pattern, block_start)
 
         if luax_start then
-            -- remove call to LuaX
-            local text = text:sub(1, block_start - 1) .. info.replacer .. text:sub(luax_start)
+            captured = captured or ""
 
-            local new_luax_start = block_start + #info.replacer
+            -- remove call to LuaX
+            local text = text:sub(1, block_start - 1) .. info.replacer .. captured .. text:sub(luax_start)
+
+            local new_luax_start = block_start + #info.replacer + #captured
             local text, transpiled_length = self:transpile_tag(text, new_luax_start, components, components_mode)
 
             local luax_end = new_luax_start + transpiled_length
