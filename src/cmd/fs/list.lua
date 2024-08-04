@@ -5,8 +5,6 @@ local is_windows = package.config:sub(1, 1) == "\\"
 
 ---@alias LuaX.CLI.LsDir fun (path: string): string[]
 
-local ls = nil
-
 ---@type LuaX.CLI.LsDir
 local function ls_lfs(path)
     local children = {}
@@ -59,6 +57,7 @@ local function ls_windows (path)
     return children
 end
 
+local ls = nil
 if has_lfs then
     ls = ls_lfs
 elseif is_windows then
@@ -76,6 +75,5 @@ return {
     ls_windows = ls_windows,
 
     ---@type LuaX.CLI.LsDir
-    ---@diagnostic disable-next-line:assign-type-mismatch
     ls = ls
 }

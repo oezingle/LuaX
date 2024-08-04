@@ -1,68 +1,74 @@
-local argparse   = require("lib.argparse")
-local transpile_dir = require("src.cmd.transpile_dir")
+#!/usr/bin/lua
 
-local parse_file = require("src.cmd.parse_file")
+local argparse      = require("lib.argparse")
+local basename = require("src.util.polyfill.path.basename")
+local to_luapath = require ("src.cmd.to_luapath")
+local transpile = require("src.cmd.transpile")
 
-
--- I genuinely hate the args available as of right now.
 local function cmd()
-    -- TODO FIXME https://github.com/mpeterv/argparse
     local parser = argparse("LuaX")
 
-    --[[
     parser
-        :option("--convert", "Transpile an input file to an output file.")
+        :option("-r --recursive", "Recursively check, either to any depth (implicit/\"auto\") or a specified number")
+        :args("?")
+
+    parser
+        :option("--remap", "Match imports for $1, replacing with $2")
         :args(2)
         :count("*")
 
     parser
-        :option("--file", "Transpile an input file to stdout.")
-        :args(1)
-        :count("*")
-    ]]
+        :flag("-a --auto-remap", "Attempt to automatically remap imports given input & output")
 
     parser
-        :option("--dir", "Transpile a directory to an output")
-        :args(2)
-        :count("*")
+        :argument("input", "Input file/folder path")
+
+    parser
+        :argument("output", "Output file/folder path")
 
     local args = parser:parse()
 
-    for _, dirs in ipairs(args.dir) do
-        local indir = dirs[1]
-        local outdir = dirs[2]
+    if args.recursive then
+        if #args.recursive == 0 or args.recursive[1] == "auto" then
+            args.recursive = true
+        else
+            local depth = tonumber(args.recursive[1])
 
-        transpile_dir(indir, outdir)
-    end
+            if not depth then
+                print(string.format("--recursive: expected number, got %q", args.recursive[1]))
 
-    --[[
-    for _, convert in ipairs(args.convert) do
-        local convert_in = convert[1]
-        local convert_out = convert[2]
+                os.exit(1)
+            end
 
-        local parsed = parse_file(convert_in)
-
-        local outfile = io.open(convert_out, "w")
-
-        if not outfile then
-            error(string.format(
-                "Unable to transpile %s: output file %s does not exist.",
-                convert_in, convert_out
-            ))
+            args.recursive = depth
         end
-
-        outfile:write(parsed)
-
-        outfile:flush()
-        outfile:close()
+    else
+        args.recursive = false
     end
 
-    for _, filename in ipairs(args.file) do
-        local parsed = parse_file(filename)
-
-        print(parsed)
+    local remap = {}
+    for _, pair in ipairs(args.remap) do
+        table.insert(remap, {
+            from = pair[1],
+            to = pair[2]
+        })
     end
-    ]]
+
+    if args.auto_remap then
+        table.insert(remap, {
+            from = to_luapath(basename(args.input)),
+            to = to_luapath(basename(args.output))
+        })
+    end
+
+    local transpile_options = {
+        inpath = args.input,
+        outpath = args.output,
+        recursive = args.recursive,
+        remap = remap
+    }
+
+    transpile(transpile_options)
 end
 
 return cmd
