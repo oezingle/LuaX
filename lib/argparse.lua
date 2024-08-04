@@ -3,7 +3,7 @@ local argparse = require("lib.argparse.src.argparse")
 
 if false then
     ---@class ArgParse.Option
-    ---@field args fun(self: ArgParse.Option, args: number): ArgParse.Option set the number of arguments per option. ie parser:option("double"):args(2) -> <program> --double arg1 arg2
+    ---@field args fun(self: ArgParse.Option, args: number | "?"): ArgParse.Option set the number of arguments per option. ie parser:option("double"):args(2) -> <program> --double arg1 arg2
     ---@field target fun(self: ArgParse.Option, target: string): ArgParse.Option
     ---@field count fun(self: ArgParse.Option, count: "*"|string|number): ArgParse.Option set the count of this option possible
     ---@field choices fun(self: ArgParse.Option, choies: string[]): ArgParse.Option set the possible choices for that option
