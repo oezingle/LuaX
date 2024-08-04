@@ -73,6 +73,7 @@ function FunctionComponentInstance:__gc()
     local length = self.hookstate.index
 
     for _, hook in ipairs_with_nil(hooks, length) do
+        -- TODO if not hook then there's low key an issue
         if hook and hook.on_remove then
             hook.on_remove()
         end
