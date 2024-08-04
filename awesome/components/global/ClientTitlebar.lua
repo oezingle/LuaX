@@ -28,7 +28,6 @@ local ClientTitlebar = function(props)
 
         local root = WiboxElement.get_root(widget)
 
-        -- TODO this fucks everything up. ClientContext only provides initial value for some reason.
         local provided = create_element(ClientContext.Provider, {
             children = clone_element(props.children),
             value = client
