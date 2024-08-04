@@ -9,10 +9,7 @@ local function get_src_files()
         error(err)
     end
 
-    -- line by line yippee
-    return function()
-        return stdout:read()
-    end
+    return stdout:lines()
 end
 
 ---@param filename string
