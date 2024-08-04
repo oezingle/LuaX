@@ -9,7 +9,7 @@ local get_function_location = require("src.util.Renderer.helper.get_function_loc
 -- ---@alias LuaX.Generic.ElementNode<Props> { type: LuaX.Generic.Component<Props>, props: Props, _component: LuaX.ComponentInstance }
 -- ---@alias LuaX.ElementNode LuaX.Generic.ElementNode<{ [string]: any }>
 
--- TODO table equality is slow as fuck?? LITERAL_NODE has to be a string to be speedy.
+-- TODO FIXME table equality is slow as fuck?? LITERAL_NODE has to be a string to be speedy.
 
 ---TODO FIXME add generics
 ---@class LuaX.ElementNode
@@ -25,7 +25,7 @@ local get_function_location = require("src.util.Renderer.helper.get_function_loc
 ---@field LITERAL_NODE LuaX.ElementNode.LiteralNode unique key
 ---
 local ElementNode = {
-    LITERAL_NODE = "LITERAL_NODE", -- this table is used for its unique key
+    LITERAL_NODE = "LUAX_LITERAL_NODE", -- this table is used for its unique key
 }
 
 ---@param children LuaX.ElementNode.Children
