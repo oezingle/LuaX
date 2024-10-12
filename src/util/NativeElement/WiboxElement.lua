@@ -6,7 +6,7 @@ local wibox = require("wibox")
 
 -- TODO FIXME text is not working too well
 
----@class WiboxElement : LuaX.NativeElement
+---@class LuaX.WiboxElement : LuaX.NativeElement
 ---@field texts WiboxText[]
 local WiboxElement = NativeElement:extend("WiboxElement")
 
@@ -31,7 +31,14 @@ function WiboxElement:set_prop(prop, value)
 
     local wibox = self.wibox
 
-    if prop:match("^signal::") then
+    -- support LuaX::onload
+    if prop:match("^LuaX::") then
+        local prop_name = prop:sub(7)
+
+        if prop_name == "onload" then
+            value(self, wibox)
+        end
+    elseif prop:match("^signal::") then
         local signal_name = prop:sub(9)
 
         -- if self.signal_handlers[prop] then
@@ -100,6 +107,7 @@ function WiboxElement:get_type()
     return self.type
 end
 
+---@param component string
 function WiboxElement.create_element(component)
     -- every widget & layout starts with wibox. , so remove it here
     local wibox_name = string.sub(component, 7)
@@ -133,7 +141,7 @@ function WiboxElement:_reload_text()
 end
 
 ---@class WiboxText : LuaX.NativeTextElement
----@field protected parent WiboxElement
+---@field protected parent LuaX.WiboxElement
 ---@field value string
 local WiboxText = NativeTextElement:extend("WiboxText")
 
@@ -153,7 +161,7 @@ function WiboxText:get_prop(prop)
 end
 
 ---@param value string
----@param parent WiboxElement
+---@param parent LuaX.WiboxElement
 function WiboxElement.create_literal(value, parent)
     return WiboxText(value, parent)
 end

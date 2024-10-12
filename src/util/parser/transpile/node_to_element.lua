@@ -28,10 +28,8 @@ end
 ---@param create_element string
 ---@return string
 local function transpile_node_to_element(node, components, components_mode, create_element)
-    if node.type == "literal" then
-        -- TODO this feels hacky.
-        -- TODO FIXME LITERAL_NODE here has to come from ElementNode?
-        return transpile_create_element(create_element, "\"LITERAL_NODE\"", { value = node.value })
+    if node.type == "literal" then        
+        return string.format("%q", node.value)
     end
 
     -- Otherwise mode

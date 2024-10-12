@@ -13,3 +13,9 @@
 [submodule "lib/argparse"]
 	path = lib/argparse
 	url = https://github.com/mpeterv/argparse.git
+[submodule "lib/bundler"]
+	path = lib/bundler
+	url = https://github.com/oezingle/lua-bundler.git
+[submodule "lib/log"]
+	path = lib/log
+	url = https://github.com/rxi/log.lua

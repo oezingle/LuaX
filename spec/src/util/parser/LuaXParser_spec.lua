@@ -1,5 +1,5 @@
 local LuaXParser = require("src.util.parser.LuaXParser")
-local pprint     = require("lib.pprint")
+local log = require("lib.log")
 
 -- local pprint = require("lib.pprint")
 
@@ -26,7 +26,7 @@ describe("LuaXParser (v2)", function()
         assert.equal(#code, end_pos)
     end)
 
-    it("parses literals in quotes", function ()
+    it("parses literals in quotes", function()
         local parser = LuaXParser()
 
         local code = "<div class=\"{variable}\"></div>"
@@ -35,7 +35,6 @@ describe("LuaXParser (v2)", function()
 
         assert.equal("{variable}", node.props.class)
         assert.equal(#code, end_pos)
-
     end)
 
     it("parses tags with explicit props", function()
@@ -60,7 +59,7 @@ describe("LuaXParser (v2)", function()
         assert.equal(#code, end_pos)
     end)
 
-    it("Parses tags with no children with no whitespace", function ()
+    it("Parses tags with no children with no whitespace", function()
         local parser = LuaXParser()
 
         local code = "<Box/>"
@@ -169,6 +168,48 @@ describe("LuaXParser (v2)", function()
         assert.equal("_LuaX_create_element(_LuaX_Fragment, {  })", transpiled)
     end)
 
+    it("parses complex props", function()
+        local parser = LuaXParser()
+
+        local code = [[<wibox.widget.textbox
+                signal::button::press={function ()
+                    set_render(function (render) return not render end)
+                end}
+            >
+                {render and "Rendering children (click)" or "Not rendering children (click)"}
+
+                I'm not lua!
+            </wibox.widget.textbox>]]
+
+        parser.indent = "    "
+
+        local node, end_pos = parser:parse_tag(code, 3)
+
+        assert.Truthy(node.props['signal::button::press'])
+
+        assert.equal(#code, end_pos)
+    end)
+
+    it("parses literal children", function()
+        local parser = LuaXParser()
+
+        local code = [[<text>{message}</text>]]
+
+        local node = parser:parse_tag(code, 0)
+
+        assert.equal('message', node.children[1])
+    end)
+
+    it("Parses children without spaces", function ()
+        local parser = LuaXParser()
+
+        local code = [[<text>Message!</text>]]
+
+        local node = parser:parse_tag(code, 0)
+
+        assert.equal("Message!", node.children[1].value)
+    end)
+
     it("transpiles files", function()
         local parser = LuaXParser()
 
@@ -199,36 +240,71 @@ describe("LuaXParser (v2)", function()
         assert.equal("a string!", element.props.children[1].props.value)
     end)
 
-    it("parses complex props", function()
+    it("transpiles files with inline calls", function()
         local parser = LuaXParser()
 
-        local code = [[<wibox.widget.textbox
-                signal::button::press={function ()
-                    set_render(function (render) return not render end)
-                end}
-            >
-                {render and "Rendering children (click)" or "Not rendering children (click)"}
+        local code = [[
+            local Fragment = require("src.components.Fragment")
 
-                I'm not lua!
-            </wibox.widget.textbox>]]
+            local Component = function (props)
+                return ]] .. "LuaX([[" .. [[
 
-        parser.indent = "    "
+                    <>
+                        {props.message}
+                    </>
+                ]] .. "]])" .. [[
+            end
 
-        local node, end_pos = parser:parse_tag(code, 3)
+            return Component
+        ]]
 
-        assert.Truthy(node.props['signal::button::press'])
+        local transpiled = parser:transpile_file(code)
 
-        assert.equal(#code, end_pos)
+        local run_transpiled, err = load(transpiled, "transpiled LuaX")
+
+        if not run_transpiled then
+            error(err)
+        end
+
+        local Component = run_transpiled()
+
+        local element = Component({ message = "a string!" })
+
+        assert.equal("a string!", element.props.children[1].props.value)
     end)
 
-    it("parses literal children", function ()
+    it("transpiles files with inline functions", function()
         local parser = LuaXParser()
 
-        local code = [[<text>{message}</text>]]
+        local code = [[
+            local Fragment = require("src.components.Fragment")
 
-        local node = parser:parse_tag(code, 0)
+            local Component = LuaX(function (props)
+                return ]] .. "[[" .. [[
 
-        assert.equal('message', node.children[1])
+                    <>
+                        {props.message}
+                    </>
+                ]] .. "]]" .. [[
+            end)
+
+            return Component
+        ]]
+
+
+        local transpiled = parser:transpile_file(code)
+
+        local run_transpiled, err = load(transpiled, "transpiled LuaX")
+
+        if not run_transpiled then
+            error(err)
+        end
+
+        local Component = run_transpiled()
+
+        local element = Component({ message = "a string!" })
+
+        assert.equal("a string!", element.props.children[1].props.value)
     end)
 
     -- TODO FIXME - spec for parsing comment literals - eg {--[[ Hello World! ]]}

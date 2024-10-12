@@ -9,7 +9,7 @@ local function is_dir(path)
         return false
     end
 
-    local content, err, code = file:read()
+    local _, _, code = file:read()
 
     if code == 21 then
         return true

@@ -24,16 +24,14 @@ end
 local function ls_unix(path)
     local children = {}
 
-    local command = string.format("ls -a %q", path)
+    local command = string.format("ls -A %q", path)
     local handle, err = io.popen(command, "r")
     if not handle then
         error(string.format("Unable to run %q: %q", command, err))
     end
 
     for child in handle:lines("l") do
-        if child ~= "." and child ~= ".." then
-            table.insert(children, child)
-        end
+        table.insert(children, child)
     end
 
     return children

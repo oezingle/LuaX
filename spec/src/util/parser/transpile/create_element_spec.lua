@@ -34,7 +34,7 @@ describe("transpile_create_element", function()
     end)
 
     it("gets the right value", function ()
-        local transpiled = transpile_create_element(nil, "\"LITERAL_NODE\"", { value = "{props.message}" })
+        local transpiled = transpile_create_element(nil, "\"LUAX_LITERAL_NODE\"", { value = "{props.message}" })
 
         local get_element, err = load("return " .. transpiled, "transpiled create_element", "t", {
             create_element = create_element,

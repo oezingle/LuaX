@@ -1,5 +1,6 @@
 local ipairs_with_nil = require "src.util.ipairs_with_nil"
 -- TODO lua-ext also provides table stringification - probably does it better.
+-- TODO FIXME switch to lua-ext now that it's a dep
 
 ---@param input any
 ---@return string

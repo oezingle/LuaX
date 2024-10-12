@@ -1,4 +1,5 @@
 local class              = require("lib.30log")
+local log                = require("lib.log")
 local escape             = require("src.util.polyfill.string.escape")
 local TokenStack         = require("src.util.parser.TokenStack")
 local node_to_element    = require("src.util.parser.transpile.node_to_element")
@@ -8,12 +9,15 @@ local get_indent         = require("src.util.parser.parse.get_indent")
 local get_default_indent = require("src.util.parser.parse.get_default_indent")
 local tokens             = require("src.util.parser.tokens")
 local collect_locals     = require("src.util.parser.transpile.collect_locals")
+local truncate           = require("src.util.truncate")
 
 local require_path
 
 do
     if table.pack(...)[1] == (arg or {})[1] then
-        error("LuaXParser must be imported")
+        print("LuaXParser must be imported")
+
+        os.exit(1)
     end
 
     require_path = (...)
@@ -37,7 +41,6 @@ end
 ---@field imported { ["Fragment"]: boolean }
 ---@field indent string
 ---@field default_indent string
----@field verbose boolean?
 -- ---@field imports table<"auto"|"required", table<string, LuaXParser.V2.Import>>
 ---@operator call: LuaX.Parser.V2
 local LuaXParser = class("LuaXParser (V2)")
@@ -53,6 +56,7 @@ function LuaXParser:init()
 end
 
 -- TODO make all these auto, and also not necessarily imports (see IS_COMPILED)
+-- TODO ie rewrite this system
 LuaXParser.imports = {
     auto = {
         FRAGMENT = {
@@ -71,12 +75,20 @@ LuaXParser.imports = {
     }
 }
 
+function LuaXParser:log_trace(message)
+    local info = debug.getinfo(2, 'n')
+
+    local call_name = "LuaXParser." .. info.name
+
+    local msg = string.format("%s : %s", call_name, truncate(tostring(message)))
+
+    log.trace(msg)
+end
+
 ---@param text string
 ---@return table<string, string>, integer
 function LuaXParser:parse_props(text)
-    if self.verbose then
-        print("parse_props", text)
-    end
+    self:log_trace(text)
 
     local pos = 1
 
@@ -132,14 +144,15 @@ end
 ---@param nodes LuaX.Language.Node[]
 ---@param slice string
 ---@param is_luablock boolean
-function LuaXParser:handle_literal_slice(nodes, slice, is_luablock)
-    if self.verbose then
-        print("handle_literal_slice", slice)
-    end
+---@param depth number
+function LuaXParser:handle_literal_slice(nodes, slice, is_luablock, depth)
+    self:log_trace(slice)
 
     if #slice == 0 then
         return
     end
+
+    -- TODO FIXME transpile within literal blocks - ie { render_child and <>{props.children}</> } should transpile. We need components though!
 
     -- io.stdout:write("inserting literal |", slice, "|\n")
 
@@ -153,63 +166,50 @@ function LuaXParser:handle_literal_slice(nodes, slice, is_luablock)
     end
 end
 
---- TODO needs a rewrite badly - these loops suck!
 --- Handle literal values, splitting into blocks of lua if necessary.
 ---@param nodes LuaX.Language.Node[]
 ---@param text string
 ---@param depth integer
 ---@return integer
 function LuaXParser:parse_literal(nodes, text, depth)
-    if self.verbose then
-        print("parse_literal", text)
-    end
+    self:log_trace(text)
 
     local tokenstack = TokenStack(text)
     tokenstack.requires_literal = true
 
-    local last_was_luablock = false
-
-    -- TODO if tokenstack's first run_once() results in a literal, then last_start needs to be += 1
     local last_start = tokenstack:get_pos()
-
-    -- TODO FIXME this is a terrible way to fix this edge case. see above
-    if text:sub(1, 1) == "{" then
-        last_start = last_start + 1
-    end
 
     ---@type { value: string, is_luablock: boolean }[]
     local slices = {}
 
     -- TODO is_cancelled here would be nice.
-    -- todo this loop is a little bit shakey but it seems to get the job done.
-    -- TODO rewrite - last_start issue.
-    while not (tokenstack:get_current() == "<" and tokenstack:is_empty()) do
+    repeat
         tokenstack:run_once()
 
-        local was_luablock = tokenstack:is_empty()
-
-        if was_luablock ~= last_was_luablock then
-            local slice = text:sub(last_start, tokenstack:get_pos() - 2)
-
+        if not tokenstack:is_empty() then
+            local slice_val = text:sub(last_start, tokenstack:get_pos() - 2)
             table.insert(slices, {
-                value = slice,
-                is_luablock = was_luablock
+                value = slice_val,
+                is_luablock = false
             })
-
-            if self.verbose then
-                print("insert slice", slice, was_luablock)
-            end
 
             last_start = tokenstack:get_pos()
 
-            last_was_luablock = was_luablock
-        end
-    end
+            tokenstack:run_until_empty()
 
-    -- TODO can i assume this isn't a literal? seems like it!
-    local slice = text:sub(last_start, tokenstack:get_pos() - 2)
+            local slice_val = text:sub(last_start, tokenstack:get_pos() - 2)
+            table.insert(slices, {
+                value = slice_val,
+                is_luablock = true
+            })
+
+            last_start = tokenstack:get_pos()
+        end
+    until tokenstack:get_current() == "<"
+
+    local slice_val = text:sub(last_start, tokenstack:get_pos() - 1)
     table.insert(slices, {
-        value = slice,
+        value = slice_val,
         is_luablock = false
     })
 
@@ -239,7 +239,7 @@ function LuaXParser:parse_literal(nodes, text, depth)
     slices[#slices].value = slices[#slices].value:gsub("\n%s-$", "")
 
     for _, slice in ipairs(slices) do
-        self:handle_literal_slice(nodes, slice.value, slice.is_luablock)
+        self:handle_literal_slice(nodes, slice.value, slice.is_luablock, depth + 1)
     end
 
     return tokenstack:get_pos()
@@ -253,9 +253,7 @@ end
 ---@param depth integer
 ---@return LuaX.Language.Node[], integer
 function LuaXParser:parse_text(text, depth)
-    if self.verbose then
-        print("parse_text", text)
-    end
+    self:log_trace(text)
 
     local pos = 1
 
@@ -300,9 +298,7 @@ end
 ---@param tag_name string
 ---@param depth integer
 function LuaXParser:parse_children(text, props_end, tag_name, depth)
-    if self.verbose then
-        print("parse_children", text:sub(props_end))
-    end
+    self:log_trace(text:sub(props_end))
 
     local _, nochild = text:find("^%s*/%s*>", props_end)
 
@@ -336,9 +332,7 @@ end
 ---@param depth integer
 ---@return LuaX.Language.Node, integer
 function LuaXParser:parse_tag(text, depth)
-    if self.verbose then
-        print("parse_tag", text)
-    end
+    self:log_trace(text)
 
     local fragment_match = text:match("^<%s*>")
 
@@ -398,9 +392,7 @@ end
 ---@param components table<string, true>
 ---@param components_mode "global" | "local"
 function LuaXParser:transpile_tag(text, init, components, components_mode)
-    if self.verbose then
-        print("transpile_tag", text)
-    end
+    self:log_trace(text)
 
     init = init or 1
 
@@ -429,33 +421,7 @@ function LuaXParser.collect_global_components()
     ---@type LuaX.NativeElement[]
     local subclasses_of_native_element = NativeElement:subclasses()
 
-    if #subclasses_of_native_element > 0 then
-        for _, NativeElementImplementation in ipairs(subclasses_of_native_element) do
-            -- saves some memory to do this here, as every string from this class in globals will be the same
-            local implementation_name = tostring(NativeElementImplementation)
-
-            if not NativeElementImplementation.components then
-                warn_once(string.format(
-                    "LuaX Parser: NativeElement subclass %s does not have a component registry list - defaulting to local variable lookup",
-                    implementation_name
-                ))
-
-                return nil
-            end
-
-            for _, component_name in ipairs(NativeElementImplementation.components) do
-                if globals[component_name] then
-                    warn_once(string.format(
-                        "LuaX Parser: Multiple NativeElement implementations implement the element '%s'. Ignoring from %s, using existing from %s",
-                        component_name, implementation_name, globals[component_name]
-                    ))
-                end
-
-                -- so that we can look up which implementation uses this
-                globals[component_name] = implementation_name
-            end
-        end
-    else
+    if #subclasses_of_native_element == 0 then
         warn_once(
             "LuaX Parser: NativeElement has not been extended yet - defaulting to local variable lookup" .. '\n' ..
             "to use global mode, import your NativeElement implementation before any LuaX files"
@@ -464,7 +430,42 @@ function LuaXParser.collect_global_components()
         return nil
     end
 
+    for _, NativeElementImplementation in ipairs(subclasses_of_native_element) do
+        -- saves some memory to do this here, as every string from this class in globals will be the same
+        local implementation_name = tostring(NativeElementImplementation)
+
+        if not NativeElementImplementation.components then
+            warn_once(string.format(
+                "LuaX Parser: NativeElement subclass %s does not have a component registry list - defaulting to local variable lookup",
+                implementation_name
+            ))
+
+            return nil
+        end
+
+        for _, component_name in ipairs(NativeElementImplementation.components) do
+            if globals[component_name] then
+                warn_once(string.format(
+                    "LuaX Parser: Multiple NativeElement implementations implement the element '%s'. Ignoring from %s, using existing from %s",
+                    component_name, implementation_name, globals[component_name]
+                ))
+            end
+
+            -- so that we can look up which implementation uses this
+            globals[component_name] = implementation_name
+        end
+    end
+
     return globals
+end
+
+---@param text string
+---@param name string
+---@param value string
+function LuaXParser:add_variable(text, name, value)
+    local variable = string.format("local %s = %s", name, value)
+
+    return variable .. "\n" .. text
 end
 
 ---@param text string
@@ -475,11 +476,9 @@ function LuaXParser:add_import(text, import)
         -- TODO FIXME this code is location dependent
         :gsub("%.util%.parser%.LuaXParser$", "")
 
-    local fmt = "local %s = require(%q)[%q]"
+    local require_string = string.format("require(%q)[%q]", luax_root, import.export)
 
-    local require_string = string.format(fmt, import.name, luax_root, import.export)
-
-    return require_string .. "\n" .. text
+    return self:add_variable(text, import.name, require_string)
 end
 
 ---@param text any
@@ -487,8 +486,8 @@ end
 ---@param components_mode any
 ---@return boolean continue, string text
 function LuaXParser:replace_once(text, components, components_mode)
-    for _, info in ipairs(tokens) do
-        local pattern = info.pattern
+    for _, token_info in ipairs(tokens) do
+        local pattern = token_info.pattern
 
         -- Find from back to front
         local block_start, _, captured = text:find(pattern .. ".-")
@@ -499,18 +498,18 @@ function LuaXParser:replace_once(text, components, components_mode)
             captured = captured or ""
 
             -- remove call to LuaX
-            local text = text:sub(1, block_start - 1) .. info.replacer .. captured .. text:sub(luax_start)
+            local text = text:sub(1, block_start - 1) .. token_info.replacer .. captured .. text:sub(luax_start)
 
-            local new_luax_start = block_start + #info.replacer + #captured
+            local new_luax_start = block_start + #token_info.replacer + #captured
             local text, transpiled_length = self:transpile_tag(text, new_luax_start, components, components_mode)
 
             local luax_end = new_luax_start + transpiled_length
 
-            local _, call_end = text:find(info.end_pattern, luax_end)
+            local _, call_end = text:find(token_info.end_pattern, luax_end)
             if not call_end then
                 error("LuaX Parser: Unable to locate end of block")
             end
-            text = text:sub(1, luax_end) .. info.end_replacer .. text:sub(call_end + 1)
+            text = text:sub(1, luax_end) .. token_info.end_replacer .. text:sub(call_end + 1)
 
             return true, text
         end
@@ -535,9 +534,7 @@ end
 
 ---@param text string
 function LuaXParser:transpile_file(text)
-    if self.verbose then
-        print("transpile_file", text)
-    end
+    self:log_trace(text)
 
     local globals = self.collect_global_components()
 
@@ -551,8 +548,7 @@ function LuaXParser:transpile_file(text)
     text = self:add_import(text, self.imports.required.CREATE_ELEMENT)
 
     -- See src/util/parser/inline/decorator.lua:40
-    local compilation_string = string.format("local %s = true", self.imports.auto.IS_COMPILED.name)
-    text = compilation_string .. "\n" .. text
+    text = self:add_variable(text, self.imports.auto.IS_COMPILED.name, "true")
 
     if self.imported.Fragment then
         text = self:add_import(text, self.imports.auto.FRAGMENT)
