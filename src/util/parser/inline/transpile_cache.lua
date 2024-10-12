@@ -16,7 +16,6 @@ function cache.set(tag, output)
     transpile_cache[tag] = output
 end
 
-local parser = LuaXParser()
 -- parser.verbose = true
 
 --- Get a value from either parsing or the cache, depending on if tag is saved.
@@ -34,6 +33,8 @@ function cache.get(tag, locals)
     end
 
     local _, init = tag:find("^%s*<")
+
+    local parser = LuaXParser()
 
     -- TODO condiitonals need to be transpiled seperately.
     local inner_transpiled = parser:transpile_text(tag, locals, "local")

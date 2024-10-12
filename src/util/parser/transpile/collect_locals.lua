@@ -9,7 +9,7 @@ local function list_to_map(list)
     local map = {}
 
     for _, item in pairs(list) do
-        map[item] = true
+        map[tostring(item)] = true
     end
 
     return map

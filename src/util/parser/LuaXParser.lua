@@ -78,7 +78,7 @@ LuaXParser.imports = {
 function LuaXParser:log_trace(message)
     local info = debug.getinfo(2, 'n')
 
-    local call_name = "LuaXParser." .. info.name
+    local call_name = info.name and ("LuaXParser." .. info.name) or "unknown"
 
     local msg = string.format("%s : %s", call_name, truncate(tostring(message)))
 
