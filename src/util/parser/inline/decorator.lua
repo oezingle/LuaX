@@ -6,7 +6,6 @@ local LuaXParser      = require("src.util.parser.LuaXParser")
 local Fragment        = require("src.components.Fragment")
 local create_element  = require("src.create_element")
 
-
 local debug = debug
 
 local function assert_can_use_decorator()
@@ -38,12 +37,15 @@ local function inline_transpile_decorator(chunk, stackoffset)
     local chunk_locals = get_locals(3 + stackoffset)
 
     -- This is compiled, ignore usage of decorator
-    if chunk_locals[LuaXParser.imports.auto.IS_COMPILED.name] then
+    ---@diagnostic disable-next-line:invisible
+    if chunk_locals[LuaXParser.vars.IS_COMPILED.name] then
         return chunk
     end
 
-    chunk_locals[LuaXParser.imports.required.CREATE_ELEMENT.name] = create_element
-    chunk_locals[LuaXParser.imports.auto.FRAGMENT.name] = Fragment
+    ---@diagnostic disable-next-line:invisible
+    chunk_locals[LuaXParser.vars.CREATE_ELEMENT.name] = create_element
+    ---@diagnostic disable-next-line:invisible
+    chunk_locals[LuaXParser.vars.FRAGMENT.name] = Fragment
 
     setmetatable(chunk_locals, { __index = _G })
 

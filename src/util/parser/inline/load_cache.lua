@@ -1,5 +1,6 @@
 
 local table_equals = require "src.util.table_equals"
+local LuaXParser   = require "src.util.parser.LuaXParser"
 
 ---@type table<string, { env: table<string, any>, old: any }>
 local load_cache = {}

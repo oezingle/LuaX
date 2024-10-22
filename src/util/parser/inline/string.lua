@@ -29,8 +29,12 @@ local function inline_transpile_string(tag, stackoffset)
 
     -- 3 is a value from trial and error
     local locals = get_locals(3 + stackoffset)
-    locals[LuaXParser.imports.required.CREATE_ELEMENT.name] = create_element
-    locals[LuaXParser.imports.auto.FRAGMENT.name] = Fragment
+    ---@diagnostic disable-next-line:invisible
+    locals[LuaXParser.vars.CREATE_ELEMENT.name] = create_element
+    ---@diagnostic disable-next-line:invisible
+    locals[LuaXParser.vars.FRAGMENT.name] = Fragment
+    ---@diagnostic disable-next-line:invisible
+    locals[LuaXParser.vars.IS_COMPILED.name] = true
 
     local element_str = transpile_cache.get(tag, locals)
 

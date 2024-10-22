@@ -40,7 +40,8 @@ local function bake_tokens()
 
     for _, keyword in ipairs(keywords) do
         table.insert(tokens, {
-            pattern = keyword .. "%s*<"
+            pattern = keyword .. "%s*<",
+            replacer = keyword .. " "
         })
     end
 
@@ -54,8 +55,10 @@ local function bake_tokens()
     }) do
         table.insert(tokens, {
             pattern = escape(token) .. "%s*<",
+            replacer = token,
             -- Add end_pattern match for matching ending brackets
-            end_pattern = match and ("%s*" .. escape(match))
+            end_pattern = match and ("%s*" .. escape(match)),
+            end_replacer = match
         })
     end
 

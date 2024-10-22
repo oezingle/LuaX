@@ -1,18 +1,11 @@
-
 local LuaXParser = require("src.util.parser.LuaXParser")
 
 ---@param path string
 ---@return string
 local function parse_file(path)
-    local file = io.open(path, "r")
-
-    if not file then
-        error(string.format("File %s not found", path))
-    end
-
-    local content = file:read("a")
-
-    local transpiled = LuaXParser():transpile_file(content)
+    local transpiled = LuaXParser
+        .from_file_path(path)
+        :transpile()
 
     return transpiled
 end

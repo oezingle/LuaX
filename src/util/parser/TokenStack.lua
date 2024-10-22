@@ -2,7 +2,7 @@ local class = require("lib.30log")
 local is_cancelled = require("src.util.parser.parse.is_cancelled")
 
 -- TODO different environments if in string or in literal
---      - in string: ignore ()[] and other string tags 
+--      - in string: ignore ()[] and other string tags
 --          - make sure to include [[ as in_string
 --          - don't ignore {} because that indicates the borders of a literal
 --      - out of literal: ignore tokens
@@ -40,7 +40,7 @@ local TokenStack = class("TokenStack")
 
 ---@param text string
 function TokenStack:init(text)
-    self.pos = 1
+    self:set_pos(1)
 
     self.stack = ""
 
@@ -48,15 +48,26 @@ function TokenStack:init(text)
 
     self.tokens = get_tokens()
 
-    self.requires_literal = false
+    self:set_requires_literal(false)
+end
+
+---@param requires_literal boolean
+---@return self
+function TokenStack:set_requires_literal(requires_literal)
+    self.requires_literal = requires_literal
+
+    return self
 end
 
 ---@param pos integer
+---@return self
 function TokenStack:set_pos(pos)
     self.pos = pos
+
+    return self
 end
 
-function TokenStack:get_pos ()
+function TokenStack:get_pos()
     return self.pos
 end
 
@@ -117,6 +128,7 @@ end
 -- TODO LuaXParser:parse_string would fail if it finds a 'string' with no end
 
 --- Advance one character
+---@return self
 function TokenStack:run_once()
     local char = self.text:sub(self.pos, self.pos)
 
@@ -137,24 +149,29 @@ function TokenStack:run_once()
     self:safety_check()
 
     self.pos = self.pos + 1
+
+    return self
 end
 
-function TokenStack:get_current() 
+function TokenStack:get_current()
     return self.text:sub(self.pos, self.pos)
 end
 
-function TokenStack:safety_check ()
+function TokenStack:safety_check()
     if self.pos > #self.text + 1 then
         error("TokenStack out of text bounds")
     end
 end
 
+---@return self
 function TokenStack:run_until_empty()
     while not self:is_empty() do
         self:run_once()
 
         self:safety_check()
     end
+
+    return self
 end
 
 return TokenStack

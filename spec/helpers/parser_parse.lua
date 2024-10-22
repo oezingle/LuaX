@@ -1,13 +1,12 @@
-
 local LuaXParser = require("src.util.parser.LuaXParser")
 
 ---@param tag string
-local function parse (tag)
+local function parse(tag)
     local parser = LuaXParser()
+        :set_text(tag)
 
-    local no_whitespace = tag:gsub("^%s*<", "<")
-
-    return parser:parse_tag(no_whitespace, 0)
+    ---@diagnostic disable-next-line:invisible
+    return parser:parse_tag(0)
 end
 
 return parse

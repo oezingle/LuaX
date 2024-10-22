@@ -32,14 +32,13 @@ function cache.get(tag, locals)
         return cached
     end
 
-    local _, init = tag:find("^%s*<")
+    local parser = LuaXParser.from_inline_string("return " .. tag)
+        :set_components(locals, "local")
+        
+    -- parser:move_to_pattern_end("^%s*<")
+    -- parser:move_cursor(-1)
 
-    local parser = LuaXParser()
-
-    -- TODO condiitonals need to be transpiled seperately.
-    local inner_transpiled = parser:transpile_text(tag, locals, "local")
-
-    local transpiled = "return " .. parser:transpile_tag(inner_transpiled, init, locals, "local")
+    local transpiled = parser:transpile()
 
     -- print(transpiled)
 

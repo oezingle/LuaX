@@ -1,6 +1,7 @@
 local Parser = require("lib.lua-parser")
-local find_ending_tag = require("src.util.parser.find_ending_tag")
-local keywords = require("src.util.parser.keywords")
+
+---@type LuaX.Parser.V3
+local LuaXParser
 
 ---@generic T
 ---@param list T[]
@@ -18,7 +19,7 @@ end
 --- TODO could do a much better job - get current scope by position, then find parent expressions to ignore variables outside scope
 --- Recursively collect locals given a lua-parser tree
 ---@param vars string[]
----@param node Lua-Parser.Exprs
+---@param node Lua-Parser.Node
 local function collect_vars(vars, node)
     for _, expression in ipairs(node) do
         --[[
@@ -48,49 +49,15 @@ end
 
 ---@param text string
 ---@return table<string, true>
-local collect_locals = function(text)
-    -- TODO this is a sorry excuse for parsing functionality
-    --[[
-    text = text
-        :gsub("%(%s*<.-</.->%s*%)", "nil")
-        :gsub("=%s*<.-</.->", "= nil")
-        :gsub("return%s*<.-</.->", "return nil")
-    ]]
-
-    repeat
-        local multiline_start, multiline_end = text:find("%(%s*<")
-
-        local _, assign_tag_start = text:find("=%s*<")
-
-        local _, keyword_tag_start = nil, nil
-        for _, keyword in ipairs(keywords) do
-            _, keyword_tag_start = text:find(keyword .. "%s+<")
-
-            if keyword_tag_start then break end
-        end
-        
-        local pos = multiline_end or assign_tag_start or keyword_tag_start
-
-        if not pos then
-            break
-        end
-
-        local sub = text:sub(pos + 1)
-
-        local length = find_ending_tag(sub)
-
-        local end_tag_etc = text:sub(pos + 1 + length)
-
-        local _, tag_end = end_tag_etc:find("^</.->")
-
-        local tag_content = text:sub(pos, pos + length + tag_end)
-
-        if multiline_start then
-            tag_content = "(" .. tag_content .. ")"
-        end
-
-        text = text:gsub(tag_content, "nil")
-    until false
+local function collect_locals (text)
+    -- this is the most resource intensive way to do this, BUT
+    -- 1. users get a warning when auto_set_components can't resolve globals
+    -- 2. cpus are free these days. completeness trumps efficiency in this case
+    local text = LuaXParser()
+        :set_text(text)
+        :set_sourceinfo("collect_locals internal parser")
+        :set_components({}, "local")
+        :transpile()
 
     local node = Parser.parse(text)
 
@@ -102,4 +69,8 @@ local collect_locals = function(text)
     return list_to_map(vars)
 end
 
-return collect_locals
+return function (parser)
+    LuaXParser = parser
+
+    return collect_locals
+end
