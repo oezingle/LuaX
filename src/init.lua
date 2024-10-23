@@ -1,5 +1,9 @@
 #!/usr/bin/lua
 
+local LuaXParser = require("src.util.parser.LuaXParser")
+
+local _VERSION = "0.3.0"
+
 -- check if ... (provided by import) matches arg (provided by lua command line)
 if table.pack(...)[1] ~= (arg or {})[1] then
     -- this file has been imported
@@ -27,12 +31,28 @@ if table.pack(...)[1] ~= (arg or {})[1] then
         use_ref        = require("src.hooks.use_ref"),
         register       = require("src.util.parser.loader.register"),
 
-        __from_cli = require("src.cmd.cmd")
+        Parser = LuaXParser,
+        transpile      = {
+            ---@param path string
+            from_path = function (path)
+                return LuaXParser.from_file_path(path):transpile()
+            end,
+            ---@param content string
+            ---@param source string?
+            from_string = function (content, source)
+                return LuaXParser.from_file_content(content, source)
+            end,
+            inline = require("src.util.parser.inline")
+        },
+
+        __from_cli     = require("src.cmd.cmd"),
+        
+        _VERSION = _VERSION
     }
 
     setmetatable(export, {
-        __call = function(_, tag)
-            return require("src.util.parser.inline")(tag)
+        __call = function(table, tag)
+            return table.transpile.inline(tag)
         end
     })
 

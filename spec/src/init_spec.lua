@@ -2,6 +2,8 @@ local LuaX = require("src.init")
 
 local expected_types = {
     Renderer = "table",
+    Parser = "table",
+    transpile = "table",
     Fragment = "function",
     create_element = "function",
     use_state = "function",
@@ -11,23 +13,13 @@ local expected_types = {
 }
 
 describe("LuaX init", function()
-    it("has custom pairs handler", function()
-        local keys = {}
-
-        for k, _ in pairs(LuaX) do
-            table.insert(keys, k)
-        end
-
-        assert.truthy(#keys > 0)
-    end)
-
-    it("exports user APIs", function()
-        for key, expected_type in pairs(expected_types) do
-            local t = type(LuaX[key])
+    for name, expected_type in pairs(expected_types) do
+        it("exports user API" .. name, function()
+            local t = type(LuaX[name])
 
             assert.equal(expected_type, t)
-        end
-    end)
+        end)
+    end
 
     it("is callable as an inline parser", function()
         local node = LuaX([[
