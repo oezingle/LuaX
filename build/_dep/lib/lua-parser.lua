@@ -1,0 +1,15 @@
+local function parser_shim() package.loaded["ext.op"]=require"7b791f5a-9ab9-4f26-8ff8-7af2bb1b7b9b._dep.lib.lua-ext.op"
+package.loaded["ext.table"]=require"7b791f5a-9ab9-4f26-8ff8-7af2bb1b7b9b._dep.lib.lua-ext.table"
+package.loaded["ext.class"]=require"7b791f5a-9ab9-4f26-8ff8-7af2bb1b7b9b._dep.lib.lua-ext.class"
+package.loaded["ext.string"]=require"7b791f5a-9ab9-4f26-8ff8-7af2bb1b7b9b._dep.lib.lua-ext.string"
+package.loaded["ext.tolua"]=require"7b791f5a-9ab9-4f26-8ff8-7af2bb1b7b9b._dep.lib.lua-ext.tolua"
+package.loaded["ext.assert"]=require"7b791f5a-9ab9-4f26-8ff8-7af2bb1b7b9b._dep.lib.lua-ext.assert"
+package.loaded["parser.base.ast"]=require"7b791f5a-9ab9-4f26-8ff8-7af2bb1b7b9b._dep.lib.lua-parser.base.ast"
+package.loaded["parser.lua.ast"]=require"7b791f5a-9ab9-4f26-8ff8-7af2bb1b7b9b._dep.lib.lua-parser.lua.ast"
+package.loaded["parser.base.datareader"]=require"7b791f5a-9ab9-4f26-8ff8-7af2bb1b7b9b._dep.lib.lua-parser.base.datareader"
+package.loaded["parser.base.tokenizer"]=require"7b791f5a-9ab9-4f26-8ff8-7af2bb1b7b9b._dep.lib.lua-parser.base.tokenizer"
+package.loaded["parser.lua.tokenizer"]=require"7b791f5a-9ab9-4f26-8ff8-7af2bb1b7b9b._dep.lib.lua-parser.lua.tokenizer"
+package.loaded["parser.base.parser"]=require"7b791f5a-9ab9-4f26-8ff8-7af2bb1b7b9b._dep.lib.lua-parser.base.parser"
+package.loaded["parser.lua.parser"]=require"7b791f5a-9ab9-4f26-8ff8-7af2bb1b7b9b._dep.lib.lua-parser.lua.parser"
+return require"7b791f5a-9ab9-4f26-8ff8-7af2bb1b7b9b._dep.lib.lua-parser.parser" end
+return parser_shim()

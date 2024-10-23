@@ -19,3 +19,7 @@
 [submodule "lib/log"]
 	path = lib/log
 	url = https://github.com/rxi/log.lua
+[submodule "build/LuaX"]
+	path = build/LuaX
+	url = https://github.com/oezingle/LuaX
+	branch = build
