@@ -44,7 +44,7 @@ if false then
     ---@generic T
     ---@type (fun(name: string, properties: T): LogClass<T>)|(fun(name: string): LogClass<table>)
     class = function (name, properties)
-        error("if i were in hell i'd be pretty warm right now")
+        error("if i were in hell i'd be pretty cold right now")
     end
 end
 
