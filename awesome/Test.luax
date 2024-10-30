@@ -1,0 +1,10 @@
+
+local Test = function (props)
+    return (
+        <>
+            {warn and <wibox.widget.textbox>
+                I am text!
+            </wibox.widget.textbox>}
+        </>
+    )
+end

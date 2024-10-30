@@ -32,15 +32,12 @@ function cache.get(tag, locals)
         return cached
     end
 
-    local parser = LuaXParser.from_inline_string("return " .. tag)
+    local transpiled = LuaXParser.from_inline_string("return " .. tag)
+        :handle_variables_as_table(locals)
         :set_components(locals, "local")
-        
-    -- parser:move_to_pattern_end("^%s*<")
-    -- parser:move_cursor(-1)
+        :transpile()
 
-    local transpiled = parser:transpile()
-
-    -- print(transpiled)
+    print(transpiled)
 
     cache.set(tag, transpiled)
 

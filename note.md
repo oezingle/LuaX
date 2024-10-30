@@ -8,12 +8,9 @@
 - LuaXParser loader / inline should provide ... - see TODO
 - elements should have unmount handlers
     - remove __gc
-- literals could just be strings
-    - would save a lot of work with props
 - add comment support!
-
-- does NativeElement:delete_children_by_key() handle nested fragments?
-    - nested keys.
+  - ~~in props~~
+  - in tags
 
 - GLibIdleWorkLoop
 

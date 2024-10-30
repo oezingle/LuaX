@@ -116,7 +116,7 @@ do
     ---@param mode "global" | "local"
     ---@return self
     function LuaXParser:set_components(components, mode)
-        if #components then
+        if #components > 0 then
             local components_new = {}
             for _, component in ipairs(components) do
                 components_new[component] = true
