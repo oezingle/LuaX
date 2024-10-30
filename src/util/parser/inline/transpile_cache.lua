@@ -37,8 +37,6 @@ function cache.get(tag, locals)
         :set_components(locals, "local")
         :transpile()
 
-    print(transpiled)
-
     cache.set(tag, transpiled)
 
     return transpiled
