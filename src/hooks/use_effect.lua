@@ -1,11 +1,10 @@
-
 local table_equals = require("src.util.table_equals")
 
 ---@alias LuaX.UseEffectState { deps: any[]?, on_remove: function? }
 
 ---@param callback fun(): function?
 ---@param deps any[]?
-local function use_effect (callback, deps)
+local function use_effect(callback, deps)
     local hookstate = LuaX._hookstate
 
     local index = hookstate:get_index()
@@ -15,22 +14,17 @@ local function use_effect (callback, deps)
     local on_remove = old_value.on_remove
 
     if not deps or not table_equals(deps, old_deps, false) then
-        -- removed: seems to have no effect
-        -- set deps initially to stop this hook from refiring
-        -- hookstate:set_value_silent(index, {
-        --     deps = deps,
-        -- })
-        
+        -- set deps initially to prevent hook refiring
+        hookstate:set_value_silent(index, { deps = deps })
+
         if on_remove then
             on_remove()
         end
 
         local callback_result = callback()
 
-        hookstate:set_value_silent(index, { 
-            deps = deps, 
-            on_remove = callback_result
-        })
+        -- this feels wrong but is performant
+        hookstate:get_value(index)["on_remove"] = callback_result
     end
 
     hookstate:set_index(index + 1)
