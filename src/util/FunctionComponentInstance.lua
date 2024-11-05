@@ -26,7 +26,7 @@ local ipairs_with_nil = require("src.util.ipairs_with_nil")
 local FunctionComponentInstance = class("FunctionComponentInstance")
 
 function FunctionComponentInstance:init(component)
-    self.handlers = setmetatable({}, { __mode="v"})
+    self.handlers = {}
 
     self.requests_rerender = false
 

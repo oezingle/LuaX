@@ -118,6 +118,8 @@ function WiboxElement.create_element(component)
         return object[key]
     end, wibox)
 
+    assert(widget_type, string.format("No known widget of name %q", component))
+
     local widget = wibox.widget { widget = widget_type }
 
     return WiboxElement(widget, component)
