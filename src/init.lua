@@ -2,7 +2,7 @@
 
 local LuaXParser = require("src.util.parser.LuaXParser")
 
-local _VERSION = "0.3.4"
+local _VERSION = "0.3.5"
 
 -- check if ... (provided by import) matches arg (provided by lua command line)
 if table.pack(...)[1] ~= (arg or {})[1] then

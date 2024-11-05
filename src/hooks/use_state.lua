@@ -32,6 +32,9 @@ local function use_state (default)
 
         -- Functions cannot be accurately checked, so assume they've changed.
         if type(new_value) == "function" or not table_equals(value, new_value) then
+            -- modify the value we compare against
+            value = new_value
+
             hookstate:set_value(index, new_value)
         end
     end
