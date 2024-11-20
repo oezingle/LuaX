@@ -1,3 +1,4 @@
+local includes = require "src.util.polyfill.list.includes"
 local pairs = pairs
 local next = next
 local type = type
@@ -17,13 +18,21 @@ end
 ---@param a any first object to check
 ---@param b any second object to check
 ---@param shallow boolean? don't delve into sub-tables, functions, etc.
----@param traversed table? Internally used to track objects that are accounted for
+---@param traversed table<any, any[]>? Internally used to track objects that are accounted for
 local function any_equals(a, b, shallow, traversed)
     shallow = shallow or false
 
     traversed = traversed or {}
-    if traversed[a] and traversed[b] then
-        return true
+
+    -- Check if both values have been traversed wiht respect to each other already
+    do
+        local traversed_a = traversed[a]
+        local traversed_b = traversed[b]
+        if traversed_a and traversed_b then
+            if includes(traversed_a, b) and includes(traversed_b, a) then
+                return true
+            end
+        end
     end
 
     if a == b then
@@ -94,8 +103,10 @@ local function any_equals(a, b, shallow, traversed)
     if t == "table" then
         if shallow then return true end
 
-        traversed[a] = true
-        traversed[b] = true
+        traversed[a] = traversed[a] or {}
+        table.insert(traversed[a], b)
+        traversed[b] = traversed[b] or {}
+        table.insert(traversed[b], a)
 
         if #a ~= #b then
             return false

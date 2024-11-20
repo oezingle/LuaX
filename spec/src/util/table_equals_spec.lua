@@ -63,4 +63,16 @@ describe("table_equals", function()
 
         assert.True(table_equals(parent, parent2))
     end)
+
+    it("Doesn't allow traversed table to ignore unequal values", function ()
+        local k_a_1 = {}
+        local k_a_2 = { "bruh" }
+        local a = { k_a_1, k_a_2, k_a_2 }
+
+        local k_b_1 = {}
+        local k_b_2 = { "bruh" }
+        local b = { k_b_1, k_b_2, k_b_1 }
+
+        assert.False(table_equals(a, b))
+    end)
 end)
