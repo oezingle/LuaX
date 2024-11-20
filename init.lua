@@ -13,7 +13,7 @@ local library_root=folder_of_this_file:sub(1, - 1 -  # "")
 require(library_root .. "_shim") end
 local LuaXParser=require"lib_LuaX.util.parser.LuaXParser"
 
-local _VERSION="0.3.5"
+local _VERSION="0.3.6"
 if table.pack(...)[1] ~= (arg or {})[1] then 
 ---@class LuaX.Exported
 ---@field Renderer LuaX.Renderer
