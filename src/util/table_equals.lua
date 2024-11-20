@@ -3,7 +3,7 @@ local next = next
 local type = type
 local getmetatable = getmetatable
 
----@type fun(a: table, b: table): boolean
+---@type fun(a: table, b: table, traversed: table): boolean, table
 local fchk_table_keys
 
 --- Check if a value is a primitive
@@ -14,11 +14,18 @@ local function is_primitive(value)
     return t == "nil" or t == "string" or t == "number" or t == "boolean"
 end
 
----@param a any
----@param b any
----@param shallow boolean?
-local function any_equals(a, b, shallow)
+---@param a any first object to check
+---@param b any second object to check
+---@param shallow boolean? don't delve into sub-tables, functions, etc.
+---@param traversed table? Internally used to track objects that are accounted for
+local function any_equals(a, b, shallow, traversed)
     shallow = shallow or false
+
+    traversed = traversed or {}
+    if traversed[a] and traversed[b] then
+        return true
+    end
+
     if a == b then
         return true
     end
@@ -46,13 +53,13 @@ local function any_equals(a, b, shallow)
             return true
         end
 
-        if not any_equals(getmetatable(a), getmetatable(b), false) then
+        if not any_equals(getmetatable(a), getmetatable(b), false, traversed) then
             return false
         end
 
         -- make sure we have pairs
         if getmetatable(a).__pairs then
-            if not fchk_table_keys(a, b) then
+            if not fchk_table_keys(a, b, traversed) then
                 return false
             end
 
@@ -87,25 +94,35 @@ local function any_equals(a, b, shallow)
     if t == "table" then
         if shallow then return true end
 
+        traversed[a] = true
+        traversed[b] = true
+
         if #a ~= #b then
             return false
         end
 
         -- TODO can I use mt ~= mt here? genuinely unsure!
         -- check mt
-        if not any_equals(getmetatable(a), getmetatable(b), false) then
+        if not any_equals(getmetatable(a), getmetatable(b), false, traversed) then
             return false
         end
 
         -- check keys
-        if not fchk_table_keys(a, b) then
+        local keys_ok, exotic_b = fchk_table_keys(a, b, traversed)
+        if not keys_ok then
             return false
         end
 
         -- keys must match so we can walk a
         for k, value_a in pairs(a) do
-            local value_b = b[k]
-            if not any_equals(value_a, value_b, false) then
+            if not is_primitive(k) then
+                for _, k_b in pairs(exotic_b) do
+                    -- keys match, but values do not
+                    if any_equals(k, k_b, false, traversed) and not any_equals(value_a, b[k_b]) then
+                        return false
+                    end
+                end
+            elseif not any_equals(value_a, b[k], false, traversed) then
                 return false
             end
         end
@@ -118,10 +135,12 @@ end
 
 --- Fast check table keys: check all keys of two tables, ignoring values
 --- O(a + b) for primitive keys, O(ab) for exotic keys
---- @param a table
---- @param b table
----@return boolean
-fchk_table_keys = function(a, b)
+---@param a table
+---@param b table
+---@param traversed table
+---@return boolean key_match
+---@return table exotic_keys
+fchk_table_keys = function(a, b, traversed)
     local primitive_keys_a = {}
     local exotic_keys_a = {}
     for k in pairs(a) do
@@ -132,16 +151,19 @@ fchk_table_keys = function(a, b)
         end
     end
 
-    for k in pairs(b) do
-        if is_primitive(k) then
-            if not primitive_keys_a[k] then
-                return false
+    local exotic_keys_b = {}
+    for k_b in pairs(b) do
+        if is_primitive(k_b) then
+            if not primitive_keys_a[k_b] then
+                return false, exotic_keys_b
             end
-            primitive_keys_a[k] = nil
+            primitive_keys_a[k_b] = nil
         else
+            table.insert(exotic_keys_b, k_b)
+
             local has_match = false
             for i, k_a in ipairs(exotic_keys_a) do
-                if any_equals(k_a, b, false) then
+                if any_equals(k_a, k_b, false, traversed) then
                     has_match = true
                     table.remove(exotic_keys_a, i)
 
@@ -149,11 +171,11 @@ fchk_table_keys = function(a, b)
                 end
             end
             if not has_match then
-                return false
+                return false, exotic_keys_b
             end
         end
     end
-    return next(primitive_keys_a) == nil and # exotic_keys_a == 0
+    return next(primitive_keys_a) == nil and # exotic_keys_a == 0, exotic_keys_b
 end
 
 return any_equals

@@ -50,7 +50,7 @@ local collect_locals = require("src.util.parser.transpile.collect_locals")(LuaXP
 ---@return string
 local function luax_export(export_name)
     local luax_root = require_path
-        -- TODO FIXME this code is location dependent
+        -- this code is location dependent
         :gsub("%.util%.parser%.LuaXParser$", "")
 
     return string.format("require(%q)[%q]", luax_root, export_name)
@@ -94,10 +94,6 @@ function LuaXParser:set_text(text)
     end
 
     self.text = text
-
-    self.default_indent = get_default_indent(self.text)
-    -- TODO FIXME get indent
-    self.indent = ""
 
     return self
 end
@@ -150,35 +146,6 @@ do
 
         return self:set_components(locals, "local")
     end
-
-    -- TODO FIXME unused
-    if false then
-        --- Determine if a component name is a global component name
-        ---@param name string
-        ---@return boolean
-        ---@protected
-        function LuaXParser:is_global(name)
-            -- annotations provide table<string, true> but i want to enforce true, not
-            -- just truthy.
-            local names_has = not not self.components.names[name]
-            local mode = self.components.mode
-
-            --[[
-            has     true    false
-            local   0       1
-            global  1       0
-        ]]
-            return (mode == "global") == names_has
-        end
-
-        --- Determine if a component name is a local variable
-        ---@param name string
-        ---@return boolean
-        ---@protected
-        function LuaXParser:is_local(name)
-            return not self:is_global(name)
-        end
-    end
 end
 --#endregion
 
@@ -190,7 +157,6 @@ end
 function LuaXParser:error(msg)
     local fmt = "LuaX Parser - In %s at %d:%d: %s"
 
-    -- TODO FIXME test this!
     local chars_away = self:get_cursor()
     local n_line = 0
     local n_col = 0
@@ -408,7 +374,6 @@ do
 
             already_set[name] = value
 
-            -- TODO FIXME why does this not work!
             ---@diagnostic disable-next-line:invisible
             parser.text = insert .. parser.text
 
@@ -457,7 +422,6 @@ do
         ---@type { is_luablock: boolean, chars: string[], start: integer }[]
         local slices = {}
 
-        -- TODO FIXME misses char after a lua block
         -- Loop until LuaX tag found
         while true do
             local pos = tokenstack:get_pos()
@@ -552,7 +516,6 @@ do
         -- stop iterating at </ - which we will only encounter at the end of the
         -- parent tag. This is because of recursion!
 
-        -- TODO FIXME in some cases whitespace can be intrepreted as a literal of size 0. this results in the cursor moving backwards (bad!)
         while not (self:text_match("^%s*</") or self:is_at_end()) do
             if self:text_match("^%s*<") then
                 local node = self:parse_tag(depth)
@@ -576,7 +539,6 @@ do
         local props = {}
 
         while not self:text_match("^%s*>") and not self:text_match("^%s*/%s*>") do
-            -- TODO FIXME test this
             -- skip comments
             self:move_to_pattern_end("^%s*%-%-%[%[.-%]%]")
             self:move_to_pattern_end("^%s*%-%-.-[\n\r]")
@@ -621,9 +583,6 @@ do
         return props
     end
 
-    --- TODO FIXME hangs often
-    --- TODO FIXME set default_indent every time parse_tag is called
-    ---
     --- Parse text that we know is a LuaX tag
     ---@protected
     ---@param depth integer

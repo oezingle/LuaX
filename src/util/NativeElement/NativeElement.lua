@@ -2,8 +2,7 @@ local class                 = require("lib.30log")
 local count_children_by_key = require("src.util.NativeElement.helper.count_children_by_key")
 local set_child_by_key      = require("src.util.NativeElement.helper.set_child_by_key")
 local list_reduce           = require("src.util.polyfill.list.reduce")
-
-local pprint = require("lib.pprint")
+local log                   = require("lib.log")
 
 --[[
     - count_children_by_key seems like it could have performance issues.
@@ -125,7 +124,7 @@ function NativeElement:insert_child_by_key(key, child)
 
     local is_text = NativeTextElement and NativeTextElement:classOf(child.class) or false
 
-    -- print(self:get_type(), "adding native child", insert_index)
+    log.trace(self:get_type(), "insert_child_by_key", insert_index)
 
     -- Insert this child into the key table
     set_child_by_key(self._children_by_key, key, child)
@@ -135,9 +134,7 @@ end
 
 -- TODO does key_children work here for Fragment(Fragment(..elements..)) ?
 function NativeElement:delete_children_by_key(key)
-    -- print(self:get_type(), "delete_children_by_key", table.concat(key, " "))
-
-    -- print(debug.traceback())
+    log.trace(self:get_type(), "delete_children_by_key", table.concat(key, "."))
     
     -- No need to delete anything
     if not self._children_by_key then

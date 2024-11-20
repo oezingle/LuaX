@@ -10,7 +10,7 @@ cd ../../
 
 rm -rf ./build
 
-lua lib/bundler/build/stage-1/init.lua src build --log-level error \
+lua lib/bundler/build/stage-1/init.lua src build --log-level error --preserve annotations \
         --uid lib_LuaX \
         -i gears -i wibox \
         -i ext -i parser -i table \

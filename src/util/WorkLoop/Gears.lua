@@ -1,6 +1,4 @@
 
--- TODO FIXME doesn't change visuals for some reason. boo!
-
 local WorkLoop = require("src.util.WorkLoop")
 local gears = require("gears")
 

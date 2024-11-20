@@ -25,15 +25,6 @@ describe("table_equals", function()
         assert.False(table_equals("hello", "world"))
     end)
 
-    --[[
-    it("takes functions", function()
-        local a = function() print("Hello world!") end
-        local b = function() print("Hello world!") end
-
-        assert.True(table_equals(a, b))
-    end)
-    ]]
-
     it("Takes nil vs table", function ()
         assert.False(table_equals(nil, {}))
         assert.False(table_equals({}, nil))
@@ -49,5 +40,27 @@ describe("table_equals", function()
 
     it("Works with missing primitive keys in b", function()
         assert.False(table_equals({ 1 }, {}))
+    end)
+
+    it("Doesn't hang for self-referencing tables", function ()
+        local parent = { child = {} }
+        parent.child.parent = parent
+
+        local parent2 = { child = {} }
+        parent2.child.parent = parent2
+
+        assert.True(table_equals(parent, parent2))
+    end)
+
+    it("Doesn't hang for self-referencing keys", function ()
+        local child = {}        
+        local parent = { [child] = "Hello World!" }
+        child.parent = parent
+
+        local child2 = {} 
+        local parent2 = { [child2] = "Hello World!" }
+        child2.parent = parent2
+
+        assert.True(table_equals(parent, parent2))
     end)
 end)

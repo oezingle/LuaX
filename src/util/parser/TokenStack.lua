@@ -1,14 +1,6 @@
 local class = require("lib.30log")
 local is_cancelled = require("src.util.parser.parse.is_cancelled")
 
--- TODO different environments if in string or in literal
---      - in string: ignore ()[] and other string tags
---          - make sure to include [[ as in_string
---          - don't ignore {} because that indicates the borders of a literal
---      - out of literal: ignore tokens
-
--- TODO FIXME remove_comments in here! (but replace with whitespace or something to keep string length the same)
-
 ---@return table<string, true>
 local function get_tokens()
     local tokens = {
@@ -125,7 +117,6 @@ end
 -- collect char if:
 --      first char(s) is string (LuaXParser props collection)
 --      first char(s) is literal (LuaXParser props collection / literal parsing)
--- TODO LuaXParser:parse_string would fail if it finds a 'string' with no end
 
 --- Advance one character
 ---@return self

@@ -24,7 +24,7 @@ local function use_effect(callback, deps)
         local callback_result = callback()
 
         -- this feels wrong but is performant
-        hookstate:get_value(index)["on_remove"] = callback_result
+        hookstate:get_value(index).on_remove = callback_result
     end
 
     hookstate:set_index(index + 1)

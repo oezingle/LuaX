@@ -47,8 +47,6 @@ function FunctionComponentInstance:on_change(cb)
     table.insert(self.handlers, cb)
 end
 
--- TODO FIXME use_effect unmount
-
 function FunctionComponentInstance:render(props)
     self.requests_rerender = false
 
@@ -68,16 +66,20 @@ function FunctionComponentInstance:render(props)
     return element
 end
 
-function FunctionComponentInstance:__gc()
+function FunctionComponentInstance:cleanup () 
     local hooks = self.hookstate.values
     local length = self.hookstate.index
 
     for _, hook in ipairs_with_nil(hooks, length) do
-        -- TODO if not hook then there's low key an issue
-        if hook and hook.on_remove then
+        -- hooks can sometimes be garbage collected before components - how do I protect against this?
+        if hook and type(hook) == "table" and hook.on_remove then
             hook.on_remove()
         end
     end
+end
+
+function FunctionComponentInstance:__gc()
+    self:cleanup()
 end
 
 return FunctionComponentInstance

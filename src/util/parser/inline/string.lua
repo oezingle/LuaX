@@ -42,18 +42,6 @@ local function inline_transpile_string(tag, stackoffset)
         __index = _G
     })
 
-    --[[
-    -- TODO FIXME no. maybe?
-    local ok, node = pcall(function()
-        return load_cache.get(element_str, env)
-    end)
-
-    -- TODO this better.
-    if not ok then
-        error(node .. "\n" .. element_str)
-    end
-    ]]
-
     local node = load_cache.get(element_str, env)
 
     return node

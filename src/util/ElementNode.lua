@@ -9,7 +9,15 @@ local get_function_location = require("src.util.Renderer.helper.get_function_loc
 -- ---@alias LuaX.Generic.ElementNode<Props> { type: LuaX.Generic.Component<Props>, props: Props, _component: LuaX.ComponentInstance }
 -- ---@alias LuaX.ElementNode LuaX.Generic.ElementNode<{ [string]: any }>
 
--- TODO FIXME table equality is slow as fuck?? LITERAL_NODE has to be a string to be speedy.
+--[[
+    returning to a super old comment i left here - see
+    spec/special/table_equality_slow.lua
+
+    in terms of why tables are slower than strings, I realized it's becaues of
+    Lua's string 'baking' - when transforming to bytecode, strings are converted
+    to IDs. Accessing these is faster than loading and checking 2 upvalues, even
+    if local (by number) as opposed to global (by name)
+]]
 
 ---TODO FIXME add generics
 ---@class LuaX.ElementNode

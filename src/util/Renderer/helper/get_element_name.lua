@@ -66,9 +66,7 @@ local function get_element_name(element)
             return element:get_type()
         end
 
-        -- TODO FIXME NativeElement:issubclass() or whatever it's called
-
-        return "UNKNOWN (NativeElement or some 30log class)"
+        return "UNKNOWN (extends NativeElement)"
     end
 
     return "UNKNOWN"

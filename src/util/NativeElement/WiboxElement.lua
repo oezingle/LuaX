@@ -4,8 +4,6 @@ local string_split = require("src.util.polyfill.string.split")
 local list_reduce = require("src.util.polyfill.list.reduce")
 local wibox = require("wibox")
 
--- TODO FIXME text is not working too well
-
 ---@class LuaX.WiboxElement : LuaX.NativeElement
 ---@field texts WiboxText[]
 local WiboxElement = NativeElement:extend("WiboxElement")
@@ -21,8 +19,6 @@ function WiboxElement:init(native, type)
 
     self.type = type
 end
-
--- TODO FIXME maybe proxy signals?
 
 ---@param prop string
 ---@param value any
@@ -40,12 +36,6 @@ function WiboxElement:set_prop(prop, value)
         end
     elseif prop:match("^signal::") then
         local signal_name = prop:sub(9)
-
-        -- if self.signal_handlers[prop] then
-        --     local signal_handler = self.signal_handlers[prop]
-        -- 
-        --     wibox:disconnect_signal(signal_name, signal_handler)
-        -- end
 
         if value then
             wibox:weak_connect_signal(signal_name, value)
@@ -129,7 +119,6 @@ function WiboxElement.get_root(native)
     return WiboxElement(native, "UNKNOWN (root element)")
 end
 
--- TODO FIXME this does NOT work!
 function WiboxElement:_reload_text()
     local texts = {}
 
@@ -153,7 +142,6 @@ function WiboxText:set_value(value)
     self.parent:_reload_text()
 end
 
--- TODO seems like it might not working.
 function WiboxText:get_prop(prop)
     if prop ~= "value" then
         return nil
