@@ -30,6 +30,8 @@ function FunctionComponentInstance:init(component)
 
     self.requests_rerender = false
 
+    self.props = {}
+
     self.hookstate = HookState()
 
     self.hookstate:add_listener(function()
@@ -53,15 +55,17 @@ function FunctionComponentInstance:render(props)
     self.hookstate:reset()
 
     -- TODO optionally use setfenv hack here to set _G.LuaX._context and _G.LuaX._hookstate for only self.component
+    local last_context = _G.LuaX._context
     _G.LuaX._context = props.__luax_internal.context
+    local last_hookstate = _G.LuaX._hookstate
     _G.LuaX._hookstate = self.hookstate
 
     local component = self.component
 
     local element = component(props)
 
-    _G.LuaX._context = nil
-    _G.LuaX._hookstate = nil
+    _G.LuaX._context = last_context
+    _G.LuaX._hookstate = last_hookstate
 
     return element
 end

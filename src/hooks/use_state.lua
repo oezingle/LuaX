@@ -14,13 +14,16 @@ local function use_state (default)
     local value = hookstate:get_value(index)
     
     if value == nil then
+        if type(default) == "function" then
+            default = default()
+        end
+
         value = default
 
         hookstate:set_value_silent(index, value)
     end
 
     -- TODO closure here supposedly is bad for performance
-    -- TODO could basically building a class be faster?
     local setter = function (cb_or_new_value)
         local new_value = nil
 

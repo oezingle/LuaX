@@ -1,31 +1,36 @@
-local class                     = require("lib.30log")
-local ipairs_with_nil           = require("src.util.ipairs_with_nil")
-local key_add                   = require("src.util.key.key_add")
-local get_element_name          = require("src.util.Renderer.helper.get_element_name")
-local create_native_element     = require("src.util.Renderer.helper.create_native_element")
-local table_equals              = require("src.util.table_equals")
-local can_modify_child          = require("src.util.Renderer.helper.can_modify_child")
-local ElementNode               = require("src.util.ElementNode")
-local inherit_contexts          = require("src.context.inherit")
-local log                       = require("lib.log")
+local class                 = require("lib.30log")
+local ipairs_with_nil       = require("src.util.ipairs_with_nil")
+local key_add               = require("src.util.key.key_add")
+local get_element_name      = require("src.util.Renderer.helper.get_element_name")
+local create_native_element = require("src.util.Renderer.helper.create_native_element")
+local table_equals          = require("src.util.table_equals")
+local can_modify_child      = require("src.util.Renderer.helper.can_modify_child")
+local ElementNode           = require("src.util.ElementNode")
+local inherit_contexts      = require("src.context.inherit")
+local log                   = require("lib.log")
+local VirtualElement       = require("src.util.NativeElement.VirtualElement")
+local DefaultWorkLoop       = require("src.util.WorkLoop.Default")
 
-local FunctionComponentInstance = require("src.util.FunctionComponentInstance")
-local DefaultWorkLoop           = require("src.util.WorkLoop.Default")
 
-local max                       = math.max
+local max      = math.max
 
 ---@class LuaX.Renderer : Log.BaseFunctions
 ---@field workloop LuaX.WorkLoop instance of a workloop
 ---@field native_element LuaX.NativeElement class here, not instance
 ---@field set_workloop fun (self: self, workloop: LuaX.WorkLoop): self set workloop using either a class or an instance
 ---
----@field protected render_function_component fun(self: self, element: LuaX.ElementNode, container: LuaX.NativeElement, key: LuaX.Key)
----@field protected render_pure_component fun(self: self, component: LuaX.ElementNode | nil, container: LuaX.NativeElement, key: LuaX.Key, caller?: LuaX.ElementNode)
+---@field protected render_function_component fun(self: self, element: LuaX.ElementNode, container: LuaX.NativeElement, key: LuaX.Key, caller?: LuaX.ElementNode)
+---@field protected render_native_component fun(self: self, component: LuaX.ElementNode | nil, container: LuaX.NativeElement, key: LuaX.Key, caller?: LuaX.ElementNode)
 ---
 ---@operator call: LuaX.Renderer
-local Renderer                  = class("Renderer")
+local Renderer = class("Renderer")
 
 function Renderer:init(workloop)
+    if not _G.LuaX then
+        ---@diagnostic disable-next-line:missing-fields
+        _G.LuaX = {}
+    end
+
     self:set_workloop(workloop)
 end
 
@@ -48,7 +53,9 @@ end
 ---@param container LuaX.NativeElement
 ---@param key LuaX.Key
 ---@param caller LuaX.ElementNode?
-function Renderer:render_pure_component(component, container, key, caller)
+function Renderer:render_native_component(component, container, key, caller)
+    -- print(get_element_name(container), "render_native_component", get_element_name(component))
+
     if component == nil then
         -- container:set_child(index, nil)
         container:delete_children_by_key(key)
@@ -95,8 +102,6 @@ function Renderer:render_pure_component(component, container, key, caller)
         end
 
         workloop:start()
-    else
-        -- TODO FIXME does there exist a scenario where a pure component's children will change? probably!
     end
     -- end
 
@@ -110,17 +115,52 @@ end
 ---@param element LuaX.ElementNode
 ---@param container LuaX.NativeElement
 ---@param key LuaX.Key
-function Renderer:render_function_component(element, container, key)
-    local rendered = element._component:render(element.props)
+---@param caller LuaX.ElementNode?
+function Renderer:render_function_component(element, container, key, caller)
+    local virtual_key = key_add(key, 1)
+    local can_modify, existing_child = can_modify_child(element, container, virtual_key)
 
-    --[[
-        TODO FIXME element is never inserted as a child of container, so
-        element._component:unmount can't be accessed. What do?
-    ]]
+    ---@type LuaX.NativeElement.Virtual
+    local node = nil
 
-    -- ignore rendering if the component is destined for a re-render
-    if not element._component.requests_rerender then
-        self:render_keyed_child(rendered, container, key, element)
+    if can_modify then
+        node = existing_child --[[ @as LuaX.NativeElement.Virtual ]]
+    else
+        if existing_child then
+            container:delete_children_by_key(virtual_key)
+        end
+
+        node = VirtualElement.create_element(element.type)
+
+        node:on_change(function()
+            self.workloop:add(function()
+                self:render_function_component(element, container, key, caller)
+            end)
+
+            -- start workloop if it isn't running
+            self.workloop:start()
+        end)
+
+        container:insert_child_by_key(virtual_key, node)
+    end
+
+    -- link hidden props
+    element = ElementNode.inherit_props(element, {
+        __luax_internal = {
+            renderer = self,
+            container = container,
+            context = inherit_contexts(caller)
+        }
+    })
+    node:set_props(element.props)
+
+    local render_key = key_add(key, 2)
+
+    -- This feels evil
+    local did_render, render_result = node:render()
+
+    if did_render then
+        self:render_keyed_child(render_result, container, render_key, element)
     end
 end
 
@@ -132,7 +172,8 @@ function Renderer:render_keyed_child(element, container, key, caller)
     log.trace(get_element_name(container), "rendering", get_element_name(element), table.concat(key, " "))
 
     if not element or type(element.type) == "string" then
-        self:render_pure_component(element, container, key, caller)
+        self:render_native_component(element, container, key, caller)
+        -- TODO element.element_node ~= ElementNode equality check might be slow!
     elseif type(element) == "table" and element.element_node ~= ElementNode then
         -- lists of children are valid children
 
@@ -152,33 +193,7 @@ function Renderer:render_keyed_child(element, container, key, caller)
             self:render_keyed_child(child, container, newkey, caller)
         end
     elseif type(element.type) == "function" then
-        if not element._component then
-            log.trace("Creating new FunctionComponentInstance for", get_element_name(element))
-
-            element = ElementNode.inherit_props(element, {
-                __luax_internal = {
-                    renderer = self,
-                    container = container,
-                    context = inherit_contexts(caller)
-                }
-            })
-
-            local component = element.type
-            local component_instance = FunctionComponentInstance(component)
-
-            component_instance:on_change(function()
-                self.workloop:add(function()
-                    self:render_function_component(element, container, key)
-                end)
-
-                -- start workloop if it isn't running
-                self.workloop:start()
-            end)
-
-            element._component = component_instance
-        end
-
-        self:render_function_component(element, container, key)
+        self:render_function_component(element, container, key, caller)
     else
         local component_type = type(element.type)
 

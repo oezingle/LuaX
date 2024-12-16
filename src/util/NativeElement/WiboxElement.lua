@@ -70,7 +70,7 @@ function WiboxElement:insert_child(index, element, is_text)
 
             self.wibox:set_children(children)
         else
-            error(string.format("Unable to insert child with wibox %s", self.wibox))
+            error(string.format("Unable to insert child to wibox %s", self.wibox))
         end
     end
 end

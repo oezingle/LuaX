@@ -25,7 +25,6 @@ local get_function_location = require("src.util.Renderer.helper.get_function_loc
 ---@field type LuaX.Component
 ---@field props LuaX.Props
 ---
----@field _component LuaX.ComponentInstance
 ---@field inherit_props fun(self: self, inherit_props: LuaX.Props): self
 ---@field element_node self
 ---
@@ -36,7 +35,9 @@ local ElementNode = {
     LITERAL_NODE = "LUAX_LITERAL_NODE", -- this table is used for its unique key
 }
 
+--- Process any possible value for "children" into a list of ElementNodes
 ---@param children LuaX.ElementNode.Children
+---@protected
 function ElementNode.clean_children(children)
     -- Convert children to list. This getmetatable usage is apparently
     -- recommended https://github.com/Yonaba/30log/wiki/Instances

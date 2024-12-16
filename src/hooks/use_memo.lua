@@ -7,7 +7,9 @@ local use_effect = require("src.hooks.use_effect")
 ---@return T
 local function use_memo(callback, deps)
     -- default value wahoo
-    local result, set_result = use_state()
+    local result, set_result = use_state(function ()
+        return callback()
+    end)
 
     use_effect(function()
         set_result(callback())

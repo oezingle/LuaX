@@ -38,7 +38,11 @@ function XMLElement:delete_child(index)
 end
 
 function XMLElement.get_root(xml)
-    return XMLElement(xml)
+    return XMLElement(xml or {
+        type = "ROOT",
+        props = {},
+        children = {}
+    })
 end
 
 function XMLElement:get_type()

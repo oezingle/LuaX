@@ -3,6 +3,7 @@ local count_children_by_key = require("src.util.NativeElement.helper.count_child
 local set_child_by_key      = require("src.util.NativeElement.helper.set_child_by_key")
 local list_reduce           = require("src.util.polyfill.list.reduce")
 local log                   = require("lib.log")
+local VirtualElement       = require("src.util.NativeElement.VirtualElement")
 
 --[[
     - count_children_by_key seems like it could have performance issues.
@@ -10,22 +11,18 @@ local log                   = require("lib.log")
 ]]
 
 -- Helper type
----@alias LuaX.NativeElement.ChildrenByKey LuaX.NativeElement  | LuaX.NativeElement.ChildrenByKey[] | LuaX.NativeElement.ChildrenByKey[][]
+---@alias LuaX.NativeElement.ChildrenByKey LuaX.NativeElement | LuaX.NativeElement.ChildrenByKey[] | LuaX.NativeElement.ChildrenByKey[][]
 
 ---@class LuaX.NativeElement : Log.BaseFunctions
--- ---@field protected _key integer
--- ---@field set_key fun(self: self, key: integer)
--- ---@field get_key fun(self: self): integer
 ---
 ---@field protected _children_by_key LuaX.NativeElement.ChildrenByKey
----@field _get_key_insert_index fun(self: self, key: LuaX.Key): integer Helper function to get index
 ---@field get_children_by_key fun(self: self, key: LuaX.Key): LuaX.NativeElement.ChildrenByKey
 ---@field insert_child_by_key fun(self: self, key: LuaX.Key, child: LuaX.NativeElement)
 ---@field delete_children_by_key fun(self: self, key: LuaX.Key)
 ---
 ---@field set_prop_safe fun (self: self ,prop: string, value: any)
 ---@field set_prop_virtual fun (self: self, prop: string, value: any)
----@field _virtual_props table<string, any>
+---@field protected _virtual_props table<string, any>
 ---
 --- Abstract Methods
 ---@field set_prop fun(self: self, prop: string, value: any)
@@ -39,7 +36,9 @@ local log                   = require("lib.log")
 ---@field get_type  nil | fun(self: self): string
 ---@field create_literal nil | fun(value: string, parent: LuaX.NativeElement): LuaX.NativeElement TODO special rules here?
 ---
----@field get_prop fun(self: self, prop: string): any
+---@field get_prop nil|fun(self: self, prop: string): any
+---
+---@field cleanup nil|fun(self: self)
 ---
 ---@field components string[]? class static property - components implemented by this class.
 ---@operator call : LuaX.NativeElement
@@ -105,31 +104,30 @@ function NativeElement:get_prop(prop)
     return self._virtual_props[prop]
 end
 
---- Get the real insert position for a child of a given key.
-function NativeElement:_get_key_insert_index(key)
-    if not self._children_by_key then
-        self._children_by_key = {}
-    end
-
-    local count = count_children_by_key(self._children_by_key, key)
-
-    return count + 1
+function NativeElement:count_children_by_key (key)
+    return count_children_by_key(self._children_by_key, key)
 end
 
 -- TODO this block is probably part of the reason only 1 literal can be rendered
 function NativeElement:insert_child_by_key(key, child)
-    local insert_index = self:_get_key_insert_index(key)
+    if not self._children_by_key then
+        self._children_by_key = {}
+    end
 
-    local NativeTextElement = self._dependencies.NativeTextElement
+    if child.class ~= VirtualElement then
+        local insert_index = self:count_children_by_key(key) + 1
 
-    local is_text = NativeTextElement and NativeTextElement:classOf(child.class) or false
+        local NativeTextElement = self._dependencies.NativeTextElement
+    
+        local is_text = NativeTextElement and NativeTextElement:classOf(child.class) or false
+    
+        log.trace("insert child", child:get_type(), insert_index)
 
-    log.trace(self:get_type(), "insert_child_by_key", insert_index)
+        self:insert_child(insert_index, child, is_text)
+    end
 
     -- Insert this child into the key table
     set_child_by_key(self._children_by_key, key, child)
-
-    self:insert_child(insert_index, child, is_text)
 end
 
 -- TODO does key_children work here for Fragment(Fragment(..elements..)) ?
@@ -161,21 +159,24 @@ function NativeElement:delete_children_by_key(key)
     for i = #key_children, 1, -1 do
         local child_index = delete_start + i
 
-        -- print(self:get_type(), "deleting native child", child_index)
-
         local child = key_children[i]
 
-        -- TODO unmount handler
+        child:cleanup()
 
         local NativeTextElement = self._dependencies.NativeTextElement
 
         local is_text = NativeTextElement and NativeTextElement:classOf(child.class) or false
 
-        self:delete_child(child_index, is_text)
+        if child.class ~= VirtualElement then
+            self:delete_child(child_index, is_text)
+        end
     end
 
     set_child_by_key(self._children_by_key, key, nil)
 end
+
+-- Default implementation does nothing!
+function NativeElement:cleanup() end
 
 function NativeElement.create_element(element_type)
     if type(element_type) ~= "string" then
@@ -191,7 +192,8 @@ function NativeElement:get_class()
     return self.class
 end
 
---- Set class of this instance
+--- Set multiple props at once
+---@param props table<string, any>
 function NativeElement:set_props(props)
     for prop, value in pairs(props) do
         if prop ~= "children" then

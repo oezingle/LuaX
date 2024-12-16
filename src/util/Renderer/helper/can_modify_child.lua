@@ -1,6 +1,5 @@
 local NativeElement = require "src.util.NativeElement.NativeElement"
 
--- TODO seems to always return false.
 --- Determine if the existing child of container can be modified to become child, 
 --- Or if it must be replaced
 ---@param child LuaX.ElementNode | nil
@@ -15,7 +14,7 @@ local function can_modify_child (child, container, key)
     end
 
     -- This is a NativeElement[], not a single NativeElement
-    if not existing_children.class then
+    if #existing_children ~= 0 then
         return false, existing_children
     end
 

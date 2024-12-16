@@ -2,7 +2,7 @@
 
 local LuaXParser = require("src.util.parser.LuaXParser")
 
-local _VERSION = "0.3.6"
+local _VERSION = "0.3.6-dev"
 
 -- check if ... (provided by import) matches arg (provided by lua command line)
 if table.pack(...)[1] ~= (arg or {})[1] then
@@ -40,7 +40,8 @@ if table.pack(...)[1] ~= (arg or {})[1] then
             ---@param content string
             ---@param source string?
             from_string = function (content, source)
-                return LuaXParser.from_file_content(content, source)
+                -- TODO FIXME does NOT work on inline LuaX
+                return LuaXParser.from_file_content(content, source):transpile()
             end,
             inline = require("src.util.parser.inline")
         },
@@ -56,7 +57,7 @@ if table.pack(...)[1] ~= (arg or {})[1] then
         end
     })
 
-    if not LuaX then
+    if not LuaX or not next(LuaX) then
         ---@class LuaX : LuaX.Exported
         ---@field _hookstate LuaX.HookState
         LuaX = export
