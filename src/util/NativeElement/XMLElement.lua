@@ -2,7 +2,7 @@ local NativeElement = require("src.util.NativeElement.NativeElement")
 local split         = require("src.util.polyfill.string.split")
 local ElementNode   = require("src.util.ElementNode")
 
--- TODO either fix up or move to dead/
+-- TODO improve. a lot.
 
 ---@class LuaX.XMLElement : LuaX.NativeElement
 ---@field native { type: string, props: table<string, any>, children: LuaX.XMLElement[] }
@@ -37,8 +37,13 @@ function XMLElement:delete_child(index)
     table.remove(self.children, index)
 end
 
+---@return LuaX.XMLElement
 function XMLElement.get_root(xml)
-    return XMLElement(xml)
+    return XMLElement(xml or {
+        type = "ROOT",
+        props = {},
+        children = {}
+    })
 end
 
 function XMLElement:get_type()
@@ -47,7 +52,7 @@ end
 
 -- This is NOT a good xml serializer
 function XMLElement:__tostring()
-    if self.type == ElementNode.LITERAL_NODE then
+    if ElementNode.is_literal(self.type) then
         return tostring(self.props.value)
     end
 

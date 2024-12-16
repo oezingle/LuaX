@@ -1,10 +1,7 @@
 
 # hooks
 
-Hooks are the system within LuaX enabling its reactivity. When a hook creates a
-change, the component automatically re-renders itself. Other hooks detect these
-changes, allowing you to dynamically call external dependencies when values
-change.
+Hooks are the system within LuaX enabling its reactivity. When a hook creates a change, the component automatically re-renders itself. Other hooks can detect these changes, allowing you to dynamically call external dependencies when values change. Those who know React will find LuaX's hooks extremely familiar - in fact, LuaX hooks have been adapted from React to reduce mental complexity for developers.
 
 ## use_state
 
@@ -13,7 +10,7 @@ re-renders.
 
 ```lua
 local LuaX = require("LuaX")
-local use_state = LuaX.use_state
+local use_state = LuaX.use_state -- or require("LuaX.hooks.use_state")
 
 local MyCounter = LuaX(function ()
     local clicks, set_clicks = use_state(0)
@@ -44,6 +41,14 @@ end)
 
 If you wish to set the value of a state variable to a function, simply pass a
 function that returns a function.
+
+```lua
+set_fn(function ()
+    return function ()
+        print("I'm a function")
+    end
+end)
+```
 
 ## use_effect
 
@@ -93,3 +98,25 @@ use_effect(function ()
     end
 end)
 ```
+
+## use_memo
+
+`use_memo` acts almost like a combination of `use_state` and `use_effect`. There's a little more going on under the hood, but you can think of it operating similarly to this:
+
+`(Pseudocode)`
+```lua
+local function use_memo (callback, deps)
+    local computed, set_computed = use_state()
+
+    use_effect(function ()
+        -- callback is some expensive operation
+        local new_value = callback()
+        
+        set_computed(new_value)
+    end, deps)
+end
+```
+
+In practice, `use_memo` lets us save the work of expensive computations every time a component re-renders, instead recomputing only if any of the dependencies in the `deps` table change.
+
+<!-- TODO code example -->

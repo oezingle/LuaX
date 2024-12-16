@@ -32,7 +32,8 @@ local function collect_vars(vars, node)
         ]]
 
         if expression.name then
-            table.insert(vars, expression.name)
+            -- lua-parser now seems to nest expression names??
+            table.insert(vars, expression.name.name)
         end
 
         if expression.vars then
@@ -59,7 +60,11 @@ local function collect_locals (text)
         :set_components({}, "local")
         :transpile()
 
-    local node = Parser.parse(text)
+    local node, err = Parser.parse(text)
+
+    if not node then
+        error("Unable to collect locals - are you sure your code is syntactically correct?\n" .. err)
+    end
 
     ---@type string[]
     local vars = {}

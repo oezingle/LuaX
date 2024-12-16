@@ -3,7 +3,7 @@
 -- TODO FIXME remove?
 
 local create_element = require("src.create_element")
-local get_function_location = require("src.util.Renderer.helper.get_function_location")
+local get_function_location = require("src.util.debug.get_function_location")
 local ElementNode           = require("src.util.ElementNode")
 
 local function_a = function(component, props)

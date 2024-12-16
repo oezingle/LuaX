@@ -14,9 +14,8 @@ describe("collect_locals", function()
         assert.True(locals.Fragment)
     end)
 
-    describe("parses LuaX source code:", function()
+    describe("parses LuaX", function()
         it("multiline", function()
-            -- TODO FIXME TokenStack catches the ' in I'm and thinks its a string. Boo!
             local locals = collect_locals([[
                 local Fragment = require("src.components.Fragment")
 

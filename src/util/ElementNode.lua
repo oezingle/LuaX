@@ -1,5 +1,5 @@
 local ipairs_with_nil = require("src.util.ipairs_with_nil")
-local get_function_location = require("src.util.Renderer.helper.get_function_location")
+local get_function_location = require("src.util.debug.get_function_location")
 
 ---@alias LuaX.ElementNode.LiteralNode string
 
@@ -22,21 +22,23 @@ local get_function_location = require("src.util.Renderer.helper.get_function_loc
 ---TODO FIXME add generics
 ---@class LuaX.ElementNode
 ---
+--- Instance properties
 ---@field type LuaX.Component
 ---@field props LuaX.Props
 ---
----@field _component LuaX.ComponentInstance
----@field inherit_props fun(self: self, inherit_props: LuaX.Props): self
----@field element_node self
+---@field protected element_node self
 ---
+---@field inherit_props fun(self: self, inherit_props: LuaX.Props): self
 ---@field create fun(component: LuaX.Component | LuaX.ElementNode.LiteralNode, props: LuaX.Props): self
----@field LITERAL_NODE LuaX.ElementNode.LiteralNode unique key
+---@field protected LITERAL_NODE LuaX.ElementNode.LiteralNode unique key
 ---
 local ElementNode = {
     LITERAL_NODE = "LUAX_LITERAL_NODE", -- this table is used for its unique key
 }
 
+--- Process any possible value for "children" into a list of ElementNodes
 ---@param children LuaX.ElementNode.Children
+---@protected
 function ElementNode.clean_children(children)
     -- Convert children to list. This getmetatable usage is apparently
     -- recommended https://github.com/Yonaba/30log/wiki/Instances
@@ -76,6 +78,7 @@ end
 
 --- API for LuaX environment to hand elements internal props
 ---
+---@param node LuaX.ElementNode
 ---@param inherit_props { [string]: any }
 ---@return self
 function ElementNode.inherit_props(node, inherit_props)
@@ -103,6 +106,17 @@ function ElementNode.create(component, props)
     }
 
     return node
+end
+
+---@overload fun (component: LuaX.ElementNode): boolean
+---@param component LuaX.Component
+---@return boolean
+function ElementNode.is_literal (component)
+    if type(component) == "table" then
+        return ElementNode.is_literal(component.type)
+    end
+    
+    return component == ElementNode.LITERAL_NODE
 end
 
 return ElementNode

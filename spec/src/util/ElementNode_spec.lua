@@ -2,6 +2,7 @@ local ElementNode = require("src.util.ElementNode")
 
 describe("ElementNode", function()
     describe("clean_children", function()
+        ---@diagnostic disable-next-line:invisible
         local literal_element = ElementNode.create(ElementNode.LITERAL_NODE, { value = "Hello World!" })
 
         describe("takes single", function()
@@ -9,6 +10,7 @@ describe("ElementNode", function()
                 local children = "Hello World!"
                 local expected = { literal_element }
 
+                ---@diagnostic disable-next-line:invisible
                 local cleaned = ElementNode.clean_children(children)
 
                 assert.are.same(expected, cleaned)
@@ -18,6 +20,7 @@ describe("ElementNode", function()
                 local children = ElementNode.create("nil", {})
                 local expected = { ElementNode.create("nil", {}) }
 
+                ---@diagnostic disable-next-line:invisible
                 local cleaned = ElementNode.clean_children(children)
 
                 assert.are.same(expected, cleaned)
@@ -27,6 +30,7 @@ describe("ElementNode", function()
                 local children = nil
                 local expected = {}
 
+                ---@diagnostic disable-next-line:invisible
                 local cleaned = ElementNode.clean_children(children)
 
                 assert.are.same(expected, cleaned)
@@ -36,17 +40,19 @@ describe("ElementNode", function()
                 local children = false
                 local expected = {}
 
+                ---@diagnostic disable-next-line:invisible
                 local cleaned = ElementNode.clean_children(children)
 
                 assert.are.same(expected, cleaned)
             end)
         end)
 
-        describe("takes multiple", function ()
+        describe("takes multiple", function()
             it("strings", function()
                 local children = { "Hello World!" }
                 local expected = { literal_element }
 
+                ---@diagnostic disable-next-line:invisible
                 local cleaned = ElementNode.clean_children(children)
 
                 assert.are.same(expected, cleaned)
@@ -56,6 +62,7 @@ describe("ElementNode", function()
                 local children = { false, "Hello World!" }
                 local expected = { nil, literal_element }
 
+                ---@diagnostic disable-next-line:invisible
                 local cleaned = ElementNode.clean_children(children)
 
                 assert.are.same(expected, cleaned)
@@ -63,7 +70,7 @@ describe("ElementNode", function()
         end)
     end)
 
-    it("returns an expected lua table", function ()
+    it("returns an expected lua table", function()
         local element = ElementNode.create("test_element", {
             prop1 = true,
             prop2 = 2
@@ -75,9 +82,10 @@ describe("ElementNode", function()
         assert.equal(element.props.prop2, 2)
     end)
 
-    it("gives metatable still", function ()
+    it("gives metatable still", function()
         local node = ElementNode.create("test_element", {})
 
+        ---@diagnostic disable-next-line:invisible
         assert.equal(ElementNode, node.element_node)
     end)
 
@@ -86,6 +94,7 @@ describe("ElementNode", function()
         local a = ElementNode.create("div", {})
         local b = ElementNode.create("div", {})
 
+        ---@diagnostic disable-next-line:invisible
         assert.equal(a.element_node, b.element_node)
     end)
 end)

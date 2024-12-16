@@ -19,3 +19,6 @@
 [submodule "lib/log"]
 	path = lib/log
 	url = https://github.com/rxi/log.lua
+[submodule "lib/profiler"]
+	path = lib/profiler
+	url = https://github.com/oezingle/LuaProfiler

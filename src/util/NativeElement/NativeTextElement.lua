@@ -9,6 +9,7 @@ local ElementNode   = require("src.util.ElementNode")
 -- ---@field get_prop fun(self: self, prop: string): any
 ---
 --- Abstract fields
+---@field get_value fun (self: self): string
 ---@field set_value fun(self: self, value: string)
 local NativeTextElement = NativeElement:extend("NativeTextElement")
 
@@ -16,7 +17,6 @@ NativeElement._dependencies.NativeTextElement = NativeTextElement
 
 -- Doesn't export anything as this is a helper class for NativeElement subclasses
 NativeTextElement.components = {}
-
 
 function NativeTextElement:init (value, parent)
     self.parent = parent
@@ -30,6 +30,14 @@ function NativeTextElement:set_prop(prop, value)
     end
 
     self:set_value(value)
+end
+
+function NativeTextElement:get_prop (prop)
+    if prop ~= "value" then
+        return nil
+    end
+
+    return self:get_value()
 end
 
 --[[
@@ -46,6 +54,7 @@ function NativeTextElement:delete_child()
 end
 
 function NativeTextElement:get_type()
+    ---@diagnostic disable-next-line:invisible
     return ElementNode.LITERAL_NODE
 end
 

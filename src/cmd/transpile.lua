@@ -5,7 +5,7 @@ local is_dir      = require("src.cmd.fs.is_dir")
 local cp          = require("src.cmd.fs.cp")
 local is_lua_file = require("src.cmd.fs.is_lua_file")
 local parse_file  = require("src.cmd.parse_file")
-local basename    = require("src.util.polyfill.path.basename")
+local dirname    = require("src.util.polyfill.path.dirname")
 
 ---@class LuaX.Cmd.TranspileOptions
 ---@field inpath string
@@ -47,7 +47,7 @@ local function transpile(options)
         outfile:flush()
         outfile:close()
     elseif is_dir(inpath) and should_recurse then
-        local outdir = basename(outpath)
+        local outdir = dirname(outpath)
 
         mkdir(outdir)
 

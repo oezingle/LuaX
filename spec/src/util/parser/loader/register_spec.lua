@@ -1,6 +1,6 @@
 
 local luax_loader_register = require("src.util.parser.loader.register")
-local get_element_name = require("src.util.Renderer.helper.get_element_name")
+local get_element_name = require("src.util.debug.get_element_name")
 
 describe("LuaX loader register", function ()
     it("registers", function ()

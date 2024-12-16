@@ -1,6 +1,5 @@
-
 local lfs = require("lfs")
-local join= require("src.util.polyfill.path.join")
+local join = require("src.util.polyfill.path.join")
 
 --- Return true if a path exists and is a directory, false otherwise
 ---@param path string
@@ -23,7 +22,7 @@ end
 
 ---@param path string
 ---@return string
-local function luaify_path (path) 
+local function luaify_path(path)
     local path = path:gsub("%.lua$", ""):gsub("[/\\]", '.')
 
     return path
@@ -47,7 +46,7 @@ end
 
 local root_dir = "src"
 
-local function main ()
+local function main()
     ---@type string[]
     local files = {}
 
@@ -60,10 +59,10 @@ local function main ()
 
     for _, real_path in pairs(files) do
         local f = io.open(real_path, "r")
-        
+
         if not f then
             print("UNABLE TO OPEN", real_path)
-            
+
             goto continue
         end
 
@@ -73,6 +72,9 @@ local function main ()
 
             if required_path then
                 lua_paths[required_path] = nil
+            
+                -- also try for .init
+                lua_paths[required_path .. ".init"] = nil
             end
         end
 
@@ -85,4 +87,4 @@ local function main ()
     end
 end
 
-main ()
+main()

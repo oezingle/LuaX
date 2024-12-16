@@ -1,25 +1,12 @@
 
-local XMLElement = require("src.util.NativeElement.XMLElement")
-
-local Renderer = require("src.util.Renderer")
-local ProfiledRenderer = require("src.util.Renderer.Profiled")
-
--- Mock LuaX. not ideal but busted does a good job of cleaning globals
-LuaX = {}
+local render_set_up = require("spec.helpers.render_set_up")
 
 ---@param element LuaX.ElementNode
 ---@param options { profiled?: boolean }?
 local function static_render (element, options)
-    options = options or {}
+    local root, render = render_set_up(element, options)
 
-    local renderer = options.profiled and ProfiledRenderer() or Renderer()
-
-    local root = XMLElement.get_root({
-        type = "root",
-        children = {}
-    })
-
-    renderer:render(element, root)
+    render()
 
     return root.children[1]
 end

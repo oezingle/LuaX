@@ -3,21 +3,25 @@
 
 [`src/util/NativeElement/NativeElement.lua`](../src/util/NativeElement/NativeElement.lua)
 
-In order to keep LuaX interface agnostic, we extend the abstract class `NativeElement`. 
+In order to keep LuaX interface agnostic, UI libraries must be integrated by developing a class that extends the abstract class `NativeElement`. 
 To connect your interface library of choice, you only need to implement a few functions:
 
+`(Pseudocode)`
 ```lua
 local MyNativeElement = NativeElement:extend("MyNativeElement")
 
+--- Set a property by name. get_prop is optional (see below)
 function MyNativeElement:set_prop(prop_name: string, value: any)
 
+--- Insert a child element by index. is_text may be useful if your UI library handles text differently to other elements
 function MyNativeElement:insert_child(index: number, element: MyNativeElement, is_text: boolean)
+--- Delete a child element by index. see above for information on is_text
 function MyNativeElement:delete_child(index: number, is_text: boolean)
 
---- static class function
+--- class function to create a new element given an element type name
 function MyNativeElement.create_element(type: string): MyNativeElement
 
---- static class function
+--- class function to create a new element given its native representation
 function MyNativeElement.get_root(native: any): MyNativeElement
 ```
 
@@ -29,24 +33,30 @@ subclasses implement the following:
 ---@field get_type  nil | fun(self: self): string
 ---@field create_literal nil | fun(value: string, parent: LuaX.NativeElement): LuaX.NativeElement TODO special rules here?
 ---
----@field get_prop fun(self: self, prop: string): any
+---@field get_prop nil|fun(self: self, prop: string): any
+---
+---@field cleanup nil|fun(self: self)
 ---
 ---@field components string[]? class static property - components implemented by this class.
 -->
 
 ```lua
+--- Get the element's type name. This is extremely useful for debugging your interface programs.
 function MyNativeElement:get_type(): string
 
+--- Get an element's property by its name. NativeElement will fall back to a virtual list of properties otherwise, which uses excessive memory.
 function MyNativeElement:get_prop(prop: string): any
 
-MyNativeElement.components = {
-    -- a list of component types, as strings, that this class implements.
-}
+--- Run any custom removal logic before the element is deleted
+function MyNativeElement:cleanup()
+
+-- a list of LuaX component names, as strings, that this class implements
+MyNativeElement.components = {}
 ```
 
 There's one special optional static function, `create_literal`, which lets you
 implement special logic if your interface library doesn't handle text in the 
-same way as components.
+same way as other elements.
 
 ```lua
 function MyNativeElement.create_literal (value: string, parent: MyNativeElement): LuaX.NativeElement
@@ -54,7 +64,9 @@ function MyNativeElement.create_literal (value: string, parent: MyNativeElement)
 
 ## Recommendations
 
-### `:init()` should consume interface objects
+`NativeElement` contains minimal facilities for interface manipulation intentionally, providing primarily helpers to convert LuaX's keys to individual index values, and automatic creation and removal of NativeElement objects. This means that your UI element class can be implemented in many different ways, though following best practices will make development easier.
+
+### `:init()` should consume UI objects as native elements
 
 Generally, this it's recommended `MyNativeElement:init()` takes a native 
 representation of that component as its argument. This would mean
@@ -67,8 +79,7 @@ function MyNativeElement:init(native)
 end
 
 function MyNativeElement.create_element(type)
-    -- Here, interface_library represents the black box of whatever interface
-    -- library your project uses.
+    -- Here, interface_library represents the black box of whatever interface library your project uses.
     local elem = interface_library.create(type)
     
     return MyNativeElement(elem)
@@ -81,7 +92,7 @@ end
 
 ### implement `:get_prop()`
 
-Retrieving a prop is done, by default, using a virtual props table. This is wasteful and slow.
+Retrieving a prop is done using a virtual props table by default. This is wasteful and slow.
 
 ## `create_literal` and `NativeTextElement`
 
@@ -91,3 +102,7 @@ See [NativeTextElement](NativeTextElement.md) for more.
 
 ## Examples
 - [`WiboxElement.lua`](../src/util/NativeElement/WiboxElement.lua): Native elements for [AwesomeWM](https://awesomewm.org). Uses `create_literal` and `NativeTextElement`
+
+## `VirtualElement`
+
+`VirtualElement` is a special class implements a less-than-minimal set of NativeElement methods. It provides object storage for function components, by inserting hook states and any other necessary information into an un-rendered portion of a NativeElement's child table. Your UI element class does not need to consider VirtualElements.

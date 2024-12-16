@@ -60,6 +60,16 @@ stringify = function(input)
         return stringify_table(input)
     end
 
+    -- TODO FIXME test this!
+    if t == "function" then
+        local dump = string.dump(input)
+
+        -- TODO if debug exists, use it to name chunk?
+
+        -- this will look DISGUSTING printed out but it's a hack that works (i believe)
+        return string.format("load(%q)", dump)
+    end
+
     error(string.format("Cannot stringify %s", t))
 end
 

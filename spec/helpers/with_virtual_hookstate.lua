@@ -9,7 +9,7 @@ local function with_virtual_hookstate(cb, change_listener)
         local hookstate = HookState()
 
         if change_listener then
-            hookstate:add_listener(change_listener)
+            hookstate:set_listener(change_listener)
         end
 
         _G.LuaX = {

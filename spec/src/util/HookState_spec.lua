@@ -20,7 +20,7 @@ describe("HookState", function ()
         local hello_world = "Hello World!"
 
         local hookstate = HookState()
-        hookstate:add_listener(function (index, value)
+        hookstate:set_listener(function (_, value)
             assert.equal(hello_world, value)
         end)
 

@@ -9,6 +9,7 @@ local LuaX = require("LuaX")
 local Renderer = LuaX.Renderer
 local create_element = LuaX.create_element
 
+-- App is a function component
 local App = require("App")
 
 local function main ()
@@ -19,6 +20,7 @@ local function main ()
 
     local container = native_element_library.get_element("root")
 
+    -- LuaX requires a class that extends NativeElement in order to interface with your UI library
     local root = SomeElement.get_root(container)
 
     renderer:render(element, root)

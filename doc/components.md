@@ -1,9 +1,11 @@
 # Developing components
 
-As a user of LuaX, most of your work will be in writing components, enabling you
-to focus on creating the visual elements of your project with familiar syntax.
+As a user of LuaX, most of your work will be in writing components. Components are written in a HTML-like syntax, enabling you
+to work on visual elements with a familiar coding style.
 
 ## LuaX in Vanilla Lua
+
+LuaX provides a number of facilities to write LuaX components within a `.lua` file, although you can also use `.luax` files to write LuaX code as if it were a native language feature. That feature will be covered later in this article.
 
 ### Decorator syntax
 
@@ -28,9 +30,9 @@ end)
 return MyComponent
 ```
 
-### Return syntax
+### Return syntax *(Not recommended)*
 
-LuaX can also be called when you return from your component function.
+LuaX can also be called when you return from your component function. This is not recommended.
 
 `src/components/MyComponent.lua`
 ```lua
@@ -76,15 +78,15 @@ server support is unfortunately not yet available, but is planned.
 
 `src/components/MyComponent.luax`
 ```lua
-local textbox = require("src.components.textbox")
+local Textbox = require("src.components.Textbox")
 
 local function MyComponent (props)
     local name = props.name
 
     return (
-        <textbox color="white">
+        <Textbox color="white">
             Hello {name}!
-        </textbox>
+        </Textbox>
     )
 end
 ```
