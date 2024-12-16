@@ -36,6 +36,7 @@ local ipairs_with_nil=require"lib_LuaX.util.ipairs_with_nil"
 local FunctionComponentInstance=class"FunctionComponentInstance"
 function FunctionComponentInstance:init(component) self.handlers={}
 self.requests_rerender=false
+self.props={}
 self.hookstate=HookState()
 self.hookstate:add_listener(function () self.requests_rerender=true
 for _,handler in ipairs(self.handlers) do handler() end end)
@@ -44,12 +45,14 @@ function FunctionComponentInstance:on_change(cb) table.insert(self.handlers,cb) 
 function FunctionComponentInstance:render(props) self.requests_rerender=false
 
 self.hookstate:reset()
+local last_context=_G.LuaX._context
 _G.LuaX._context=props.__luax_internal.context
+local last_hookstate=_G.LuaX._hookstate
 _G.LuaX._hookstate=self.hookstate
 local component=self.component
 local element=component(props)
-_G.LuaX._context=nil
-_G.LuaX._hookstate=nil
+_G.LuaX._context=last_context
+_G.LuaX._hookstate=last_hookstate
 return element end
 function FunctionComponentInstance:cleanup() local hooks=self.hookstate.values
 local length=self.hookstate.index

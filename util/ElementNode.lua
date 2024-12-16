@@ -24,7 +24,6 @@ local ipairs_with_nil=require"lib_LuaX.util.ipairs_with_nil"
 ---@field type LuaX.Component
 ---@field props LuaX.Props
 
----@field _component LuaX.ComponentInstance
 ---@field inherit_props fun(self: self, inherit_props: LuaX.Props): self
 ---@field element_node self
 
@@ -33,7 +32,9 @@ local ipairs_with_nil=require"lib_LuaX.util.ipairs_with_nil"
 
 local get_function_location=require"lib_LuaX.util.Renderer.helper.get_function_location"
 
+
 ---@param children LuaX.ElementNode.Children
+---@protected
 local ElementNode={["LITERAL_NODE"] = "LUAX_LITERAL_NODE"}
 function ElementNode.clean_children(children) 
 

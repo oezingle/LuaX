@@ -13,7 +13,7 @@ local library_root=folder_of_this_file:sub(1, - 1 -  # "")
 require(library_root .. "_shim") end
 local LuaXParser=require"lib_LuaX.util.parser.LuaXParser"
 
-local _VERSION="0.3.6"
+local _VERSION="0.3.6-dev"
 if table.pack(...)[1] ~= (arg or {})[1] then 
 ---@class LuaX.Exported
 ---@field Renderer LuaX.Renderer
@@ -29,9 +29,10 @@ if table.pack(...)[1] ~= (arg or {})[1] then
 ---@param path string
 ---@param content string
 ---@param source string?
-local export={["Renderer"] = require"lib_LuaX.util.Renderer",["Fragment"] = require"lib_LuaX.components.Fragment",["create_element"] = require"lib_LuaX.create_element",["clone_element"] = require"lib_LuaX.clone_element",["use_state"] = require"lib_LuaX.hooks.use_state",["use_effect"] = require"lib_LuaX.hooks.use_effect",["use_memo"] = require"lib_LuaX.hooks.use_memo",["use_ref"] = require"lib_LuaX.hooks.use_ref",["register"] = require"lib_LuaX.util.parser.loader.register",["Parser"] = LuaXParser,["transpile"] = {["from_path"] = function (path) return LuaXParser.from_file_path(path):transpile() end,["from_string"] = function (content,source) return LuaXParser.from_file_content(content,source) end,["inline"] = require"lib_LuaX.util.parser.inline"},["__from_cli"] = require"lib_LuaX.cmd.cmd",["_VERSION"] = _VERSION}
+local export={["Renderer"] = require"lib_LuaX.util.Renderer",["Fragment"] = require"lib_LuaX.components.Fragment",["create_element"] = require"lib_LuaX.create_element",["clone_element"] = require"lib_LuaX.clone_element",["use_state"] = require"lib_LuaX.hooks.use_state",["use_effect"] = require"lib_LuaX.hooks.use_effect",["use_memo"] = require"lib_LuaX.hooks.use_memo",["use_ref"] = require"lib_LuaX.hooks.use_ref",["register"] = require"lib_LuaX.util.parser.loader.register",["Parser"] = LuaXParser,["transpile"] = {["from_path"] = function (path) return LuaXParser.from_file_path(path):transpile() end,["from_string"] = function (content,source) 
+return LuaXParser.from_file_content(content,source):transpile() end,["inline"] = require"lib_LuaX.util.parser.inline"},["__from_cli"] = require"lib_LuaX.cmd.cmd",["_VERSION"] = _VERSION}
 setmetatable(export,{["__call"] = function (table,tag) return table.transpile.inline(tag) end})
-if  not LuaX then ---@class LuaX : LuaX.Exported
+if  not LuaX or  not next(LuaX) then ---@class LuaX : LuaX.Exported
 ---@field _hookstate LuaX.HookState
 LuaX=export end
 return export else local cmd=require"lib_LuaX.cmd.cmd"

@@ -27,7 +27,7 @@ function XMLElement:set_prop(prop,value) self.props[prop]=value end
 
 function XMLElement:insert_child(index,element) table.insert(self.children,index,element) end
 function XMLElement:delete_child(index) table.remove(self.children,index) end
-function XMLElement.get_root(xml) return XMLElement(xml) end
+function XMLElement.get_root(xml) return XMLElement(xml or {["type"] = "ROOT",["props"] = {},["children"] = {}}) end
 function XMLElement:get_type() return self.type end
 
 function XMLElement:__tostring() if self.type == ElementNode.LITERAL_NODE then return tostring(self.props.value) end

@@ -38,7 +38,7 @@ return self.wibox[prop] end
 function WiboxElement:insert_child(index,element,is_text) if is_text then table.insert(self.texts,index,element)
 self:_reload_text() else if self.wibox.insert then self.wibox:insert(index,element.wibox) elseif self.wibox.get_children and self.wibox.set_children then local children=self.wibox:get_children()
 table.insert(children,element.wibox)
-self.wibox:set_children(children) else error(string.format("Unable to insert child with wibox %s",self.wibox)) end end end
+self.wibox:set_children(children) else error(string.format("Unable to insert child to wibox %s",self.wibox)) end end end
 function WiboxElement:delete_child(index,is_text) if is_text then table.remove(self.texts,index) else if self.wibox.remove then self.wibox:remove(index) elseif self.wibox.get_children and self.wibox.set_children then local children=self.wibox:get_children()
 table.remove(children,index)
 self.wibox:set_children(children) else error(string.format("Unable to insert child with wibox %s",self.wibox)) end end end

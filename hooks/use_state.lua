@@ -19,9 +19,9 @@ local table_equals=require"lib_LuaX.util.table_equals"
 local function use_state(default) local hookstate=LuaX._hookstate
 local index=hookstate:get_index()
 local value=hookstate:get_value(index)
-if value == nil then value=default
+if value == nil then if type(default) == "function" then default=default() end
+value=default
 hookstate:set_value_silent(index,value) end
-
 
 local setter=function (cb_or_new_value) local new_value=nil
 if type(cb_or_new_value) == "function" then new_value=cb_or_new_value(value) else new_value=cb_or_new_value end

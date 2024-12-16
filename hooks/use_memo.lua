@@ -18,7 +18,7 @@ local use_state=require"lib_LuaX.hooks.use_state"
 ---@return T
 local use_effect=require"lib_LuaX.hooks.use_effect"
 local function use_memo(callback,deps) 
-local result,set_result=use_state()
+local result,set_result=use_state(function () return callback() end)
 use_effect(function () set_result(callback()) end,deps)
 return result end
 return use_memo
