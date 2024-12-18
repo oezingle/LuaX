@@ -22,7 +22,7 @@ if table.pack(...)[1] ~= (arg or {})[1] then
 
     local export = {
         Renderer       = require("src.util.Renderer"),
-        Fragment       = require("src.compots.Fragment"),
+        Fragment       = require("src.components.Fragment"),
         create_element = require("src.create_element"),
         clone_element  = require("src.clone_element"),
         use_state      = require("src.hooks.use_state"),
