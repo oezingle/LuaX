@@ -8,7 +8,7 @@ local table_equals = require("src.util.table_equals")
 ---@param deps any[]
 ---@return T
 local function use_memo(callback, deps)
-    local hookstate = HookState.global()
+    local hookstate = HookState.global.get(true)
 
     local index = hookstate:get_index()
 

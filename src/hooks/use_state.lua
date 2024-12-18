@@ -8,7 +8,7 @@ local HookState    = require("src.util.HookState")
 ---@param default T?
 ---@return T, fun(new_value: LuaX.Dispatch<T>)
 local function use_state (default)
-    local hookstate = HookState.global()
+    local hookstate = HookState.global.get(true)
 
     local index = hookstate:get_index()
 

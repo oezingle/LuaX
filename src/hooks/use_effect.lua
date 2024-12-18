@@ -6,7 +6,7 @@ local HookState    = require("src.util.HookState")
 ---@param callback fun(): function?
 ---@param deps any[]?
 local function use_effect(callback, deps)
-    local hookstate = HookState.global()
+    local hookstate = HookState.global.get(true)
 
     local index = hookstate:get_index()
 

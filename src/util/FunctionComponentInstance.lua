@@ -26,7 +26,7 @@ local log = require("lib.log")
 ---@operator call: LuaX.FunctionComponentInstance
 local FunctionComponentInstance = class("FunctionComponentInstance")
 
-local ABORT_RENDER = {}
+local ABORT_CURRENT_RENDER = {}
 
 function FunctionComponentInstance:init(component)
     log.debug("new FunctionComponentInstance")
@@ -45,9 +45,12 @@ function FunctionComponentInstance:init(component)
         for _, handler in ipairs(self.handlers) do
             handler()
         end
-        
-        -- Throw ABORT_RENDER table to quit rendering this component, and start again
-        error(ABORT_RENDER)
+
+        -- If currently rendering this component
+        if HookState.global.get() == self.hookstate then
+            -- Throw ABORT_RENDER table to quit rendering this component, and start again
+            error(ABORT_CURRENT_RENDER)
+        end
     end)
 
     self.component = component
@@ -65,19 +68,18 @@ function FunctionComponentInstance:render(props)
     -- TODO optionally use setfenv hack here to set _G.LuaX._context and _G.LuaX._hookstate for only self.component
     local last_context = _G.LuaX._context
     _G.LuaX._context = props.__luax_internal.context
-    local last_hookstate = _G.LuaX._hookstate
-    _G.LuaX._hookstate = self.hookstate
+    local last_hookstate = HookState.global.set(self.hookstate)
 
     local component = self.component
 
     local ok, res = pcall(component, props)
 
     _G.LuaX._context = last_context
-    _G.LuaX._hookstate = last_hookstate
+    HookState.global.set(last_hookstate)
 
     if not ok then
         local err = res
-        if err ~= ABORT_RENDER then
+        if err ~= ABORT_CURRENT_RENDER then
             error(err)
         end
     else
@@ -86,7 +88,7 @@ function FunctionComponentInstance:render(props)
     end
 end
 
-function FunctionComponentInstance:cleanup () 
+function FunctionComponentInstance:cleanup()
     local hooks = self.hookstate.values
     local length = math.max(#self.hookstate.values, self.hookstate.index)
 

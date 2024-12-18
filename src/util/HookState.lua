@@ -88,19 +88,30 @@ function HookState:__tostring()
     return string.format("HookState {\n%s\n}", table.concat(hooks, "\n"))
 end
 
----@overload fun(value: nil): LuaX.HookState
----@overload fun(value: LuaX.HookState): nil
-function HookState.global(value)
-    if value then
-        _G.LuaX._hookstate = value
-    else
-        local hookstate = _G.LuaX._hookstate
+HookState.global = {}
 
+---@overload fun(): LuaX.HookState | nil
+---@param required boolean
+---@return LuaX.HookState
+function HookState.global.get(required)
+    local hookstate = _G.LuaX._hookstate
+
+    if required then
         -- TODO more in depth error message
         assert(hookstate, "No global hookstate!")
-
-        return hookstate
     end
+
+    return hookstate
+end
+
+---@param hookstate LuaX.HookState?
+---@return LuaX.HookState? last_hookstate
+function HookState.global.set (hookstate)
+    local last_hookstate = _G.LuaX._hookstate
+
+    _G.LuaX._hookstate = hookstate
+
+    return last_hookstate
 end
 
 return HookState
