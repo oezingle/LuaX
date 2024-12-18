@@ -17,7 +17,7 @@ local table_equals=require"lib_LuaX.util.table_equals"
 ---@param default T?
 ---@return T, fun(new_value: LuaX.Dispatch<T>)
 local HookState=require"lib_LuaX.util.HookState"
-local function use_state(default) local hookstate=HookState.global()
+local function use_state(default) local hookstate=HookState.global.get(true)
 local index=hookstate:get_index()
 local value=hookstate:get_value(index)
 if value == nil then if type(default) == "function" then default=default() end

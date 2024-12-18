@@ -39,5 +39,10 @@ if t == "nil" or t == "number" or t == "boolean" then return tostring(input) end
 if t == "string" then if input:match"^{.*}$" then 
 return input:sub(2, - 2) else return string.format("%q",input) end end
 if t == "table" then return stringify_table(input) end
+
+if t == "function" then 
+
+local dump=string.dump(input)
+return string.format("load(%q)",dump) end
 error(string.format("Cannot stringify %s",t)) end
 return stringify_table

@@ -35,7 +35,7 @@ local ipairs_with_nil=require"lib_LuaX.util.ipairs_with_nil"
 ---@operator call: LuaX.FunctionComponentInstance
 local log=require"lib_LuaX._dep.lib.log"
 local FunctionComponentInstance=class"FunctionComponentInstance"
-local ABORT_RENDER={}
+local ABORT_CURRENT_RENDER={}
 function FunctionComponentInstance:init(component) log.debug"new FunctionComponentInstance"
 self.handlers={}
 self.requests_rerender=false
@@ -44,7 +44,8 @@ self.hookstate=HookState()
 self.hookstate:set_listener(function () self.requests_rerender=true
 for _,handler in ipairs(self.handlers) do handler() end
 
-error(ABORT_RENDER) end)
+if HookState.global.get() == self.hookstate then 
+error(ABORT_CURRENT_RENDER) end end)
 self.component=component end
 function FunctionComponentInstance:on_change(cb) table.insert(self.handlers,cb) end
 function FunctionComponentInstance:render(props) self.requests_rerender=false
@@ -52,14 +53,13 @@ function FunctionComponentInstance:render(props) self.requests_rerender=false
 self.hookstate:reset()
 local last_context=_G.LuaX._context
 _G.LuaX._context=props.__luax_internal.context
-local last_hookstate=_G.LuaX._hookstate
-_G.LuaX._hookstate=self.hookstate
+local last_hookstate=HookState.global.set(self.hookstate)
 local component=self.component
 local ok,res=pcall(component,props)
 _G.LuaX._context=last_context
-_G.LuaX._hookstate=last_hookstate
+HookState.global.set(last_hookstate)
 if  not ok then local err=res
-if err ~= ABORT_RENDER then error(err) end else local element=res
+if err ~= ABORT_CURRENT_RENDER then error(err) end else local element=res
 return element end end
 function FunctionComponentInstance:cleanup() local hooks=self.hookstate.values
 local length=math.max( # self.hookstate.values,self.hookstate.index)

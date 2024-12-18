@@ -16,7 +16,7 @@ local table_equals=require"lib_LuaX.util.table_equals"
 ---@param callback fun(): function?
 ---@param deps any[]?
 local HookState=require"lib_LuaX.util.HookState"
-local function use_effect(callback,deps) local hookstate=HookState.global()
+local function use_effect(callback,deps) local hookstate=HookState.global.get(true)
 local index=hookstate:get_index()
 
 local last_value=hookstate:get_value(index) or {}
