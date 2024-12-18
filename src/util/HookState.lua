@@ -1,20 +1,22 @@
 local class = require("lib.30log")
 local ipairs_with_nil = require("src.util.ipairs_with_nil")
-local table_equals    = require("src.util.table_equals")
+local stringify_table = require("src.util.parser.transpile.stringify_table")
 
 ---@alias LuaX.HookState.Listener fun(index: number, value: any)
 
 ---@class LuaX.HookState : Log.BaseFunctions
 ---@field index number
 ---@field values any[]
----@field listeners LuaX.HookState.Listener[]
+---@field listeners LuaX.HookState.Listener
 ---@operator call:LuaX.HookState
 local HookState = class("HookState")
+
+local no_op = function() end
 
 function HookState:init()
     self.values = {}
 
-    self.listeners = {}
+    self.listener = no_op
 
     self.index = 1
 end
@@ -32,7 +34,11 @@ function HookState:set_index(index)
     self.index = index
 end
 
----@param index number
+function HookState:increment()
+    self:set_index(self:get_index() + 1)
+end
+
+---@param index number?
 function HookState:get_value(index)
     return self.values[index or self.index]
 end
@@ -54,33 +60,24 @@ end
 ---@param index number
 ---@param value any
 function HookState:modified(index, value)
-    for _, listener in pairs(self.listeners) do
-        listener(index, value)
-    end
+    self.listener(index, value)
 end
 
 ---@param listener LuaX.HookState.Listener
-function HookState:add_listener(listener)
-    table.insert(self.listeners, listener)
+function HookState:set_listener(listener)
+    self.listener = listener
 end
 
--- TODO serialization library would be neat
 function HookState:__tostring()
     local hooks = {}
 
-    for _, hook in ipairs_with_nil(self.values, self.index) do
+    local size = math.max(self.index, #self.values)
+
+    for _, hook in ipairs_with_nil(self.values, size) do
         local hook_str = nil
 
         if type(hook) == "table" then
-            local hook_values = {}
-
-            for key, hook_value in ipairs(hook) do
-                local fmt = string.format("%s=%s", key, tostring(hook_value))
-
-                table.insert(hook_values, fmt)
-            end
-
-            hook_str = "{ " .. table.concat(hook_values, ", ") .. " }"
+            hook_str = stringify_table(hook)
         else
             hook_str = tostring(hook)
         end
@@ -89,6 +86,21 @@ function HookState:__tostring()
     end
 
     return string.format("HookState {\n%s\n}", table.concat(hooks, "\n"))
+end
+
+---@overload fun(value: nil): LuaX.HookState
+---@overload fun(value: LuaX.HookState): nil
+function HookState.global(value)
+    if value then
+        _G.LuaX._hookstate = value
+    else
+        local hookstate = _G.LuaX._hookstate
+
+        -- TODO more in depth error message
+        assert(hookstate, "No global hookstate!")
+
+        return hookstate
+    end
 end
 
 return HookState

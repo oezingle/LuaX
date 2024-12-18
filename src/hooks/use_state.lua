@@ -1,13 +1,14 @@
 
 local table_equals = require("src.util.table_equals")
+local HookState    = require("src.util.HookState")
 
 ---@alias LuaX.Dispatch<T> T | (fun(old: T): T)
 
 ---@generic T
 ---@param default T?
----@return T, fun(new_value: LuaX.Dispatch)
+---@return T, fun(new_value: LuaX.Dispatch<T>)
 local function use_state (default)
-    local hookstate = LuaX._hookstate
+    local hookstate = HookState.global()
 
     local index = hookstate:get_index()
 
@@ -23,7 +24,7 @@ local function use_state (default)
         hookstate:set_value_silent(index, value)
     end
 
-    -- TODO closure here supposedly is bad for performance
+    -- TODO closure here supposedly is bad for performance - can it be generic at all?
     local setter = function (cb_or_new_value)
         local new_value = nil
 
@@ -34,6 +35,7 @@ local function use_state (default)
         end
 
         -- Functions cannot be accurately checked, so assume they've changed.
+        -- Note that passing a function requires set_value(function () return function () ... end end)
         if type(new_value) == "function" or not table_equals(value, new_value) then
             -- modify the value we compare against
             value = new_value
@@ -42,7 +44,7 @@ local function use_state (default)
         end
     end
 
-    hookstate:set_index(index + 1)
+    hookstate:increment()
 
     return value, setter
 end

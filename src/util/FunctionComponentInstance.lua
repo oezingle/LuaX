@@ -1,6 +1,7 @@
 local class = require("lib.30log")
 local HookState = require("src.util.HookState")
 local ipairs_with_nil = require("src.util.ipairs_with_nil")
+local log = require("lib.log")
 
 ---@alias LuaX.ComponentInstance.ChangeHandler fun(element: LuaX.ElementNode | nil)
 
@@ -25,7 +26,11 @@ local ipairs_with_nil = require("src.util.ipairs_with_nil")
 ---@operator call: LuaX.FunctionComponentInstance
 local FunctionComponentInstance = class("FunctionComponentInstance")
 
+local ABORT_RENDER = {}
+
 function FunctionComponentInstance:init(component)
+    log.debug("new FunctionComponentInstance")
+
     self.handlers = {}
 
     self.requests_rerender = false
@@ -34,12 +39,15 @@ function FunctionComponentInstance:init(component)
 
     self.hookstate = HookState()
 
-    self.hookstate:add_listener(function()
+    self.hookstate:set_listener(function()
         self.requests_rerender = true
 
         for _, handler in ipairs(self.handlers) do
             handler()
         end
+        
+        -- Throw ABORT_RENDER table to quit rendering this component, and start again
+        error(ABORT_RENDER)
     end)
 
     self.component = component
@@ -62,28 +70,33 @@ function FunctionComponentInstance:render(props)
 
     local component = self.component
 
-    local element = component(props)
+    local ok, res = pcall(component, props)
 
     _G.LuaX._context = last_context
     _G.LuaX._hookstate = last_hookstate
 
-    return element
+    if not ok then
+        local err = res
+        if err ~= ABORT_RENDER then
+            error(err)
+        end
+    else
+        local element = res
+        return element
+    end
 end
 
 function FunctionComponentInstance:cleanup () 
     local hooks = self.hookstate.values
-    local length = self.hookstate.index
+    local length = math.max(#self.hookstate.values, self.hookstate.index)
 
     for _, hook in ipairs_with_nil(hooks, length) do
+        -- TODO this breaks use_effect -> HookState -> FunctionComponentInstance encapsulation.
         -- hooks can sometimes be garbage collected before components - how do I protect against this?
-        if hook and type(hook) == "table" and hook.on_remove then
+        if type(hook) == "table" and hook.on_remove then
             hook.on_remove()
         end
     end
-end
-
-function FunctionComponentInstance:__gc()
-    self:cleanup()
 end
 
 return FunctionComponentInstance
