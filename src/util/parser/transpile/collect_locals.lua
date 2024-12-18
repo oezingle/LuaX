@@ -32,7 +32,8 @@ local function collect_vars(vars, node)
         ]]
 
         if expression.name then
-            table.insert(vars, expression.name)
+            -- lua-parser now seems to nest expression names??
+            table.insert(vars, expression.name.name)
         end
 
         if expression.vars then
