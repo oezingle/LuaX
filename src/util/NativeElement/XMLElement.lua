@@ -37,6 +37,7 @@ function XMLElement:delete_child(index)
     table.remove(self.children, index)
 end
 
+---@return LuaX.XMLElement
 function XMLElement.get_root(xml)
     return XMLElement(xml or {
         type = "ROOT",

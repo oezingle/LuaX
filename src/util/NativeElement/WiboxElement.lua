@@ -59,6 +59,7 @@ function WiboxElement:insert_child(index, element, is_text)
     if is_text then
         table.insert(self.texts, index, element)
 
+        -- TODO can I remove this? WiboxText calls for us
         self:_reload_text()
     else
         if self.wibox.insert then
@@ -142,11 +143,7 @@ function WiboxText:set_value(value)
     self.parent:_reload_text()
 end
 
-function WiboxText:get_prop(prop)
-    if prop ~= "value" then
-        return nil
-    end
-
+function WiboxText:get_value()
     return self.value
 end
 
