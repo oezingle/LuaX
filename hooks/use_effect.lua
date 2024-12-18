@@ -11,21 +11,23 @@ package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep)
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "hooks.")
 require(library_root .. "_shim") end
+local table_equals=require"lib_LuaX.util.table_equals"
 ---@alias LuaX.UseEffectState { deps: any[]?, on_remove: function? }
 ---@param callback fun(): function?
 ---@param deps any[]?
-local table_equals=require"lib_LuaX.util.table_equals"
-local function use_effect(callback,deps) local hookstate=LuaX._hookstate
+local HookState=require"lib_LuaX.util.HookState"
+local function use_effect(callback,deps) local hookstate=HookState.global()
 local index=hookstate:get_index()
 
-local old_value=hookstate:get_value(index) or {}
-local old_deps=old_value.deps
-local on_remove=old_value.on_remove
-if  not deps or  not table_equals(deps,old_deps,false) then 
-hookstate:set_value_silent(index,{["deps"] = deps})
-if on_remove then on_remove() end
+local last_value=hookstate:get_value(index) or {}
+local last_deps=last_value.deps
+if  not deps or  not table_equals(deps,last_deps) then 
+
+local new_value={["deps"] = deps}
+hookstate:set_value_silent(index,new_value)
+if last_value.on_remove then last_value.on_remove() end
 
 local callback_result=callback()
-hookstate:get_value(index).on_remove=callback_result end
-hookstate:set_index(index + 1) end
+new_value.on_remove=callback_result end
+hookstate:increment() end
 return use_effect

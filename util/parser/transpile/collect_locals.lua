@@ -25,7 +25,8 @@ return map end
 ---@param vars string[]
 ---@param node Lua-Parser.Node
 local function collect_vars(vars,node) for _,expression in ipairs(node) do 
-if expression.name then table.insert(vars,expression.name) end
+if expression.name then 
+table.insert(vars,expression.name.name) end
 if expression.vars then for _,var in ipairs(expression.vars) do table.insert(vars,var.name) end end
 if expression.exprs then collect_vars(vars,expression.exprs) end end end
 ---@param text string

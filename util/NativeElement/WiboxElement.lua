@@ -35,7 +35,8 @@ if value then wibox:weak_connect_signal(signal_name,value) end
 self.signal_handlers[prop]=value else wibox[prop]=value end end
 function WiboxElement:get_prop(prop) if self.signal_handlers[prop] then return self.signal_handlers[prop] end
 return self.wibox[prop] end
-function WiboxElement:insert_child(index,element,is_text) if is_text then table.insert(self.texts,index,element)
+function WiboxElement:insert_child(index,element,is_text) if is_text then 
+table.insert(self.texts,index,element)
 self:_reload_text() else if self.wibox.insert then self.wibox:insert(index,element.wibox) elseif self.wibox.get_children and self.wibox.set_children then local children=self.wibox:get_children()
 table.insert(children,element.wibox)
 self.wibox:set_children(children) else error(string.format("Unable to insert child to wibox %s",self.wibox)) end end end
@@ -62,8 +63,7 @@ self:set_prop("text",text) end
 local WiboxText=NativeTextElement:extend"WiboxText"
 function WiboxText:set_value(value) self.value=value
 self.parent:_reload_text() end
-function WiboxText:get_prop(prop) if prop ~= "value" then return nil end
-return self.value end
+function WiboxText:get_value() return self.value end
 ---@param value string
 ---@param parent LuaX.WiboxElement
 function WiboxElement.create_literal(value,parent) return WiboxText(value,parent) end

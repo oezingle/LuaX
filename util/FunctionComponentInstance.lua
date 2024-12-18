@@ -13,6 +13,7 @@ local library_root=folder_of_this_file:sub(1, - 1 -  # "util.")
 require(library_root .. "_shim") end
 local class=require"lib_LuaX._dep.lib.30log"
 local HookState=require"lib_LuaX.util.HookState"
+local ipairs_with_nil=require"lib_LuaX.util.ipairs_with_nil"
 ---@alias LuaX.ComponentInstance.ChangeHandler fun(element: LuaX.ElementNode | nil)
 ---@class LuaX.ComponentInstance : Log.BaseFunctions
 ---@field handlers LuaX.ComponentInstance.ChangeHandler[]
@@ -32,14 +33,18 @@ local HookState=require"lib_LuaX.util.HookState"
 
 ---@field on_change fun(self: self, cb: LuaX.ComponentInstance.ChangeHandler)
 ---@operator call: LuaX.FunctionComponentInstance
-local ipairs_with_nil=require"lib_LuaX.util.ipairs_with_nil"
+local log=require"lib_LuaX._dep.lib.log"
 local FunctionComponentInstance=class"FunctionComponentInstance"
-function FunctionComponentInstance:init(component) self.handlers={}
+local ABORT_RENDER={}
+function FunctionComponentInstance:init(component) log.debug"new FunctionComponentInstance"
+self.handlers={}
 self.requests_rerender=false
 self.props={}
 self.hookstate=HookState()
-self.hookstate:add_listener(function () self.requests_rerender=true
-for _,handler in ipairs(self.handlers) do handler() end end)
+self.hookstate:set_listener(function () self.requests_rerender=true
+for _,handler in ipairs(self.handlers) do handler() end
+
+error(ABORT_RENDER) end)
 self.component=component end
 function FunctionComponentInstance:on_change(cb) table.insert(self.handlers,cb) end
 function FunctionComponentInstance:render(props) self.requests_rerender=false
@@ -50,13 +55,15 @@ _G.LuaX._context=props.__luax_internal.context
 local last_hookstate=_G.LuaX._hookstate
 _G.LuaX._hookstate=self.hookstate
 local component=self.component
-local element=component(props)
+local ok,res=pcall(component,props)
 _G.LuaX._context=last_context
 _G.LuaX._hookstate=last_hookstate
-return element end
+if  not ok then local err=res
+if err ~= ABORT_RENDER then error(err) end else local element=res
+return element end end
 function FunctionComponentInstance:cleanup() local hooks=self.hookstate.values
-local length=self.hookstate.index
+local length=math.max( # self.hookstate.values,self.hookstate.index)
 for _,hook in ipairs_with_nil(hooks,length) do 
-if hook and type(hook) == "table" and hook.on_remove then hook.on_remove() end end end
-function FunctionComponentInstance:__gc() self:cleanup() end
+
+if type(hook) == "table" and hook.on_remove then hook.on_remove() end end end
 return FunctionComponentInstance

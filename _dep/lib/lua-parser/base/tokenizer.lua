@@ -12,7 +12,7 @@ self.r=DataReader(data)
 self.gettokenthread=coroutine.create(function () local r=self.r
 while  not r:done() do self:skipWhiteSpaces()
 if r:done() then break end
-if self:parseComment() then  elseif self:parseString() then  elseif self:parseName() then  elseif self:parseNumber() then  elseif self:parseSymbol() then  else error("unknown token " .. r.data:sub(r.index)) end end end) end
+if self:parseComment() then  elseif self:parseString() then  elseif self:parseName() then  elseif self:parseNumber() then  elseif self:parseSymbol() then  else error{["msg"] = "unknown token " .. r.data:sub(r.index)} end end end) end
 function Tokenizer:skipWhiteSpaces() local r=self.r
 r:canbe"%s+" end
 Tokenizer.singleLineComment=string.patescape"--"
@@ -30,9 +30,9 @@ if r:canbe"[\"']" then local quote=r.lasttoken
 local s=table()
 while true do r:seekpast"."
 if r.lasttoken == quote then break end
-if r:done() then error"unfinished string" end
+if r:done() then error{["msg"] = "unfinished string"} end
 if r.lasttoken == "\\" then local esc=r:canbe"."
-local escapeCodes={["a"] = "\7",["b"] = "\8",["f"] = "\12",["n"] = "\n",["r"] = "\13",["t"] = "\9",["v"] = "\11",["\\"] = "\\",["\""] = "\"",["'"] = "'",["0"] = "\0",["\n"] = "\n"}
+local escapeCodes={["a"] = "\7",["b"] = "\8",["f"] = "\12",["n"] = "\n",["r"] = "\13",["t"] = "\9",["v"] = "\11",["\\"] = "\\",["\""] = "\"",["'"] = "'",["0"] = "\0",["\13"] = "\n",["\n"] = "\n"}
 local escapeCode=escapeCodes[esc]
 if escapeCode then s:insert(escapeCode) elseif esc == "x" and self.version >= "5.2" then esc=r:mustbe"%x" .. r:mustbe"%x"
 s:insert(string.char(tonumber(esc,16))) elseif esc == "u" and self.version >= "5.3" then r:mustbe"{"
@@ -44,7 +44,7 @@ r:mustbe"}"
 local bit=bit32 or require"bit"
 if code < 0x80 then s:insert(string.char(code)) elseif code < 0x800 then s:insert(string.char(bit.bor(0xc0,bit.band(0x1f,bit.rshift(code,6)))) .. string.char(bit.bor(0x80,bit.band(0x3f,code)))) elseif code < 0x10000 then s:insert(string.char(bit.bor(0xe0,bit.band(0x0f,bit.rshift(code,12)))) .. string.char(bit.bor(0x80,bit.band(0x3f,bit.rshift(code,6)))) .. string.char(bit.bor(0x80,bit.band(0x3f,code)))) else s:insert(string.char(bit.bor(0xf0,bit.band(0x07,bit.rshift(code,18)))) .. string.char(bit.bor(0x80,bit.band(0x3f,bit.rshift(code,12)))) .. string.char(bit.bor(0x80,bit.band(0x3f,bit.rshift(code,6)))) .. string.char(bit.bor(0x80,bit.band(0x3f,code)))) end elseif esc:match"%d" then if r:canbe"%d" then esc=esc .. r.lasttoken end
 if r:canbe"%d" then esc=esc .. r.lasttoken end
-s:insert(string.char(tonumber(esc))) else if self.version >= "5.2" then error("invalid escape sequence " .. esc .. " " .. string.byte(esc)) end end else s:insert(r.lasttoken) end end
+s:insert(string.char(tonumber(esc))) else if self.version >= "5.2" then error{["msg"] = "invalid escape sequence " .. esc} end end else s:insert(r.lasttoken) end end
 coroutine.yield(s:concat(),"string")
 return true end end
 function Tokenizer:parseName() local r=self.r
@@ -80,7 +80,8 @@ if coroutine.status(self.gettokenthread) == "dead" then self.nexttoken=nil
 self.nexttokentype=nil
 return  end
 local status,nexttoken,nexttokentype=coroutine.resume(self.gettokenthread)
-if  not status then error("\n" .. "token=" .. tostring(self.token) .. "\n" .. "tokentype=" .. tostring(self.tokentype) .. "\n" .. self:getpos() .. "tokenizer failed with error: " .. tostring(nexttoken) .. "\n" .. debug.traceback(self.gettokenthread)) end
+if  not status then local err=nexttoken
+error{["msg"] = err,["token"] = self.token,["tokentype"] = self.tokentype,["pos"] = self:getpos(),["traceback"] = debug.traceback(self.gettokenthread)} end
 self.nexttoken=nexttoken
 self.nexttokentype=nexttokentype end
 function Tokenizer:getpos() return "line " .. self.r.line .. " col " .. self.r.col .. " code \"" .. self.r.data:sub(self.r.index):match"^[^\n]*" .. "\"" end
