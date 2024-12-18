@@ -22,7 +22,7 @@ if table.pack(...)[1] ~= (arg or {})[1] then
 
     local export = {
         Renderer       = require("src.util.Renderer"),
-        Fragment       = require("src.components.Fragment"),
+        Fragment       = require("src.compots.Fragment"),
         create_element = require("src.create_element"),
         clone_element  = require("src.clone_element"),
         use_state      = require("src.hooks.use_state"),
@@ -40,7 +40,6 @@ if table.pack(...)[1] ~= (arg or {})[1] then
             ---@param content string
             ---@param source string?
             from_string = function (content, source)
-                -- TODO FIXME does NOT work on inline LuaX
                 return LuaXParser.from_file_content(content, source):transpile()
             end,
             inline = require("src.util.parser.inline")

@@ -4,8 +4,6 @@ local use_effect     = require("src.hooks.use_effect")
 local use_state      = require("src.hooks.use_state")
 local create_element = require("src.create_element")
 
-require("src.util.replace_warn")
-
 local renderer = Renderer()
 
 local function outer_function_component(props)

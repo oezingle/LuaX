@@ -4,8 +4,6 @@ local XMLElement = require("src.util.NativeElement.XMLElement")
 local renderer = require("src.util.Renderer.Profiled")()
 local create_element = require("src.create_element")
 
-require("src.util.replace_warn")
-
 -- TODO test how Fragment performs on unmonut
 
 local element = create_element("div", {

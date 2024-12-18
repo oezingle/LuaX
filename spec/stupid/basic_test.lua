@@ -1,8 +1,6 @@
 local Renderer = require("src.util.Renderer")
 local XMLElement = require("src.util.NativeElement.XMLElement")
 
-require("src.util.replace_warn")
-
 local renderer = Renderer()
 
 local element = {

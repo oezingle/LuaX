@@ -14,11 +14,6 @@ local function is_primitive(value)
     return t == "nil" or t == "string" or t == "number" or t == "boolean"
 end
 
--- TODO convert shallow to something like 'depth' or 'severity' or 'level'
--- 0 - don't delve into tables or userdata metatables
--- 1 - ignore functions, threads
--- 2 - error for function / thread / userdata values
-
 ---@param a any first object to check
 ---@param b any second object to check
 ---@param level number? to what degree objects should be checked for equality:

@@ -8,9 +8,13 @@ local function clone_element(element, props)
         local component = element.type
 
         local newprops = {}
+
+        -- copy old props
         for k, v in pairs(element.props or {}) do
             newprops[k] = v
         end
+
+        -- overwrite new porps
         for k, v in pairs(props or {}) do
             newprops[k] = v
         end

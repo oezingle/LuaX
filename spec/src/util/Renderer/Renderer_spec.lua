@@ -1,10 +1,8 @@
 local XMLElement            = require("src.util.NativeElement.XMLElement")
 local Renderer              = require("src.util.Renderer")
 local create_element        = require("src.create_element")
-local print_children_by_key = require("spec.debug.print_children_by_key")
 local use_effect            = require("src.hooks.use_effect")
 local LuaX                  = require("src.init")
-local ElementNode           = require("src.util.ElementNode")
 
 -- require("lib.log").level = "trace"
 
