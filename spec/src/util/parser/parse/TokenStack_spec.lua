@@ -1,4 +1,4 @@
-local TokenStack = require("src.util.parser.TokenStack")
+local TokenStack = require("src.util.parser.parse.TokenStack")
 
 describe("TokenStack", function()
     it("knows valid tokens", function()

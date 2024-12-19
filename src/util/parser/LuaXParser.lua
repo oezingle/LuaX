@@ -1,11 +1,10 @@
 local class                     = require("lib.30log")
 local tokens                    = require("src.util.parser.tokens")
-local get_default_indent        = require("src.util.parser.parse.get_default_indent")
 local node_to_element           = require("src.util.parser.transpile.node_to_element")
 local collect_global_components = require("src.util.parser.transpile.collect_global_components")
-local TokenStack                = require("src.util.parser.TokenStack")
+-- collect_locals required below, as collect_locals cyclically requires LuaXParser
+local TokenStack                = require("src.util.parser.parse.TokenStack")
 local escape                    = require("src.util.polyfill.string.escape")
-local get_indent                = require("src.util.parser.parse.get_indent")
 
 -- Get the require path of this module
 local require_path
@@ -398,11 +397,11 @@ end
 
 function LuaXParser:get_default_indent()
     local slice = self.text:sub(1, self:get_cursor())
-    
+
     return slice:match("[\n\r](%s*).-$") or ""
 end
 
-function LuaXParser:get_indent ()
+function LuaXParser:get_indent()
     local indent = self:text_match(">[\n\r](%s*)%S") or ""
 
     return indent:gsub("^" .. self.default_indent, "")

@@ -1,6 +1,6 @@
-
 local transpile_create_element = require("src.util.parser.transpile.create_element")
 
+--- TODO FIXME break out for testing!
 --- Return the component's name as a string, either for a lua local,
 --- or quoted as a component for NativeElement to use
 ---
@@ -8,7 +8,13 @@ local transpile_create_element = require("src.util.parser.transpile.create_eleme
 ---@param components_mode "local" | "global"
 ---@param name string
 local function component_name(components, components_mode, name)
-    local has_component = not not components[name]
+    local search_name =
+        -- Turn MyContext.Provider or MyContext["Provider"] into just MyContext
+        name:match("^(.-)[%.%[]") or
+        -- Default to just the name if we can't match table key calls
+        name
+
+    local has_component = not not components[search_name]
 
     local mode_global = components_mode == "global"
 
@@ -28,11 +34,10 @@ end
 ---@param create_element string
 ---@return string
 local function transpile_node_to_element(node, components, components_mode, create_element)
-    if node.type == "literal" then        
+    if node.type == "literal" then
         return string.format("%q", node.value)
     end
 
-    -- Otherwise mode
     if node.type == "element" then
         ---@type table<string, string|table>
         local props = node.props or {}
@@ -41,12 +46,12 @@ local function transpile_node_to_element(node, components, components_mode, crea
         if kids and #kids >= 1 then
             local children = {}
 
-            for i, kid in ipairs(kids) do                
+            for i, kid in ipairs(kids) do
                 if type(kid) == "string" then
                     children[i] = "{" .. kid .. "}"
-
                 else
-                    children[i] = "{" .. transpile_node_to_element(kid, components, components_mode, create_element) .. "}"
+                    children[i] = "{" ..
+                    transpile_node_to_element(kid, components, components_mode, create_element) .. "}"
                 end
             end
 

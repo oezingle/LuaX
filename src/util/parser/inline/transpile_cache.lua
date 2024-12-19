@@ -26,6 +26,11 @@ end
 ---@param locals table<string, any>
 ---@return string
 function cache.get(tag, locals)
+    -- fix for LuaX(function () return nil end)
+    if not tag then
+        return "return nil"
+    end
+
     local cached = cache.find(tag)
 
     if cached then
