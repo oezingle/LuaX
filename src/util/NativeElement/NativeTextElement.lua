@@ -54,6 +54,7 @@ function NativeTextElement:delete_child()
 end
 
 function NativeTextElement:get_type()
+    ---@diagnostic disable-next-line:invisible
     return ElementNode.LITERAL_NODE
 end
 

@@ -22,14 +22,15 @@ local get_function_location = require("src.util.Renderer.helper.get_function_loc
 ---TODO FIXME add generics
 ---@class LuaX.ElementNode
 ---
+--- Instance properties
 ---@field type LuaX.Component
 ---@field props LuaX.Props
 ---
----@field inherit_props fun(self: self, inherit_props: LuaX.Props): self
----@field element_node self
+---@field protected element_node self
 ---
+---@field inherit_props fun(self: self, inherit_props: LuaX.Props): self
 ---@field create fun(component: LuaX.Component | LuaX.ElementNode.LiteralNode, props: LuaX.Props): self
----@field LITERAL_NODE LuaX.ElementNode.LiteralNode unique key
+---@field protected LITERAL_NODE LuaX.ElementNode.LiteralNode unique key
 ---
 local ElementNode = {
     LITERAL_NODE = "LUAX_LITERAL_NODE", -- this table is used for its unique key

@@ -52,6 +52,7 @@ end
 
 -- This is NOT a good xml serializer
 function XMLElement:__tostring()
+    ---@diagnostic disable-next-line:invisible
     if self.type == ElementNode.LITERAL_NODE then
         return tostring(self.props.value)
     end
