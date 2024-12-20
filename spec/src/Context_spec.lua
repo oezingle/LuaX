@@ -1,8 +1,7 @@
-local Context        = require("src.context.Context")
+local Context        = require("src.Context")
 local use_context    = require("src.hooks.use_context")
 local create_element = require("src.create_element")
 local static_render  = require("spec.helpers.static_render")
-local Fragment       = require("src.components.Fragment")
 
 describe("Context", function()
     ---@type LuaX.Context<{ message: string }>
@@ -61,5 +60,14 @@ describe("Context", function()
 
         assert.equal("Hello!", root.children[1].children[1].props.value)
         assert.equal("Goodbye!", root.children[2].children[1].props.value)
+    end)
+
+    it("creates contexts", function ()
+        local context = Context.create({
+            hello = "World"
+        })
+
+        ---@diagnostic disable-next-line:undefined-field
+        assert.equal(Context, context.class)
     end)
 end)
