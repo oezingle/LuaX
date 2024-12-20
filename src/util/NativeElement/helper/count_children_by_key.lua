@@ -2,8 +2,6 @@ local ipairs_with_nil = require("src.util.ipairs_with_nil")
 local key_first = require("src.util.key.key_first")
 local VirtualElement = require("src.util.NativeElement.VirtualElement")
 
---local NativeTextElement = require("src.util.NativeElement.NativeTextElement")
-
 --[[
 
 children_by_key({
@@ -24,7 +22,8 @@ children_by_key({
 
 ---@param children_by_key LuaX.NativeElement.ChildrenByKey
 ---@param key LuaX.Key
-local function count_children_by_key(children_by_key, key)
+---@param include_virtual boolean?
+local function count_children_by_key(children_by_key, key, include_virtual)
     local count = 0
 
     -- first could be nil, despite what the type checker says - if the key is empty
@@ -33,7 +32,7 @@ local function count_children_by_key(children_by_key, key)
     for index, child in ipairs_with_nil(children_by_key, first) do
         if child then
             if child.class then
-                if child.class ~= VirtualElement then
+                if child.class ~= VirtualElement and not include_virtual then
                     count = count + 1
                 end
             else
@@ -43,7 +42,7 @@ local function count_children_by_key(children_by_key, key)
 
                 local passed_key = pass_key and restkey or {}
 
-                count = count + count_children_by_key(child, passed_key)
+                count = count + count_children_by_key(child, passed_key, include_virtual)
             end    
         end
     end

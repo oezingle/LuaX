@@ -3,7 +3,9 @@ local count_children_by_key = require("src.util.NativeElement.helper.count_child
 local set_child_by_key      = require("src.util.NativeElement.helper.set_child_by_key")
 local list_reduce           = require("src.util.polyfill.list.reduce")
 local log                   = require("lib.log")
-local VirtualElement       = require("src.util.NativeElement.VirtualElement")
+local VirtualElement        = require("src.util.NativeElement.VirtualElement")
+local flatten_children      = require("src.util.NativeElement.helper.flatten_children")
+local key_to_string         = require("src.util.key.key_to_string")
 
 --[[
     - count_children_by_key seems like it could have performance issues.
@@ -19,6 +21,9 @@ local VirtualElement       = require("src.util.NativeElement.VirtualElement")
 ---@field get_children_by_key fun(self: self, key: LuaX.Key): LuaX.NativeElement.ChildrenByKey
 ---@field insert_child_by_key fun(self: self, key: LuaX.Key, child: LuaX.NativeElement)
 ---@field delete_children_by_key fun(self: self, key: LuaX.Key)
+---@field protected count_children_by_key fun(self: self, key: LuaX.Key, ignore_virtual?: boolean): number
+---@field protected set_child_by_key fun(self: self, key: LuaX.Key, child: LuaX.NativeElement | nil)
+---@field protected flatten_children fun(self: self, key: LuaX.Key): { element: LuaX.NativeElement, key: LuaX.Key }[]
 ---
 ---@field set_prop_safe fun (self: self ,prop: string, value: any)
 ---@field set_prop_virtual fun (self: self, prop: string, value: any)
@@ -53,9 +58,9 @@ function NativeElement:init()
     error("NativeElement must be extended to use for components")
 end
 
-function NativeElement:get_type_safe ()
+function NativeElement:get_type_safe()
     return self.get_type and self:get_type() or "UNKNOWN"
-end 
+end
 
 function NativeElement:get_children_by_key(key)
     local children = self._children_by_key
@@ -104,12 +109,30 @@ function NativeElement:get_prop(prop)
     return self._virtual_props[prop]
 end
 
-function NativeElement:count_children_by_key (key)
-    return count_children_by_key(self._children_by_key, key)
+--- Count children up to and including the given key,
+--- returning the flat index of the end of the given key
+---@param key LuaX.Key
+---@param include_virtual boolean?
+function NativeElement:count_children_by_key(key, include_virtual)
+    return count_children_by_key(self._children_by_key, key, include_virtual)
 end
 
--- TODO this block is probably part of the reason only 1 literal can be rendered
+---@param key LuaX.Key
+---@param child LuaX.NativeElement | nil
+function NativeElement:set_child_by_key(key, child)
+    return set_child_by_key(self._children_by_key, key, child)
+end
+
+---@param key LuaX.Key
+function NativeElement:flatten_children(key)
+    local children = self:get_children_by_key(key)
+
+    return flatten_children(children, key)
+end
+
 function NativeElement:insert_child_by_key(key, child)
+    log.trace(self:get_type_safe(), "insert_child_by_key", key_to_string(key))
+
     if not self._children_by_key then
         self._children_by_key = {}
     end
@@ -118,61 +141,56 @@ function NativeElement:insert_child_by_key(key, child)
         local insert_index = self:count_children_by_key(key) + 1
 
         local NativeTextElement = self._dependencies.NativeTextElement
-    
+
         local is_text = NativeTextElement and NativeTextElement:classOf(child.class) or false
-    
-        log.trace("insert child", child:get_type(), insert_index)
+
+        log.trace(" ↳ insert native child", child:get_type_safe(), tostring(insert_index))
 
         self:insert_child(insert_index, child, is_text)
     end
 
     -- Insert this child into the key table
-    set_child_by_key(self._children_by_key, key, child)
+    self:set_child_by_key(key, child)
 end
 
--- TODO does key_children work here for Fragment(Fragment(..elements..)) ?
 function NativeElement:delete_children_by_key(key)
-    log.trace(self:get_type(), "delete_children_by_key", table.concat(key, "."))
-    
+    log.trace(self:get_type_safe(), "delete_children_by_key", key_to_string(key))
+
     -- No need to delete anything
     if not self._children_by_key then
         self._children_by_key = {}
-    end
 
-    local delete_end = count_children_by_key(self._children_by_key, key)
-
-    local key_children = self:get_children_by_key(key)
-
-    -- already no child here
-    if not key_children then
         return
     end
 
-    -- enforce table
-    if key_children.class then
-        key_children = { key_children }
-    end
+    local flattened = self:flatten_children(key)
 
-    local delete_start = delete_end - #key_children
+    -- count_children_by_key gets the last index of this key
+    local delete_index = self:count_children_by_key(key)
 
-    -- iterate backwards
-    for i = #key_children, 1, -1 do
-        local child_index = delete_start + i
+    -- Load here to save table indexes in loop
+    local NativeTextElement = self._dependencies.NativeTextElement
 
-        local child = key_children[i]
+    -- iterate backwards so delete_child works nicely.
+    for i = #flattened, 1, -1 do
+        local child = flattened[i].element
 
         child:cleanup()
 
-        local NativeTextElement = self._dependencies.NativeTextElement
-
-        local is_text = NativeTextElement and NativeTextElement:classOf(child.class) or false
-
         if child.class ~= VirtualElement then
-            self:delete_child(child_index, is_text)
+            local is_text = NativeTextElement and
+                NativeTextElement:classOf(child.class) or
+                false
+
+            log.trace(" ↳ delete native child", child:get_type_safe(), tostring(delete_index))
+
+            self:delete_child(delete_index, is_text)
+
+            delete_index = delete_index - 1
         end
     end
 
-    set_child_by_key(self._children_by_key, key, nil)
+    self:set_child_by_key(key, nil)
 end
 
 -- Default implementation does nothing!
@@ -203,11 +221,11 @@ function NativeElement:set_props(props)
 end
 
 ---@param children LuaX.NativeElement.ChildrenByKey
-function NativeElement.recursive_children_string (children)
+function NativeElement.recursive_children_string(children)
     if type(children) ~= "table" then
         return tostring(children)
     end
-    
+
     if #children ~= 0 then
         local children_strs = {}
 

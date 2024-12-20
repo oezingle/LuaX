@@ -23,8 +23,6 @@ end
 ---@param prop string
 ---@param value any
 function WiboxElement:set_prop(prop, value)
-    -- print(self:get_type(), "set prop", prop, value)
-
     local wibox = self.wibox
 
     -- support LuaX::onload

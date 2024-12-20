@@ -107,4 +107,15 @@ function ElementNode.create(component, props)
     return node
 end
 
+---@overload fun (component: LuaX.ElementNode): boolean
+---@param component LuaX.Component
+---@return boolean
+function ElementNode.is_literal (component)
+    if type(component) == "table" then
+        return ElementNode.is_literal(component.type)
+    end
+    
+    return component == ElementNode.LITERAL_NODE
+end
+
 return ElementNode

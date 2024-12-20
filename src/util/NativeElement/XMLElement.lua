@@ -2,7 +2,7 @@ local NativeElement = require("src.util.NativeElement.NativeElement")
 local split         = require("src.util.polyfill.string.split")
 local ElementNode   = require("src.util.ElementNode")
 
--- TODO either fix up or move to dead/
+-- TODO improve. a lot.
 
 ---@class LuaX.XMLElement : LuaX.NativeElement
 ---@field native { type: string, props: table<string, any>, children: LuaX.XMLElement[] }
@@ -52,8 +52,7 @@ end
 
 -- This is NOT a good xml serializer
 function XMLElement:__tostring()
-    ---@diagnostic disable-next-line:invisible
-    if self.type == ElementNode.LITERAL_NODE then
+    if ElementNode.is_literal(self.type) then
         return tostring(self.props.value)
     end
 
