@@ -18,23 +18,31 @@ local function get_function_name(location)
 
     -- seek to that line
     -- I'd use file:seek() but we don't know char count, just line.
-    -- This is probably the cheapest way to achieve this then.
+    -- This is probably the cheapest way to achieve this
     for _ = 1, linenumber - 1 do
         file:read("l")
     end
 
     local line = file:read("l")
 
-    local defined_keyword = line:match("function ([^%(%s]+)%s*%(")
-
+    local defined_keyword = line:match("function%s*([^%(%s]+)%s*%(")
     if defined_keyword then
         return defined_keyword
     end
 
     local defined_equal = line:match("([^%s=]+)%s*=%s*function")
-
     if defined_equal then
         return defined_equal
+    end
+
+    local defined_decorator = line:match("([^%s=]+)%s*=%s*[^(]*%(%s*function")
+    if defined_decorator then
+        return defined_decorator
+    end
+
+    local defined_method = line:match("function%s*([^:]+:[^%s(]+)%s*")
+    if defined_method then
+        return defined_method
     end
 
     return location

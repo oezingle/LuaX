@@ -6,10 +6,11 @@ local create_native_element = require("src.util.Renderer.helper.create_native_el
 local table_equals          = require("src.util.table_equals")
 local can_modify_child      = require("src.util.Renderer.helper.can_modify_child")
 local ElementNode           = require("src.util.ElementNode")
-local inherit_contexts      = require("src.context.inherit")
 local log                   = require("lib.log")
-local VirtualElement       = require("src.util.NativeElement.VirtualElement")
+local VirtualElement        = require("src.util.NativeElement.VirtualElement")
 local DefaultWorkLoop       = require("src.util.WorkLoop.Default")
+local key_to_string         = require("src.util.key.key_to_string")
+local Context               = require("src.Context")
 
 
 local max      = math.max
@@ -149,7 +150,7 @@ function Renderer:render_function_component(element, container, key, caller)
         __luax_internal = {
             renderer = self,
             container = container,
-            context = inherit_contexts(caller)
+            context = Context.inherit(caller)
         }
     })
     node:set_props(element.props)
@@ -167,16 +168,17 @@ end
 ---@param element LuaX.ElementNode | nil
 ---@param container LuaX.NativeElement
 ---@param key LuaX.Key
----@param caller LuaX.ElementNode?
+---@param caller LuaX.ElementNode? For context passing. TODO better way to do this exists for SURE
 function Renderer:render_keyed_child(element, container, key, caller)
-    log.trace(get_element_name(container), "rendering", get_element_name(element), table.concat(key, " "))
+    log.trace(get_element_name(container), "rendering", get_element_name(element), key_to_string(key))
 
     if not element or type(element.type) == "string" then
         self:render_native_component(element, container, key, caller)
+
         -- TODO element.element_node ~= ElementNode equality check might be slow!
+        ---@diagnostic disable-next-line:invisible
     elseif type(element) == "table" and element.element_node ~= ElementNode then
         -- lists of children are valid children
-
         local current_children = container:get_children_by_key(key) or {}
 
         if current_children.class and class.isClass(current_children.class) then
@@ -204,7 +206,7 @@ function Renderer:render_keyed_child(element, container, key, caller)
         ))
     end
 
-    -- TODO need to return promise that is resolved when all children have rendered :(
+    -- TODO return promise that is resolved when all children have rendered
 
     -- start workloop in case there's shit to do and it's stopped
     self.workloop:start()

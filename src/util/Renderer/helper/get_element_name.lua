@@ -1,37 +1,7 @@
-local get_function_location = require("src.util.Renderer.helper.get_function_location")
-local get_function_name     = require("src.util.Renderer.helper.get_function_name")
-local ElementNode           = require("src.util.ElementNode")
-local NativeElement         = require("src.util.NativeElement.NativeElement")
-local class = require("lib.30log")
-
-local inline_transpile_decorator = require("src.util.parser.inline.decorator")
--- TODO how heavy is this functionality, time wise?
-local inline_transpiled_location = get_function_location(inline_transpile_decorator(function (props) end))
-
----@param component LuaX.Component
-local function get_component_name(component)
-    local t = type(component)
-
-    if t == "function" then
-        local location = get_function_location(component)
-        local name = get_function_name(location)
-
-        if location == inline_transpiled_location then
-            return "Inline LuaX"
-        elseif name ~= location then
-            return string.format("%s (%s)", name, location)
-        else
-            -- fallback to just location
-            return "Function defined at " .. location
-        end
-    elseif component == ElementNode.LITERAL_NODE then
-        return "Literal node"
-    elseif t == "string" then
-        return component
-    else
-        return string.format("UNKNOWN (%s %s)", t, tostring(component))
-    end
-end
+local get_component_name = require("src.util.Renderer.helper.get_component_name")
+local ElementNode        = require("src.util.ElementNode")
+local NativeElement      = require("src.util.NativeElement.NativeElement")
+local class              = require("lib.30log")
 
 ---@param element LuaX.ElementNode | LuaX.NativeElement | LuaX.Component | nil
 ---@return string
@@ -48,14 +18,15 @@ local function get_element_name(element)
         return string.format("UNKNOWN (type %s)", type(element))
     end
 
+    ---@diagnostic disable-next-line:invisible
     if element.element_node == ElementNode then
         return get_component_name(element.type)
     end
 
-    if 
-        class.isInstance(element) and 
+    if
+        class.isInstance(element) and
         (
-            element.class == NativeElement or 
+            element.class == NativeElement or
             ---@diagnostic disable-next-line:undefined-field
             element.class:subclassOf(NativeElement)
         )
@@ -66,7 +37,15 @@ local function get_element_name(element)
             return element:get_type()
         end
 
-        return "UNKNOWN (extends NativeElement)"
+        return "UNKNOWN (NativeElement)"
+    end
+
+    if #element ~= 0 then
+        return string.format("list(%d)", #element)
+    end
+
+    if next(element) == nil then
+        return "list(nil)"
     end
 
     return "UNKNOWN"

@@ -11,7 +11,7 @@ local function get_function_location (fn)
         return "UNKNOWN (no debug.getinfo)"
     end
 
-    local success, res = pcall(function ()
+    local ok, ret = pcall(function ()
         local info = debug.getinfo(fn, "S")
 
         local location = info.short_src .. ":" .. info.linedefined
@@ -19,8 +19,8 @@ local function get_function_location (fn)
         return location
     end)
 
-    if success then
-        return string.format("%s", res)
+    if ok then
+        return ret
     end
 
     return "UNKNOWN (error calling debug.getinfo)"
