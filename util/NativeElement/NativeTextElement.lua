@@ -35,5 +35,6 @@ return self:get_value() end
 
 function NativeTextElement:insert_child() error"NativeTextElement may not have children" end
 function NativeTextElement:delete_child() error"NativeTextElement may not have children" end
-function NativeTextElement:get_type() return ElementNode.LITERAL_NODE end
+function NativeTextElement:get_type() ---@diagnostic disable-next-line:invisible
+return ElementNode.LITERAL_NODE end
 return NativeTextElement

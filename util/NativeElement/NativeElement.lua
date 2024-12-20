@@ -16,6 +16,8 @@ local count_children_by_key=require"lib_LuaX.util.NativeElement.helper.count_chi
 local set_child_by_key=require"lib_LuaX.util.NativeElement.helper.set_child_by_key"
 local list_reduce=require"lib_LuaX.util.polyfill.list.reduce"
 local log=require"lib_LuaX._dep.lib.log"
+local VirtualElement=require"lib_LuaX.util.NativeElement.VirtualElement"
+local flatten_children=require"lib_LuaX.util.NativeElement.helper.flatten_children"
 
 
 ---@alias LuaX.NativeElement.ChildrenByKey LuaX.NativeElement | LuaX.NativeElement.ChildrenByKey[] | LuaX.NativeElement.ChildrenByKey[][]
@@ -25,6 +27,9 @@ local log=require"lib_LuaX._dep.lib.log"
 ---@field get_children_by_key fun(self: self, key: LuaX.Key): LuaX.NativeElement.ChildrenByKey
 ---@field insert_child_by_key fun(self: self, key: LuaX.Key, child: LuaX.NativeElement)
 ---@field delete_children_by_key fun(self: self, key: LuaX.Key)
+---@field protected count_children_by_key fun(self: self, key: LuaX.Key, ignore_virtual?: boolean): number
+---@field protected set_child_by_key fun(self: self, key: LuaX.Key, child: LuaX.NativeElement | nil)
+---@field protected flatten_children fun(self: self, key: LuaX.Key): { element: LuaX.NativeElement, key: LuaX.Key }[]
 
 ---@field set_prop_safe fun (self: self ,prop: string, value: any)
 ---@field set_prop_virtual fun (self: self, prop: string, value: any)
@@ -48,7 +53,7 @@ local log=require"lib_LuaX._dep.lib.log"
 
 ---@field components string[]? class static property - components implemented by this class.
 ---@operator call : LuaX.NativeElement
-local VirtualElement=require"lib_LuaX.util.NativeElement.VirtualElement"
+local key_to_string=require"lib_LuaX.util.key.key_to_string"
 local NativeElement=class"NativeElement"
 ---@type LuaX.NativeTextElement
 NativeElement._dependencies={}
@@ -71,35 +76,43 @@ self.class.set_prop_safe=self.set_prop_virtual end
 self:set_prop_safe(prop,value) end
 function NativeElement:get_prop(prop) self._virtual_props=self._virtual_props or {}
 return self._virtual_props[prop] end
-function NativeElement:count_children_by_key(key) return count_children_by_key(self._children_by_key,key) end
 
-function NativeElement:insert_child_by_key(key,child) if  not self._children_by_key then self._children_by_key={} end
+
+---@param key LuaX.Key
+---@param include_virtual boolean?
+function NativeElement:count_children_by_key(key,include_virtual) return count_children_by_key(self._children_by_key,key,include_virtual) end
+---@param key LuaX.Key
+---@param child LuaX.NativeElement | nil
+function NativeElement:set_child_by_key(key,child) return set_child_by_key(self._children_by_key,key,child) end
+---@param key LuaX.Key
+function NativeElement:flatten_children(key) local children=self:get_children_by_key(key)
+return flatten_children(children,key) end
+function NativeElement:insert_child_by_key(key,child) log.trace(self:get_type_safe(),"insert_child_by_key",key_to_string(key))
+if  not self._children_by_key then self._children_by_key={} end
 if child.class ~= VirtualElement then local insert_index=self:count_children_by_key(key) + 1
 local NativeTextElement=self._dependencies.NativeTextElement
 local is_text=NativeTextElement and NativeTextElement:classOf(child.class) or false
-log.trace("insert child",child:get_type(),insert_index)
+log.trace(" ↳ insert native child",child:get_type_safe(),tostring(insert_index))
 self:insert_child(insert_index,child,is_text) end
 
-set_child_by_key(self._children_by_key,key,child) end
-
+self:set_child_by_key(key,child) end
 function NativeElement:delete_children_by_key(key) 
-log.trace(self:get_type(),"delete_children_by_key",table.concat(key,"."))
-if  not self._children_by_key then self._children_by_key={} end
-local delete_end=count_children_by_key(self._children_by_key,key)
+log.trace(self:get_type_safe(),"delete_children_by_key",key_to_string(key))
+if  not self._children_by_key then self._children_by_key={}
+return  end
 
-local key_children=self:get_children_by_key(key)
-if  not key_children then return  end
+local flattened=self:flatten_children(key)
 
-if key_children.class then key_children={key_children} end
+local delete_index=self:count_children_by_key(key)
 
-local delete_start=delete_end -  # key_children
-for i =  # key_children,1, - 1 do local child_index=delete_start + i
-local child=key_children[i]
-child:cleanup()
 local NativeTextElement=self._dependencies.NativeTextElement
-local is_text=NativeTextElement and NativeTextElement:classOf(child.class) or false
-if child.class ~= VirtualElement then self:delete_child(child_index,is_text) end end
-set_child_by_key(self._children_by_key,key,nil) end
+for i =  # flattened,1, - 1 do local child=flattened[i].element
+child:cleanup()
+if child.class ~= VirtualElement then local is_text=NativeTextElement and NativeTextElement:classOf(child.class) or false
+log.trace(" ↳ delete native child",child:get_type_safe(),tostring(delete_index))
+self:delete_child(delete_index,is_text)
+delete_index=delete_index - 1 end end
+self:set_child_by_key(key,nil) end
 
 function NativeElement:cleanup()  end
 function NativeElement.create_element(element_type) if type(element_type) ~= "string" then error"NativeElement cannot render non-pure component" end

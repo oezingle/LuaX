@@ -13,13 +13,12 @@ local library_root=folder_of_this_file:sub(1, - 1 -  # "util.parser.")
 require(library_root .. "_shim") end
 local class=require"lib_LuaX._dep.lib.30log"
 local tokens=require"lib_LuaX.util.parser.tokens"
-local get_default_indent=require"lib_LuaX.util.parser.parse.get_default_indent"
 local node_to_element=require"lib_LuaX.util.parser.transpile.node_to_element"
-local collect_global_components=require"lib_LuaX.util.parser.transpile.collect_global_components"
-local TokenStack=require"lib_LuaX.util.parser.TokenStack"
-local escape=require"lib_LuaX.util.polyfill.string.escape"
 
-local get_indent=require"lib_LuaX.util.parser.parse.get_indent"
+local collect_global_components=require"lib_LuaX.util.parser.transpile.collect_global_components"
+local TokenStack=require"lib_LuaX.util.parser.parse.TokenStack"
+
+local escape=require"lib_LuaX.util.polyfill.string.escape"
 local require_path
 do if table.pack(...)[1] == (arg or {})[1] then print"LuaXParser must be imported"
 os.exit(1) end

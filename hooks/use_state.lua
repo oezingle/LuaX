@@ -12,10 +12,12 @@ folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "hooks.")
 require(library_root .. "_shim") end
 local table_equals=require"lib_LuaX.util.table_equals"
----@alias LuaX.Dispatch<T> T | (fun(old: T): T)
+---@alias LuaX.Hooks.UseState.Dispatch<T> T | (fun(old: T): T)
+---@generic T
+---@alias LuaX.Hooks.UseState fun(default?: T): T, fun(new_value: LuaX.Hooks.UseState.Dispatch<T>)
 ---@generic T
 ---@param default T?
----@return T, fun(new_value: LuaX.Dispatch<T>)
+---@return T, fun(new_value: LuaX.Hooks.UseState.Dispatch<T>)
 local HookState=require"lib_LuaX.util.HookState"
 local function use_state(default) local hookstate=HookState.global.get(true)
 local index=hookstate:get_index()

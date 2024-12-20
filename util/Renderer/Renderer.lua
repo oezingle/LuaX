@@ -19,10 +19,11 @@ local create_native_element=require"lib_LuaX.util.Renderer.helper.create_native_
 local table_equals=require"lib_LuaX.util.table_equals"
 local can_modify_child=require"lib_LuaX.util.Renderer.helper.can_modify_child"
 local ElementNode=require"lib_LuaX.util.ElementNode"
-local inherit_contexts=require"lib_LuaX.context.inherit"
 local log=require"lib_LuaX._dep.lib.log"
 local VirtualElement=require"lib_LuaX.util.NativeElement.VirtualElement"
 local DefaultWorkLoop=require"lib_LuaX.util.WorkLoop.Default"
+local key_to_string=require"lib_LuaX.util.key.key_to_string"
+local Context=require"lib_LuaX.Context"
 ---@class LuaX.Renderer : Log.BaseFunctions
 ---@field workloop LuaX.WorkLoop instance of a workloop
 ---@field native_element LuaX.NativeElement class here, not instance
@@ -89,7 +90,7 @@ self.workloop:add(function () self:render_function_component(element,container,k
 self.workloop:start() end)
 container:insert_child_by_key(virtual_key,node) end
 
-element=ElementNode.inherit_props(element,{["__luax_internal"] = {["renderer"] = self,["container"] = container,["context"] = inherit_contexts(caller)}})
+element=ElementNode.inherit_props(element,{["__luax_internal"] = {["renderer"] = self,["container"] = container,["context"] = Context.inherit(caller)}})
 node:set_props(element.props)
 
 local render_key=key_add(key,2)
@@ -98,9 +99,10 @@ if did_render then self:render_keyed_child(render_result,container,render_key,el
 ---@param element LuaX.ElementNode | nil
 ---@param container LuaX.NativeElement
 ---@param key LuaX.Key
----@param caller LuaX.ElementNode?
-function Renderer:render_keyed_child(element,container,key,caller) log.trace(get_element_name(container),"rendering",get_element_name(element),table.concat(key," "))
+---@param caller LuaX.ElementNode? For context passing. TODO better way to do this exists for SURE
+function Renderer:render_keyed_child(element,container,key,caller) log.trace(get_element_name(container),"rendering",get_element_name(element),key_to_string(key))
 if  not element or type(element.type) == "string" then 
+---@diagnostic disable-next-line:invisible
 self:render_native_component(element,container,key,caller) elseif type(element) == "table" and element.element_node ~= ElementNode then 
 local current_children=container:get_children_by_key(key) or {}
 if current_children.class and class.isClass(current_children.class) then container:delete_children_by_key(key)

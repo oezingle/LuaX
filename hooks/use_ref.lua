@@ -12,6 +12,8 @@ folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "hooks.")
 require(library_root .. "_shim") end
 ---@generic T
+---@alias LuaX.Hooks.UseRef fun(default: T?): { current: T }
+---@generic T
 ---@param default T?
 ---@return { current: T }
 local use_state=require"lib_LuaX.hooks.use_state"

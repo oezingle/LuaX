@@ -14,11 +14,15 @@ require(library_root .. "_shim") end
 
 
 
+
 ---@param components table<string, true> hash map for speed
 ---@param components_mode "local" | "global"
 ---@param name string
 local transpile_create_element=require"lib_LuaX.util.parser.transpile.create_element"
-local function component_name(components,components_mode,name) local has_component= not  not components[name]
+local function component_name(components,components_mode,name) 
+
+local search_name=name:match"^(.-)[%.%[]" or name
+local has_component= not  not components[search_name]
 local mode_global=components_mode == "global"
 local is_global=has_component == mode_global
 if is_global then return string.format("%q",name) else return name end end
@@ -29,7 +33,6 @@ if is_global then return string.format("%q",name) else return name end end
 ---@param create_element string
 ---@return string
 local function transpile_node_to_element(node,components,components_mode,create_element) if node.type == "literal" then return string.format("%q",node.value) end
-
 if node.type == "element" then ---@type table<string, string|table>
 local props=node.props or {}
 local kids=node.children

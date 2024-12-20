@@ -14,7 +14,7 @@ require(library_root .. "_shim") end
 local class=require"lib_LuaX._dep.lib.30log"
 
 local find_unused_filename=require"lib_LuaX.util.Profiler.find_unused_filename"
-if  not debug or  not debug.getinfo then warn"Profiler requires debug.getinfo(). A pass-through implementation will be used instead"
+if  not debug or  not debug.getinfo then warn"Profiler requires debug.getinfo(). A No-op profiler will be used instead"
 local FakeProfiler=class"FakeProfiler"
 function FakeProfiler:init()  end
 function FakeProfiler:start()  end

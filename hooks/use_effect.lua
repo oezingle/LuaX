@@ -12,8 +12,9 @@ folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "hooks.")
 require(library_root .. "_shim") end
 local table_equals=require"lib_LuaX.util.table_equals"
----@alias LuaX.UseEffectState { deps: any[]?, on_remove: function? }
----@param callback fun(): function?
+---@alias LuaX.Hooks.UseEffect.State { deps: any[]?, on_remove: function? }
+---@alias LuaX.Hooks.UseEffect fun(callback: (fun(): function?), deps: any[]?)
+---@param callback fun(): function? An effect function that optionally returns an unmount handler
 ---@param deps any[]?
 local HookState=require"lib_LuaX.util.HookState"
 local function use_effect(callback,deps) local hookstate=HookState.global.get(true)

@@ -31,8 +31,6 @@ return  end
 
 self.props=props end
 ---@return boolean did_render, LuaX.ElementNode | LuaX.ElementNode[] | nil result
-function VirtualElement:render() local element=self.instance:render(self.props)
-if  not self.instance.requests_rerender then return true,element end
-return false,nil end
+function VirtualElement:render() return self.instance:render(self.props) end
 function VirtualElement:cleanup() self.instance:cleanup() end
 return VirtualElement

@@ -27,7 +27,6 @@ self.type=type end
 ---@param prop string
 ---@param value any
 function WiboxElement:set_prop(prop,value) 
-
 local wibox=self.wibox
 if prop:match"^LuaX::" then local prop_name=prop:sub(7)
 if prop_name == "onload" then value(self,wibox) end elseif prop:match"^signal::" then local signal_name=prop:sub(9)
