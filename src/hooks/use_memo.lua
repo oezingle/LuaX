@@ -1,7 +1,10 @@
 local HookState  = require("src.util.HookState")
 local table_equals = require("src.util.table_equals")
 
----@alias LuaX.UseMemoState { deps: any[], cached: any }
+---@alias LuaX.Hooks.UseMemo.State { deps: any[], cached: any }
+
+---@generic T
+---@alias LuaX.Hooks.UseMemo fun (callback: (fun(): T), deps: any[]): T
 
 ---@generic T
 ---@param callback fun(): T
@@ -12,7 +15,7 @@ local function use_memo(callback, deps)
 
     local index = hookstate:get_index()
 
-    local last_value = hookstate:get_value(index) or {} --[[ @as LuaX.UseMemoState ]]
+    local last_value = hookstate:get_value(index) or {} --[[ @asLuaX.Hooks.UseMemoStatee ]]
     local last_deps = last_value.deps
 
     local memo_value = last_value.cached

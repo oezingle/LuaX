@@ -1,16 +1,18 @@
 local table_equals = require("src.util.table_equals")
 local HookState    = require("src.util.HookState")
 
----@alias LuaX.UseEffectState { deps: any[]?, on_remove: function? }
+---@alias LuaX.Hooks.UseEffect.State { deps: any[]?, on_remove: function? }
 
----@param callback fun(): function?
+---@alias LuaX.Hooks.UseEffect fun(callback: (fun(): function?), deps: any[]?)
+
+---@param callback fun(): function? An effect function that optionally returns an unmount handler
 ---@param deps any[]?
 local function use_effect(callback, deps)
     local hookstate = HookState.global.get(true)
 
     local index = hookstate:get_index()
 
-    local last_value = hookstate:get_value(index) or {} --[[@as LuaX.UseEffectState]]
+    local last_value = hookstate:get_value(index) or {} --[[@as LuaX.Hooks.UseEffect.State]]
     local last_deps = last_value.deps
 
     if not deps or not table_equals(deps, last_deps) then

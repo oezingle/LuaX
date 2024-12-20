@@ -2,6 +2,9 @@
 local use_state = require("src.hooks.use_state")
 
 ---@generic T
+---@alias LuaX.Hooks.UseRef fun(default: T?): { current: T }
+
+---@generic T
 ---@param default T?
 ---@return { current: T }
 local function use_ref(default)
