@@ -85,7 +85,9 @@ function FunctionComponentInstance:render(props)
 
     if not ok then
         local err = res
-        if err ~= ABORT_CURRENT_RENDER then            
+        if err ~= ABORT_CURRENT_RENDER then        
+            -- TODO because we have traceback we should tune the error message.
+
             error(err)
         end
 

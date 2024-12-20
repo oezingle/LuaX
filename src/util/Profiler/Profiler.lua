@@ -3,7 +3,7 @@ local find_unused_filename = require("src.util.Profiler.find_unused_filename")
 
 -- this feels like bad pattern but idgaf tbh.
 if not debug or not debug.getinfo then
-    warn("Profiler requires debug.getinfo(). A pass-through implementation will be used instead")
+    warn("Profiler requires debug.getinfo(). A No-op profiler will be used instead")
 
     local FakeProfiler = class("FakeProfiler")
 

@@ -27,6 +27,7 @@ if table.pack(...)[1] ~= (arg or {})[1] then
     ---@field use_context LuaX.Hooks.UseContext
     ---@field use_effect LuaX.Hooks.UseEffect
     ---@field use_memo LuaX.Hooks.UseMemo
+    ---@field use_portal LuaX.Hooks.UsePortal
     ---@field use_ref LuaX.Hooks.UseRef
     ---@field use_state LuaX.Hooks.UseState
     --- Parsing
@@ -48,6 +49,7 @@ if table.pack(...)[1] ~= (arg or {})[1] then
         use_context    = require("src.hooks.use_context"),
         use_effect     = require("src.hooks.use_effect"),
         use_memo       = require("src.hooks.use_memo"),
+        use_portal     = require("src.hooks.use_portal"),
         use_ref        = require("src.hooks.use_ref"),
         use_state      = require("src.hooks.use_state"),
 

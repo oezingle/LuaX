@@ -1,7 +1,30 @@
 ---@nospec
 
+-- Some flavours of lua don't provide warn()
+
+local warn_enabled = false
+
+---@param ... string
+---@return boolean
+local function test_control_flag(...)
+    local arg1 = ({ ... })[1]
+
+    if arg1 == "@on" then
+        warn_enabled = true
+
+        -- we don't want to print "@on"
+        return false
+    elseif arg1 == "@off" then
+        warn_enabled = false
+    end
+
+    return warn_enabled
+end
+
 local function nocolor_warn(...)
-    print("WARNING:", ...)
+    if test_control_flag(...) then
+        print("Lua warning:", ...)
+    end
 end
 
 local colors = {
@@ -10,11 +33,13 @@ local colors = {
     RESET = '\27[0m',
 }
 local function color_warn(...)
-    io.stdout:write(colors.YELLOW)
+    if test_control_flag(...) then
+        io.stdout:write(colors.YELLOW)
 
-    io.stdout:write(table.concat(table.pack(...), "\t"))
+        io.stdout:write(table.concat(table.pack(...), "\t"))
 
-    io.stdout:write(colors.RESET, "\n")
+        io.stdout:write(colors.RESET, "\n")
+    end
 end
 
 local function ensure_warn()

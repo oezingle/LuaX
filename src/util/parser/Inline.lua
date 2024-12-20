@@ -1,11 +1,14 @@
 --[[
     Parse inline - leverage the debug library to allow users to render
-    components in pure-lua environments 
+    components in pure-lua environments
 ]]
 
 local LuaXParser = require("src.util.parser.LuaXParser")
 local traceback = require("src.util.debug.traceback")
 local get_locals = require("src.util.debug.get_locals")
+local get_function_location = require("src.util.Renderer.helper.get_function_location")
+
+local get_component_name = require("src.util.Renderer.helper.get_component_name")
 
 local Fragment = require("src.components.Fragment")
 local create_element = require("src.create_element")
@@ -49,8 +52,6 @@ function Inline.assert.can_get_local()
         "Cannot use inline parser: debug.getlocal API changed")
 end
 
-
-
 ---@param chunk string
 ---@param env table
 ---@param src string?
@@ -69,7 +70,17 @@ function Inline.easy_load(chunk, env, src)
         error(err)
     end
 
-    return get_output()
+    local ok, ret = pcall(get_output)
+
+    if ok then
+        return ret
+    else
+        local file, err = ret:match("%[string \"inline LuaX%s*([^\"]*)\"%]:1:%s*(.*)$")
+
+        local new_err = string.format("LuaX: %s: %s", file, err)
+        
+        error(new_err)
+    end
 end
 
 ---@param fn function
@@ -84,7 +95,7 @@ function Inline:lazy_assert(fn)
         self.assertions[fn] = false
     else
         self.assertions[fn] = err
-        
+
         error(err)
     end
 end
@@ -153,7 +164,7 @@ function Inline:transpile_decorator(chunk, stackoffset)
 
     local stackoffset = stackoffset or 0
 
-    local chunk_locals = get_locals(3 + stackoffset)
+    local chunk_locals, chunk_names = get_locals(3 + stackoffset)
 
     -- This is compiled, ignore usage of decorator
     ---@diagnostic disable-next-line:invisible
@@ -167,17 +178,18 @@ function Inline:transpile_decorator(chunk, stackoffset)
     chunk_locals[LuaXParser.vars.FRAGMENT.name] = Fragment
 
     setmetatable(chunk_locals, { __index = _G })
+    setmetatable(chunk_names, { __index = _G })
 
-    local inline_luax = function (...)
+    local inline_luax = function(...)
         -- TODO honestly this feels like an evil hack. in practice it's okay, but jeez.
-        if ({...})[1] == REQUEST_ORIGINAL_CHUNK then
+        if ({ ... })[1] == REQUEST_ORIGINAL_CHUNK then
             return chunk
         end
 
         -- get hook & mask on debug ( if any ) to re-insert
         local prev_hook, prev_mask = debug.gethook()
 
-        local inner_locals
+        local inner_locals, inner_names
 
         -- get locals as they come
         debug.sethook(function()
@@ -185,7 +197,7 @@ function Inline:transpile_decorator(chunk, stackoffset)
             local info = debug.getinfo(2, "f")
 
             if info.func == chunk then
-                inner_locals = get_locals(3)
+                inner_locals, inner_names = get_locals(3)
             end
         end, "r")
 
@@ -193,13 +205,12 @@ function Inline:transpile_decorator(chunk, stackoffset)
 
         debug.sethook(prev_hook, prev_mask)
 
-        setmetatable(inner_locals, {
-            __index = chunk_locals
-        })
+        setmetatable(inner_locals, { __index = chunk_locals })
+        setmetatable(inner_names, { __index = chunk_names })
 
-        local element_str = self:cache_get(tag, inner_locals)
+        local element_str = self:cache_get(tag, inner_names)
 
-        local chunk_src = debug.getinfo(chunk, "S").short_src
+        local chunk_src = get_function_location(chunk)
 
         local node = self.easy_load(element_str, inner_locals, chunk_src)
 
@@ -211,7 +222,7 @@ end
 
 --- Get the original chunk from a function component that has been inline transpiled
 ---@param fn function
-function Inline:get_original_chunk (fn)
+function Inline:get_original_chunk(fn)
     return fn(REQUEST_ORIGINAL_CHUNK)
 end
 
@@ -224,15 +235,21 @@ function Inline:transpile_string(tag, stackoffset)
     local stackoffset = stackoffset or 0
 
     -- 3 is a value from trial and error
-    local locals = get_locals(3 + stackoffset)
-    ---@diagnostic disable-next-line:invisible
-    locals[LuaXParser.vars.CREATE_ELEMENT.name] = create_element
-    ---@diagnostic disable-next-line:invisible
-    locals[LuaXParser.vars.FRAGMENT.name] = Fragment
-    ---@diagnostic disable-next-line:invisible
-    locals[LuaXParser.vars.IS_COMPILED.name] = true
+    local locals, names = get_locals(3 + stackoffset)
 
-    local element_str = self:cache_get(tag, locals)
+    ---@diagnostic disable-next-line:invisible
+    local vars = LuaXParser.vars
+
+    locals[vars.CREATE_ELEMENT.name] = create_element
+    names[vars.CREATE_ELEMENT.name] = true
+
+    locals[vars.FRAGMENT.name] = Fragment
+    names[vars.FRAGMENT.name] = true
+
+    locals[vars.IS_COMPILED.name] = true
+    names[vars.IS_COMPILED.name] = true
+
+    local element_str = self:cache_get(tag, names)
 
     local env = setmetatable(locals, {
         __index = _G
@@ -261,8 +278,10 @@ end
 --#endregion
 
 --- Crazy (bad) diamond dependency fix.
----@type { set_Inline: fun(Inline: LuaX.Parser.Inline)}
-local get_component_name = require("src.util.Renderer.helper.get_component_name") --[[ @as any ]]
-get_component_name.set_Inline(Inline)
+do
+    ---@type { set_Inline: fun(Inline: LuaX.Parser.Inline)}
+    local get_component_name = get_component_name --[[ @as any ]]
+    get_component_name.set_Inline(Inline)
+end
 
 return Inline
