@@ -1,5 +1,6 @@
 local ipairs_with_nil = require("src.util.ipairs_with_nil")
 
+---@class LuaX.Children
 local Children = {}
 
 ---@param children LuaX.ElementNode[] | LuaX.ElementNode | nil

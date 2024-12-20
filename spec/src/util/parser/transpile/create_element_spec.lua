@@ -47,6 +47,7 @@ describe("transpile_create_element", function()
 
         local element = get_element()
 
+        ---@diagnostic disable-next-line:invisible
         assert.equal(ElementNode.LITERAL_NODE, element.type)
         assert.equal("Hello World!", element.props.value)
     end)
