@@ -1,4 +1,4 @@
-local get_locals = require("src.util.parser.inline.get_locals")
+local get_locals = require("src.util.debug.get_locals")
 
 describe("get_locals", function()
     it("reads local variables", function()
