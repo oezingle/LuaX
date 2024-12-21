@@ -205,6 +205,12 @@ function Inline:transpile_decorator(chunk, stackoffset)
 
         debug.sethook(prev_hook, prev_mask)
 
+        local t = type(tag)
+
+        if t == "table" or t == "nil" then 
+            return tag
+        end
+
         setmetatable(inner_locals, { __index = chunk_locals })
         setmetatable(inner_names, { __index = chunk_names })
 
