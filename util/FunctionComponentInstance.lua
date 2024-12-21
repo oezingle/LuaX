@@ -63,6 +63,7 @@ _G.LuaX._context=last_context
 HookState.global.set(last_hookstate)
 if  not ok then local err=res
 if err ~= ABORT_CURRENT_RENDER then 
+err="While rendering " .. self.friendly_name .. ": " .. err
 error(err) end
 return false,nil else log.trace(string.format("render %s end. rerender=%s",self.friendly_name,self.rerender and "true" or "false"))
 local element=res

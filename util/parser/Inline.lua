@@ -99,6 +99,8 @@ local info=debug.getinfo(2,"f")
 if info.func == chunk then inner_locals,inner_names=get_locals(3) end end,"r")
 local tag=chunk(...)
 debug.sethook(prev_hook,prev_mask)
+local t=type(tag)
+if t == "table" or t == "nil" then return tag end
 setmetatable(inner_locals,{["__index"] = chunk_locals})
 setmetatable(inner_names,{["__index"] = chunk_names})
 local element_str=self:cache_get(tag,inner_names)
