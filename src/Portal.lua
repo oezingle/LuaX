@@ -173,15 +173,12 @@ function Portal:GenericProvider (props)
 
     local name = self.name
 
-    use_effect(function ()
-        table[name] = self
+    local new_table = { [name] = self }
+    for k, v in pairs(table) do
+        new_table[k] = v
+    end
 
-        return function ()
-            table[name] = nil
-        end
-    end, { self })
-
-    return create_element(Portal.Context.Provider, { children = props.children, value = table })
+    return create_element(Portal.Context.Provider, { children = props.children, value = new_table })
 end
 
 
