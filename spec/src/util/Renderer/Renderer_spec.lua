@@ -174,10 +174,8 @@ describe("Renderer", function()
     end)
 
     -- bug that I found in AwesomeWM doftiles here - older versions of Renderer
-    -- would call self:render_function_component from node:on_change, which
-    -- wastes some execution time and more importantly would revert the props
-    -- sent to the node to their initial values, because we only set
-    -- node:on_change at node creation.
+    -- would revert the props sent to the node to their initial values, because
+    -- we only set node:on_change at node creation.
     it("Doesn't force old props onto old VirtualElements", function()
         ---@type LuaX.Hooks.UseState.Dispatch<boolean>
         local set_child_hook = function() end
