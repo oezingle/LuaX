@@ -35,8 +35,9 @@ local function collect_locals(text)
 
 
 local text=LuaXParser():set_text(text):set_sourceinfo"collect_locals internal parser":set_components({},"local"):transpile()
+local node,err=Parser.parse(text)
+if  not node then err("Unable to collect locals: " .. err) end
 ---@type string[]
-local node=Parser.parse(text)
 local vars={}
 collect_vars(vars,node)
 return list_to_map(vars) end
