@@ -2,14 +2,14 @@
 local table_equals = require("src.util.table_equals")
 local HookState    = require("src.util.HookState")
 
----@alias LuaX.Hooks.UseState.Dispatch<T> T | (fun(old: T): T)
+---@alias LuaX.Hooks.UseState.Dispatch<R> fun(new_value: R | (fun(old: R): R))
 
 ---@generic T
 ---@alias LuaX.Hooks.UseState fun(default?: T): T, fun(new_value: LuaX.Hooks.UseState.Dispatch<T>)
 
 ---@generic T
 ---@param default T?
----@return T, fun(new_value: LuaX.Hooks.UseState.Dispatch<T>)
+---@return T, LuaX.Hooks.UseState.Dispatch<T>
 local function use_state (default)
     local hookstate = HookState.global.get(true)
 
