@@ -14,7 +14,7 @@ require(library_root .. "_shim") end
 local Inline=require"lib_LuaX.util.parser.Inline"
 local LuaXParser=require"lib_LuaX.util.parser.LuaXParser"
 local ensure_warn=require"lib_LuaX.util.ensure_warn"
-local _VERSION="0.4.0-dev"
+local _VERSION="0.4.0-pre"
 
 ensure_warn()
 if table.pack(...)[1] ~= (arg or {})[1] then 

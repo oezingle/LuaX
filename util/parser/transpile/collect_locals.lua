@@ -36,7 +36,7 @@ local function collect_locals(text)
 
 local text=LuaXParser():set_text(text):set_sourceinfo"collect_locals internal parser":set_components({},"local"):transpile()
 local node,err=Parser.parse(text)
-if  not node then error("Unable to collect locals: " .. err) end
+if  not node then error("Unable to collect locals - are you sure your code is syntactically correct?\n" .. err) end
 ---@type string[]
 local vars={}
 collect_vars(vars,node)

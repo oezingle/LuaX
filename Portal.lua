@@ -88,9 +88,9 @@ return map(self.children,function (data) return data.child end) end
 Portal.Context=Context()
 function Portal:GenericProvider(props) local table=use_context(Portal.Context) or {}
 local name=self.name
-use_effect(function () table[name]=self
-return function () table[name]=nil end end,{self})
-return create_element(Portal.Context.Provider,{["children"] = props.children,["value"] = table}) end
+local new_table={[name] = self}
+for k,v in pairs(table) do new_table[k]=v end
+return create_element(Portal.Context.Provider,{["children"] = props.children,["value"] = new_table}) end
 ---@param name string?
 function Portal.create(name) return Portal(name) end
 return Portal

@@ -82,20 +82,21 @@ function Renderer:render_function_component(element,container,key,caller) local 
 ---@type LuaX.NativeElement.Virtual
 local can_modify,existing_child=can_modify_child(element,container,virtual_key)
 local node=nil
+local render_node=function () 
+local render_key=key_add(key,2)
+local did_render,render_result=node:render()
+if did_render then self:render_keyed_child(render_result,container,render_key,element) end end
 if can_modify then 
 node=existing_child else if existing_child then container:delete_children_by_key(virtual_key) end
 node=VirtualElement.create_element(element.type)
-node:on_change(function () 
-self.workloop:add(function () self:render_function_component(element,container,key,caller) end)
+node:set_on_change(function () 
+self.workloop:add(render_node)
 self.workloop:start() end)
 container:insert_child_by_key(virtual_key,node) end
 
 element=ElementNode.inherit_props(element,{["__luax_internal"] = {["renderer"] = self,["container"] = container,["context"] = Context.inherit(caller)}})
 node:set_props(element.props)
-
-local render_key=key_add(key,2)
-local did_render,render_result=node:render()
-if did_render then self:render_keyed_child(render_result,container,render_key,element) end end
+render_node() end
 ---@param element LuaX.ElementNode | nil
 ---@param container LuaX.NativeElement
 ---@param key LuaX.Key

@@ -14,15 +14,28 @@ require(library_root .. "_shim") end
 
 local class=require"lib_LuaX._dep.lib.30log"
 local FunctionComponentInstance=require"lib_LuaX.util.FunctionComponentInstance"
----@class LuaX.NativeElement.Virtual : Log.BaseFunctions
+
+
+
+
+
+
+
+
+
+
+---@class LuaX.NativeElement.Virtual : LuaX.NativeElement
 ---@field component LuaX.ComponentInstance
+
+---@field render function()
 local table_equals=require"lib_LuaX.util.table_equals"
 local VirtualElement=class"LuaX.VirtualElement"
 function VirtualElement:init(component) if type(component) == "function" then self.instance=FunctionComponentInstance(component)
 self.type=component else self.instance=component end end
 function VirtualElement:get_type() return self.type end
-function VirtualElement:on_change(callback) self.instance:on_change(callback) end
+function VirtualElement:set_on_change(callback) self.instance:set_on_change(callback) end
 function VirtualElement:insert_child() error"A VirtualElement should never interact with children" end
+---@return LuaX.NativeElement.Virtual
 VirtualElement.delete_child=VirtualElement.insert_child
 function VirtualElement.create_element(type) return VirtualElement(type) end
 function VirtualElement.get_root() error"VirtualElements exist to host non-native components, and therefore cannot be used as root elements" end
