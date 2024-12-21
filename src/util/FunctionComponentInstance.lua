@@ -87,6 +87,7 @@ function FunctionComponentInstance:render(props)
         local err = res
         if err ~= ABORT_CURRENT_RENDER then        
             -- TODO because we have traceback we should tune the error message.
+            err = "While rendering " .. self.friendly_name ..  ": " .. err
 
             error(err)
         end
