@@ -2,6 +2,7 @@ local ElementNode = require("src.util.ElementNode")
 
 describe("ElementNode", function()
     describe("clean_children", function()
+        ---@diagnostic disable-next-line:invisible
         local literal_element = ElementNode.create(ElementNode.LITERAL_NODE, { value = "Hello World!" })
 
         describe("takes single", function()
@@ -84,6 +85,7 @@ describe("ElementNode", function()
     it("gives metatable still", function()
         local node = ElementNode.create("test_element", {})
 
+        ---@diagnostic disable-next-line:invisible
         assert.equal(ElementNode, node.element_node)
     end)
 
@@ -92,6 +94,7 @@ describe("ElementNode", function()
         local a = ElementNode.create("div", {})
         local b = ElementNode.create("div", {})
 
+        ---@diagnostic disable-next-line:invisible
         assert.equal(a.element_node, b.element_node)
     end)
 end)

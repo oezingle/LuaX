@@ -259,7 +259,7 @@ describe("LuaXParser (v3)", function()
 
     it("transpiles files with inline calls", function()
         local parser = LuaXParser.from_file_content([[
-            local LuaX = require("src")
+            local LuaX = require("src.init")
 
             local Component = function (props)
                 return ]] .. "LuaX([[" .. [[
@@ -290,7 +290,7 @@ describe("LuaXParser (v3)", function()
 
     it("transpiles files with inline functions", function()
         local parser = LuaXParser.from_file_content([[
-            local LuaX = require("src")
+            local LuaX = require("src.init")
 
             local Component = LuaX(function (props)
                 return ]] .. "[[" .. [[

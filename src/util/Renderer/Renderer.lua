@@ -124,6 +124,17 @@ function Renderer:render_function_component(element, container, key, caller)
     ---@type LuaX.NativeElement.Virtual
     local node = nil
 
+    local render_node = function ()
+        local render_key = key_add(key, 2)
+
+        -- This feels evil
+        local did_render, render_result = node:render()
+    
+        if did_render then
+            self:render_keyed_child(render_result, container, render_key, element)
+        end
+    end
+
     if can_modify then
         node = existing_child --[[ @as LuaX.NativeElement.Virtual ]]
     else
@@ -133,15 +144,13 @@ function Renderer:render_function_component(element, container, key, caller)
 
         node = VirtualElement.create_element(element.type)
 
-        node:on_change(function()
-            self.workloop:add(function()
-                self:render_function_component(element, container, key, caller)
-            end)
-
+        node:set_on_change(function()
+            self.workloop:add(render_node)
+    
             -- start workloop if it isn't running
             self.workloop:start()
         end)
-
+    
         container:insert_child_by_key(virtual_key, node)
     end
 
@@ -155,14 +164,7 @@ function Renderer:render_function_component(element, container, key, caller)
     })
     node:set_props(element.props)
 
-    local render_key = key_add(key, 2)
-
-    -- This feels evil
-    local did_render, render_result = node:render()
-
-    if did_render then
-        self:render_keyed_child(render_result, container, render_key, element)
-    end
+    render_node()
 end
 
 ---@param element LuaX.ElementNode | nil

@@ -1,8 +1,9 @@
-local XMLElement         = require("src.util.NativeElement.XMLElement")
-local Renderer           = require("src.util.Renderer")
-local create_element     = require("src.create_element")
-local use_effect         = require("src.hooks.use_effect")
-local LuaX               = require("src.init")
+local XMLElement     = require("src.util.NativeElement.XMLElement")
+local Renderer       = require("src.util.Renderer")
+local create_element = require("src.create_element")
+local use_state      = require('src.hooks.use_state')
+local use_effect     = require("src.hooks.use_effect")
+local LuaX           = require("src.init")
 
 -- require("lib.log").level = "trace"
 
@@ -143,34 +144,88 @@ describe("Renderer", function()
         assert.equal(1, hook_calls)
     end)
 
-    if false then
-        describe("renders", function()
-            local function bruh()
-                return create_element("bruh", {})
-            end
+    describe("renders", function()
+        local function bruh()
+            return create_element("bruh", {})
+        end
 
-            local native = false
+        local native = false
 
-            local root = XMLElement.get_root()
-            local app = LuaX(function()
-                return [[
+        local root = XMLElement.get_root()
+        local app = LuaX(function()
+            return [[
                 <>
                     {native and <div/> or <bruh />}
                 </>
             ]]
-            end)
-
-            it("a function", function()
-                r:render(app(), root)
-            end)
-            it("a function, then native", function()
-                native = not native
-                r:render(app(), root)
-            end)
-            it("a function, then native, then a function", function()
-                native = not native
-                r:render(app(), root)
-            end)
         end)
-    end
+
+        it("a function", function()
+            r:render(app(), root)
+        end)
+        it("a function, then native", function()
+            native = not native
+            r:render(app(), root)
+        end)
+        it("a function, then native, then a function", function()
+            native = not native
+            r:render(app(), root)
+        end)
+    end)
+
+    -- bug that I found in AwesomeWM doftiles here - older versions of Renderer
+    -- would call self:render_function_component from node:on_change, which
+    -- wastes some execution time and more importantly would revert the props
+    -- sent to the node to their initial values, because we only set
+    -- node:on_change at node creation.
+    it("Doesn't force old props onto old VirtualElements", function()
+        ---@type LuaX.Hooks.UseState.Dispatch<boolean>
+        local set_child_hook = function() end
+        ---@type LuaX.Hooks.UseState.Dispatch<boolean>
+        local set_parent_hook = function() end
+
+        local state_values = {}
+
+        local Child = LuaX(function(props)
+            local hook, set_hook = use_state(false)
+
+            --- Doing some fucked shit
+            set_child_hook = set_hook
+
+            table.insert(state_values, props.state)
+
+            return [[
+                <>
+                    Bruh {tostring(props.state)}
+                </>
+            ]]
+        end)
+
+        local App = LuaX(function()
+            local hook, set_hook = use_state(false)
+
+            set_parent_hook = set_hook
+
+            return [[
+                <div>
+                    <Child state={hook} />
+                </div>
+            ]]
+        end)
+
+        local root = XMLElement.get_root()
+
+        local app = create_element(App, {})
+        r:render(app, root)
+
+        set_parent_hook(true)
+        set_child_hook(true)
+        set_child_hook(false)
+
+        assert.False(state_values[1])
+
+        assert.True(state_values[2])
+        assert.True(state_values[3])
+        assert.True(state_values[4])
+    end)
 end)

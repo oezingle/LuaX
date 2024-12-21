@@ -10,22 +10,21 @@ local get_component_name = require("src.util.Renderer.helper.get_component_name"
 ---@alias LuaX.ComponentInstance.ChangeHandler fun(element: LuaX.ElementNode | nil)
 
 ---@class LuaX.ComponentInstance : Log.BaseFunctions
----@field protected handlers LuaX.ComponentInstance.ChangeHandler[]
+---@field protected change_handler LuaX.ComponentInstance.ChangeHandler
 ---
 ---@field render fun(self: self, props: LuaX.Props): boolean, (LuaX.ElementNode | nil)
----@field on_change fun(self: self, cb: LuaX.ComponentInstance.ChangeHandler)
+---@field set_on_change fun(self: self, cb: LuaX.ComponentInstance.ChangeHandler)
 ---
 ---@operator call:LuaX.ComponentInstance
 
 ---@class LuaX.FunctionComponentInstance : LuaX.ComponentInstance
 ---@field protected hookstate LuaX.HookState
----@field protected handlers LuaX.ComponentInstance.ChangeHandler[]
 ---@field init fun(self: self, renderer: LuaX.FunctionComponent)
 ---
 ---@field rerender boolean
 ---
 --- Copied from ComponentInstance because lua type checker sucks
----@field on_change fun(self: self, cb: LuaX.ComponentInstance.ChangeHandler)
+---@field set_on_change fun(self: self, cb: LuaX.ComponentInstance.ChangeHandler)
 ---@operator call: LuaX.FunctionComponentInstance
 local FunctionComponentInstance = class("FunctionComponentInstance")
 
@@ -36,18 +35,12 @@ function FunctionComponentInstance:init(component)
 
     log.debug("new FunctionComponentInstance " .. self.friendly_name)
 
-    self.handlers = {}
-
-    self.props = {}
-
     self.hookstate = HookState()
 
     self.hookstate:set_listener(function()
         self.rerender = true
 
-        for _, handler in ipairs(self.handlers) do
-            handler()
-        end
+        self.change_handler()
 
         -- If currently rendering this component
         if HookState.global.get() == self.hookstate then
@@ -59,8 +52,11 @@ function FunctionComponentInstance:init(component)
     self.component = component
 end
 
-function FunctionComponentInstance:on_change(cb)
-    table.insert(self.handlers, cb)
+-- Default no-op
+function FunctionComponentInstance.change_handler () end
+
+function FunctionComponentInstance:set_on_change(cb)
+    self.change_handler = cb
 end
 
 function FunctionComponentInstance:render(props)
@@ -76,8 +72,6 @@ function FunctionComponentInstance:render(props)
     _G.LuaX._context = props.__luax_internal.context
     local last_hookstate = HookState.global.set(self.hookstate)
 
-
-    -- TODO FIXME safe traceback
     local ok, res = xpcall(component, traceback, props)
 
     _G.LuaX._context = last_context
