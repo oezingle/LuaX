@@ -20,11 +20,11 @@ local Inline
 ---@param component LuaX.Component
 ---@return string
 local inline_transpiled_location={}
-local function get_component_name(component) local t=type(component)
+local function actually_get_component_name(component) local t=type(component)
 if t == "function" then local location=get_function_location(component)
 local name=get_function_name(location)
 if location == inline_transpiled_location then local chunk=Inline:get_original_chunk(component)
-if chunk then return get_component_name(chunk) else 
+if chunk then return actually_get_component_name(chunk) else 
 return "Inline LuaX" end elseif name ~= location then return string.format("%s (%s)",name,location) end
 
 return "Function defined at " .. location elseif ElementNode.is_literal(component) then return "Literal" elseif t == "string" then return component else return string.format("UNKNOWN (%s %s)",t,tostring(component)) end end
@@ -32,7 +32,8 @@ return "Function defined at " .. location elseif ElementNode.is_literal(componen
 ---@param value LuaX.Parser.Inline
 local function set_Inline(value) Inline=value
 inline_transpiled_location=get_function_location(Inline:transpile_decorator(function (props)  end)) end
+
 ---@type fun(component: LuaX.Component): string
 
-local evil=setmetatable({["set_Inline"] = set_Inline},{["__call"] = function (_,...) return get_component_name(...) end})
-return evil
+local get_component_name=setmetatable({["set_Inline"] = set_Inline},{["__call"] = function (_,...) return actually_get_component_name(...) end})
+return get_component_name

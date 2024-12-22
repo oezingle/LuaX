@@ -53,6 +53,7 @@ children[i]=child end
 return children end
 
 
+---@param node LuaX.ElementNode
 ---@param inherit_props { [string]: any }
 ---@return self
 function ElementNode.inherit_props(node,inherit_props) setmetatable(node.props,{["__index"] = inherit_props})

@@ -45,8 +45,6 @@ self.change_handler()
 if HookState.global.get() == self.hookstate then 
 error(ABORT_CURRENT_RENDER) end end)
 self.component=component end
-
-function FunctionComponentInstance.change_handler()  end
 function FunctionComponentInstance:set_on_change(cb) self.change_handler=cb end
 function FunctionComponentInstance:render(props) local component=self.component
 log.debug(string.format("FunctionComponentInstance render %s",self.friendly_name))

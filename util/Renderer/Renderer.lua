@@ -87,13 +87,14 @@ node=existing_child else if existing_child then container:delete_children_by_key
 node=VirtualElement.create_element(element.type)
 container:insert_child_by_key(virtual_key,node) end
 
-node:set_on_change(function () 
-self.workloop:add(function () self:render_function_component(element,container,key,caller) end)
-self.workloop:start() end)
-element=ElementNode.inherit_props(element,{["__luax_internal"] = {["renderer"] = self,["container"] = container,["context"] = Context.inherit(caller)}})
 node:set_props(element.props)
-
+element=ElementNode.inherit_props(element,{["__luax_internal"] = {["renderer"] = self,["container"] = container,["context"] = Context.inherit(caller)}})
 local render_key=key_add(key,2)
+
+node:set_on_change(function () 
+self.workloop:add(function () local did_render,render_result=node:render(true)
+if did_render then self:render_keyed_child(render_result,container,render_key,element) end end)
+self.workloop:start() end)
 local did_render,render_result=node:render()
 if did_render then self:render_keyed_child(render_result,container,render_key,element) end end
 ---@param element LuaX.ElementNode | nil

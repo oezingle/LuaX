@@ -25,7 +25,10 @@ local FunctionComponentInstance=require"lib_LuaX.util.FunctionComponentInstance"
 
 
 ---@class LuaX.NativeElement.Virtual : LuaX.NativeElement
----@field component LuaX.ComponentInstance
+
+---@field protected type LuaX.Component
+---@field protected props LuaX.Props
+---@field protected new_props boolean
 
 ---@field render function()
 local table_equals=require"lib_LuaX.util.table_equals"
@@ -39,11 +42,18 @@ function VirtualElement:insert_child() error"A VirtualElement should never inter
 VirtualElement.delete_child=VirtualElement.insert_child
 function VirtualElement.create_element(type) return VirtualElement(type) end
 function VirtualElement.get_root() error"VirtualElements exist to host non-native components, and therefore cannot be used as root elements" end
-function VirtualElement:set_props(props) if table_equals(props,self.props) then 
-return  end
+function VirtualElement:set_props(props) 
 
-self.props=props end
+if table_equals(props,self.props) and props ~= self.props then 
+return  end
+self.props=props
+self.new_props=true end
+---@param force boolean?
 ---@return boolean did_render, LuaX.ElementNode | LuaX.ElementNode[] | nil result
-function VirtualElement:render() return self.instance:render(self.props) end
+function VirtualElement:render(force) if self.new_props or force then local result
+repeat local did_render
+did_render,result=self.instance:render(self.props) until did_render
+self.new_props=false
+return true,result else return false,nil end end
 function VirtualElement:cleanup() self.instance:cleanup() end
 return VirtualElement
