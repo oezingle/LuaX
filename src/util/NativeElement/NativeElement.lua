@@ -245,13 +245,4 @@ function NativeElement.recursive_children_string(children)
     end
 end
 
--- TODO maybe strip this? Addresses are important!
-function NativeElement:__tostring()
-    local component = self:get_type_safe()
-
-    local children = NativeElement.recursive_children_string(self._children_by_key)
-
-    return component .. " " .. children
-end
-
 return NativeElement

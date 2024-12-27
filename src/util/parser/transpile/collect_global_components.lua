@@ -22,6 +22,9 @@ local function collect_global_components()
         -- saves some memory to do this here, as every string from this class in globals will be the same
         local implementation_name = tostring(NativeElementImplementation)
 
+        -- try to strip 30log's info - we only need class name
+        implementation_name = implementation_name:match("class '([^']+)'") or implementation_name
+
         if not NativeElementImplementation.components then
             warn_once(string.format(
                 "LuaX Parser: NativeElement subclass %s does not have a component registry list - defaulting to local variable lookup",
