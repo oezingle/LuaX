@@ -44,16 +44,13 @@ function FunctionComponentInstance:init(component)
 
         -- If currently rendering this component
         if HookState.global.get() == self.hookstate then
-            -- Throw ABORT_RENDER table to quit rendering this component, and start again
+            -- Throw ABORT_RENDER table to early quit rendering this component, and start again
             error(ABORT_CURRENT_RENDER)
         end
     end)
 
     self.component = component
 end
-
--- Default no-op
-function FunctionComponentInstance.change_handler () end
 
 function FunctionComponentInstance:set_on_change(cb)
     self.change_handler = cb

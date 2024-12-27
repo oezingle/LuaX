@@ -78,6 +78,7 @@ end
 
 --- API for LuaX environment to hand elements internal props
 ---
+---@param node LuaX.ElementNode
 ---@param inherit_props { [string]: any }
 ---@return self
 function ElementNode.inherit_props(node, inherit_props)

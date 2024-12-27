@@ -9,7 +9,7 @@ local inline_transpiled_location = {}
 
 ---@param component LuaX.Component
 ---@return string
-local function get_component_name(component)
+local function actually_get_component_name(component)
     local t = type(component)
 
     if t == "function" then
@@ -20,7 +20,7 @@ local function get_component_name(component)
             local chunk = Inline:get_original_chunk(component)
 
             if chunk then                
-                return get_component_name(chunk)
+                return actually_get_component_name(chunk)
             else
                 -- unable to get more info
                 return "Inline LuaX"
@@ -48,13 +48,14 @@ local function set_Inline (value)
     inline_transpiled_location = get_function_location(Inline:transpile_decorator(function(props) end))
 end
 
+--- Evil diamond dependency resolution.
 ---@type fun(component: LuaX.Component): string
-local evil = setmetatable({
+local get_component_name = setmetatable({
     set_Inline = set_Inline
 }, {
     __call = function (_, ...)
-        return get_component_name(...)
+        return actually_get_component_name(...)
     end
 }) --[[ @as any]]
 
-return evil
+return get_component_name

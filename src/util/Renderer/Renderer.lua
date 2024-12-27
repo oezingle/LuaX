@@ -107,7 +107,7 @@ function Renderer:render_native_component(component, container, key, caller)
     -- end
 
     -- Append to parent node
-    if not existing_child then
+    if not can_modify then
         container:insert_child_by_key(key, node)
     end
 end
@@ -118,6 +118,16 @@ end
 ---@param key LuaX.Key
 ---@param caller LuaX.ElementNode?
 function Renderer:render_function_component(element, container, key, caller)
+    -- check if there's already something in the way
+    do
+        local existing = container:get_children_by_key(key)
+
+        -- Single existing child or too many children. VirtualElement creates 2.
+        if existing and (existing.class or #existing > 2) then
+            container:delete_children_by_key(key)
+        end
+    end
+
     local virtual_key = key_add(key, 1)
     local can_modify, existing_child = can_modify_child(element, container, virtual_key)
 
@@ -132,20 +142,12 @@ function Renderer:render_function_component(element, container, key, caller)
         end
 
         node = VirtualElement.create_element(element.type)
-    
+
         container:insert_child_by_key(virtual_key, node)
     end
 
-    node:set_on_change(function()
-        self.workloop:add(function ()
-            self:render_function_component(element, container, key, caller)
-        end)
-
-        -- start workloop if it isn't running
-        self.workloop:start()
-    end)
-
-    -- link hidden props
+    node:set_props(element.props)
+    -- link hidden props after to save time
     element = ElementNode.inherit_props(element, {
         __luax_internal = {
             renderer = self,
@@ -153,9 +155,21 @@ function Renderer:render_function_component(element, container, key, caller)
             context = Context.inherit(caller)
         }
     })
-    node:set_props(element.props)
 
     local render_key = key_add(key, 2)
+
+    node:set_on_change(function()
+        self.workloop:add(function()
+            local did_render, render_result = node:render(true)
+
+            if did_render then
+                self:render_keyed_child(render_result, container, render_key, element)
+            end
+        end)
+
+        -- start workloop if it isn't running
+        self.workloop:start()
+    end)
 
     -- This feels evil
     local did_render, render_result = node:render()
