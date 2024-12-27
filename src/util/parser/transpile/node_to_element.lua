@@ -14,7 +14,8 @@ local function component_name(components, components_mode, name)
         -- Default to just the name if we can't match table key calls
         name
 
-    local has_component = not not components[search_name]
+    -- try both shortened name and full-length name
+    local has_component = not not (components[search_name] or components[name])
 
     local mode_global = components_mode == "global"
 

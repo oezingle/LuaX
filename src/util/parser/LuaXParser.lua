@@ -352,7 +352,17 @@ do
         if self.on_set_variable then
             self.on_set_variable(name, value, self)
         else
-            warn(string.format("LuaXParser: Variable %s not set: no on_set_variable", name))
+            local src
+            if debug and debug.getinfo then
+                local i = 0
+                repeat
+                    i = i + 1
+                    local info = debug.getinfo(i, "Sl")
+                    src = string.format("%s:%d", info.short_src, info.currentline)
+                until not src:match("LuaXParser%.lua")
+            end
+
+            warn((src and string.format("In %s: ", src) or "") .. string.format("LuaXParser: Variable %s not set: no on_set_variable", name))
         end
     end
 
@@ -488,6 +498,7 @@ do
                     value = LuaXParser()
                         :set_text(value)
                         :set_sourceinfo(self.src .. " subparser")
+                        :set_handle_variables(self.on_set_variable)
                         :set_components(self.components.names, self.components.mode)
                         :transpile()
                 else
@@ -704,13 +715,16 @@ end
 ---@param src string?
 ---@param variables table?
 function LuaXParser.from_inline_string(str, src, variables)
-    variables = variables or {}
-
-    return LuaXParser()
+    local parser = LuaXParser()
         :set_text(str)
         :set_sourceinfo(src or "Unknown inline string")
-        :handle_variables_as_table(variables)
-        :auto_set_components()
+
+    if variables then
+        parser:handle_variables_as_table(variables)
+            :auto_set_components()
+    end
+
+    return parser
 end
 
 ---@param str string

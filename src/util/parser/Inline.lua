@@ -114,10 +114,9 @@ function Inline:cache_get(tag, locals)
         return cached
     end
 
-    local transpiled = LuaXParser.from_inline_string("return " .. tag)
-        :handle_variables_as_table(locals)
-        :set_components(locals, "local")
-        :transpile()
+    local parser = LuaXParser.from_inline_string("return " .. tag, nil, locals)
+
+    local transpiled = parser:transpile()
 
     self:cache_set(tag, transpiled)
 
