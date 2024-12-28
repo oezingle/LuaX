@@ -21,7 +21,9 @@ local subclasses_of_native_element=NativeElement:subclasses()
 if  # subclasses_of_native_element == 0 then warn_once("LuaX Parser: NativeElement has not been extended yet - defaulting to local variable lookup" .. "\n" .. "to use global mode, import your NativeElement implementation before any LuaX files")
 return nil end
 for _,NativeElementImplementation in ipairs(subclasses_of_native_element) do 
+
 local implementation_name=tostring(NativeElementImplementation)
+implementation_name=implementation_name:match"class '([^']+)'" or implementation_name
 if  not NativeElementImplementation.components then warn_once(string.format("LuaX Parser: NativeElement subclass %s does not have a component registry list - defaulting to local variable lookup",implementation_name))
 return nil end
 for _,component_name in ipairs(NativeElementImplementation.components) do if globals[component_name] then warn_once(string.format("LuaX Parser: Multiple NativeElement implementations implement the element '%s'. Ignoring from %s, using existing from %s",component_name,implementation_name,globals[component_name])) end

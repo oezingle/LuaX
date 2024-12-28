@@ -129,8 +129,4 @@ if  # children ~= 0 then local children_strs={}
 for index,child in ipairs(children) do table.insert(children_strs,NativeElement.recursive_children_string(child)) end
 return string.format("{ %s }",table.concat(children_strs,", ")) else 
 return "Child " .. tostring(children) end end
-
-function NativeElement:__tostring() local component=self:get_type_safe()
-local children=NativeElement.recursive_children_string(self._children_by_key)
-return component .. " " .. children end
 return NativeElement

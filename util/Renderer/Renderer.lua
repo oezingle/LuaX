@@ -72,13 +72,17 @@ for index,child in ipairs_with_nil(children,size) do workloop:add(function () se
 workloop:start() end
 
 
-if  not existing_child then container:insert_child_by_key(key,node) end end
+if  not can_modify then container:insert_child_by_key(key,node) end end
 ---@protected
 ---@param element LuaX.ElementNode
 ---@param container LuaX.NativeElement
 ---@param key LuaX.Key
 ---@param caller LuaX.ElementNode?
-function Renderer:render_function_component(element,container,key,caller) local virtual_key=key_add(key,1)
+function Renderer:render_function_component(element,container,key,caller) 
+do 
+local existing=container:get_children_by_key(key)
+if existing and (existing.class or  # existing > 2) then container:delete_children_by_key(key) end end
+local virtual_key=key_add(key,1)
 ---@type LuaX.NativeElement.Virtual
 local can_modify,existing_child=can_modify_child(element,container,virtual_key)
 local node=nil

@@ -186,7 +186,12 @@ function LuaXParser:set_required_variables() for _,var in pairs(self.vars) do if
 ---@protected
 ---@param name string
 ---@param value string
-function LuaXParser:set_variable(name,value) if self.on_set_variable then self.on_set_variable(name,value,self) else warn(string.format("LuaXParser: Variable %s not set: no on_set_variable",name)) end end
+function LuaXParser:set_variable(name,value) if self.on_set_variable then self.on_set_variable(name,value,self) else local src
+if debug and debug.getinfo then local i=0
+repeat i=i + 1
+local info=debug.getinfo(i,"Sl")
+src=string.format("%s:%d",info.short_src,info.currentline) until  not src:match"LuaXParser%.lua" end
+warn((src and string.format("In %s: ",src) or "") .. string.format("LuaXParser: Variable %s not set: no on_set_variable",name)) end end
 function LuaXParser:handle_variables_prepend_text() local already_set={}
 return self:set_handle_variables(function (name,value,parser) local fmt="local %s = %s\n"
 local insert=string.format(fmt,name,value)
@@ -232,7 +237,7 @@ if i == 1 then value=value:gsub("^%s-[\n\13]","") end
 if i ==  # slices then value=value:gsub("[\n\13]%s-$","") end
 
 if  not value:match"^%s*$" then if slice.is_luablock then 
-value=LuaXParser():set_text(value):set_sourceinfo(self.src .. " subparser"):set_components(self.components.names,self.components.mode):transpile() else value=value.format("%q",value) end
+value=LuaXParser():set_text(value):set_sourceinfo(self.src .. " subparser"):set_handle_variables(self.on_set_variable):set_components(self.components.names,self.components.mode):transpile() else value=value.format("%q",value) end
 table.insert(nodes,value) end end
 
 
@@ -324,8 +329,9 @@ return self.text end
 ---@param str string
 ---@param src string?
 ---@param variables table?
-function LuaXParser.from_inline_string(str,src,variables) variables=variables or {}
-return LuaXParser():set_text(str):set_sourceinfo(src or "Unknown inline string"):handle_variables_as_table(variables):auto_set_components() end
+function LuaXParser.from_inline_string(str,src,variables) local parser=LuaXParser():set_text(str):set_sourceinfo(src or "Unknown inline string")
+if variables then parser:handle_variables_as_table(variables):auto_set_components() end
+return parser end
 ---@param str string
 ---@param src string?
 function LuaXParser.from_file_content(str,src) return LuaXParser():set_text(str):set_sourceinfo(src or "Unknown file string"):handle_variables_prepend_text():auto_set_components() end
