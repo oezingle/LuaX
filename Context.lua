@@ -19,9 +19,9 @@ local class=require"lib_LuaX._dep.lib.30log"
 ---@param default table
 local Context=class"Context"
 function Context:init(default) 
-self.default=default or {}
+self.default=default
 self.Provider=function (props) return self:GenericProvider(props) end end
-function Context:GenericProvider(props) props.__luax_internal.context[self]=props.value or self.default
+function Context:GenericProvider(props) props.__luax_internal.context[self]=props.value
 return props.children end
 ---@generic T
 ---@param default T?
@@ -31,5 +31,7 @@ function Context.create(default) return Context(default) end
 function Context.inherit(caller) if  not caller then return {} end
 ---@diagnostic disable-next-line:undefined-field
 local inherit=caller.props.__luax_internal.context
-return setmetatable({},{["__index"] = inherit}) end
+local new={}
+for k,v in pairs(inherit) do new[k]=v end
+return new end
 return Context

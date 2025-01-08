@@ -92,7 +92,7 @@ node=VirtualElement.create_element(element.type)
 container:insert_child_by_key(virtual_key,node) end
 
 node:set_props(element.props)
-element=ElementNode.inherit_props(element,{["__luax_internal"] = {["renderer"] = self,["container"] = container,["context"] = Context.inherit(caller)}})
+element.props.__luax_internal={["renderer"] = self,["container"] = container,["context"] = Context.inherit(caller)}
 local render_key=key_add(key,2)
 
 node:set_on_change(function () 
@@ -115,7 +115,7 @@ current_children={} end
 local size=max( # current_children, # element)
 for i,child in ipairs_with_nil(element,size) do local newkey=key_add(key,i)
 self:render_keyed_child(child,container,newkey,caller) end elseif type(element.type) == "function" then self:render_function_component(element,container,key,caller) else local component_type=type(element.type)
-error(string.format("Cannot render component of type '%s' (rendered by %s)",component_type,get_element_name(container))) end
+error(string.format("Cannot render component of type '%s' (rendered by %s)",component_type,caller and get_element_name(caller) or get_element_name(container))) end
 
 
 self.workloop:start() end
