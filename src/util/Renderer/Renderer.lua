@@ -81,7 +81,7 @@ function Renderer:render_native_component(component, container, key, caller)
 
     -- set props
     for prop, value in pairs(component.props) do
-        if prop ~= "children" and not table_equals(value, node:get_prop(prop)) then
+        if prop ~= "children" and not table_equals(value, node:get_prop(prop), 2) then
             node:set_prop_safe(prop, value)
         end
     end
@@ -148,13 +148,11 @@ function Renderer:render_function_component(element, container, key, caller)
 
     node:set_props(element.props)
     -- link hidden props after to save time
-    element = ElementNode.inherit_props(element, {
-        __luax_internal = {
-            renderer = self,
-            container = container,
-            context = Context.inherit(caller)
-        }
-    })
+    element.props.__luax_internal = {
+        renderer = self,
+        container = container,
+        context = Context.inherit(caller)
+    }
 
     local render_key = key_add(key, 2)
 
@@ -216,7 +214,7 @@ function Renderer:render_keyed_child(element, container, key, caller)
         error(string.format(
             "Cannot render component of type '%s' (rendered by %s)",
             component_type,
-            get_element_name(container)
+            caller and get_element_name(caller) or get_element_name(container)
         ))
     end
 

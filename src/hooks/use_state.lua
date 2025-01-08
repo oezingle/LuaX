@@ -39,7 +39,7 @@ local function use_state (default)
 
         -- Functions cannot be accurately checked, so assume they've changed.
         -- Note that passing a function requires set_value(function () return function () ... end end)
-        if type(new_value) == "function" or not table_equals(value, new_value) then
+        if type(new_value) == "function" or not table_equals(value, new_value, 2) then
             -- modify the value we compare against
             value = new_value
 

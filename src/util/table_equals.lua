@@ -19,10 +19,11 @@ end
 ---@param level number? to what degree objects should be checked for equality:
 --- - 0 - don't delve into tables or userdata metatables. ignore functions, threads
 --- - 1 - ignore functions, threads
---- - 2 - error for function / thread / userdata values that cannot be checked
+--- - 2 - return false for functions, threads
+--- - 3 - error for function / thread / userdata values that cannot be checked
 ---@param traversed table<any, any[]>? Internally used to track objects that are accounted for
 local function any_equals(a, b, level, traversed)
-    level = level or 2
+    level = level or 3
 
     traversed = traversed or {}
 
@@ -54,11 +55,8 @@ local function any_equals(a, b, level, traversed)
             Lua 5.1 Bytecode:
                 https://usermanual.wiki/Pdf/A20No20Frill20s20Intro20To20Lua205120VM20Instructions.560214948
         ]]
-        return level < 2 or
-            -- functions provided by a generator or load() will be equal because
-            -- debug info is equivalent (eg, line defined, last line defined)
-            string.dump(a, true) == string.dump(b, true) or
-            error("Cannot determine equality of function data")
+        return level < 2 or 
+            (level == 3 and error("Cannot determine equality of function data"))
     end
 
     if t == "userdata" then
@@ -101,7 +99,8 @@ local function any_equals(a, b, level, traversed)
     end
 
     if t == "thread" then
-        return level < 2 or error("Cannot determine equality of thread data")
+        return level < 2 or 
+            (level == 3 and error("Cannot determine equality of thread data"))
     end
 
     if t == "table" then

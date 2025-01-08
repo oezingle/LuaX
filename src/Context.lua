@@ -39,9 +39,11 @@ function Context.inherit (caller)
     ---@diagnostic disable-next-line:undefined-field
     local inherit = caller.props.__luax_internal.context
 
-    return setmetatable({}, {
-        __index = inherit
-    })
+    local new = {}
+    for k, v in pairs(inherit) do
+        new[k] = v
+    end
+    return new
 end
 
 return Context

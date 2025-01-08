@@ -182,7 +182,8 @@ describe("Renderer", function()
         ---@type LuaX.Hooks.UseState.Dispatch<boolean>
         local set_parent_hook = function() end
 
-        local state_values = {}
+        local parent_state_values = {}
+        local child_state_values = {}
 
         local Child = LuaX(function(props)
             local hook, set_hook = use_state(false)
@@ -190,7 +191,8 @@ describe("Renderer", function()
             --- Doing some fucked shit
             set_child_hook = set_hook
 
-            table.insert(state_values, props.state)
+            table.insert(parent_state_values, props.state)
+            table.insert(child_state_values, hook)
 
             return [[
                 <>
@@ -220,10 +222,10 @@ describe("Renderer", function()
         set_child_hook(true)
         set_child_hook(false)
 
-        assert.False(state_values[1])
+        assert.False(parent_state_values[1])
 
-        assert.True(state_values[2])
-        assert.True(state_values[3])
-        assert.True(state_values[4])
+        assert.True(parent_state_values[2])
+        assert.True(parent_state_values[3])
+        assert.True(parent_state_values[4])
     end)
 end)

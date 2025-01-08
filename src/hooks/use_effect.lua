@@ -15,7 +15,7 @@ local function use_effect(callback, deps)
     local last_value = hookstate:get_value(index) or {} --[[@as LuaX.Hooks.UseEffect.State]]
     local last_deps = last_value.deps
 
-    if not deps or not table_equals(deps, last_deps) then
+    if not deps or not table_equals(deps, last_deps, 2) then
         local new_value = { deps = deps }
         -- new_value.hook_name = "use_effect"
 

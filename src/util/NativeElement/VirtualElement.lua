@@ -57,9 +57,9 @@ function VirtualElement.get_root()
 end
 
 function VirtualElement:set_props(props)
-    -- Identical table references would make searching for prop changes impossible!
-    -- Lucikly this RARELY happens in real-world scenarios
-    if table_equals(props, self.props) and props ~= self.props then
+    -- Identical table references would make searching for prop changes impossible.
+    -- Lucikly this rarely happens in real-world scenarios
+    if table_equals(props, self.props, 2) and props ~= self.props then
         -- no change to props, no rerender, ignore!
         return
     end
