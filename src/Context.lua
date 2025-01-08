@@ -9,7 +9,7 @@ local Context = class("Context")
 
 ---@param default table
 function Context:init(default)
-    self.default = default or {}
+    self.default = default
 
     -- create_element doesn't know what self is.
     self.Provider = function (props)
@@ -18,7 +18,7 @@ function Context:init(default)
 end
 
 function Context:GenericProvider (props)
-    props.__luax_internal.context[self] = props.value or self.default
+    props.__luax_internal.context[self] = props.value
 
     return props.children
 end
