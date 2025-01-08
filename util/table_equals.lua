@@ -15,8 +15,9 @@ return t == "nil" or t == "string" or t == "number" or t == "boolean" end
 
 
 
+
 ---@param traversed table<any, any[]>? Internally used to track objects that are accounted for
-local function any_equals(a,b,level,traversed) level=level or 2
+local function any_equals(a,b,level,traversed) level=level or 3
 
 traversed=traversed or {}
 do local traversed_a=traversed[a]
@@ -27,9 +28,7 @@ if a == b then return true end
 local t=type(a)
 if t ~= type(b) then return false end
 if t == "function" then 
-
-
-return level < 2 or string.dump(a,true) == string.dump(b,true) or error"Cannot determine equality of function data" end
+return level < 2 or (level == 3 and error"Cannot determine equality of function data") end
 if t == "userdata" then if level < 1 then return true end
 if  not any_equals(getmetatable(a),getmetatable(b),nil,traversed) then return false end
 
@@ -39,7 +38,7 @@ if  not any_equals(value_a,value_b,nil,traversed) then return false end end else
 for i,value_a in ipairs(a) do local value_b=b[i]
 if  not any_equals(value_a,value_b,nil,traversed) then return false end end end
 return true end
-if t == "thread" then return level < 2 or error"Cannot determine equality of thread data" end
+if t == "thread" then return level < 2 or (level == 3 and error"Cannot determine equality of thread data") end
 if t == "table" then if level < 1 then return true end
 traversed[a]=traversed[a] or {}
 traversed[a][b]=true

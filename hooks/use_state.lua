@@ -30,7 +30,7 @@ local setter=function (cb_or_new_value) local new_value=nil
 if type(cb_or_new_value) == "function" then new_value=cb_or_new_value(value) else new_value=cb_or_new_value end
 
 
-if type(new_value) == "function" or  not table_equals(value,new_value) then 
+if type(new_value) == "function" or  not table_equals(value,new_value,2) then 
 value=new_value
 hookstate:set_value(index,new_value) end end
 hookstate:increment()

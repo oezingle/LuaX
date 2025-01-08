@@ -22,7 +22,7 @@ local index=hookstate:get_index()
 
 local last_value=hookstate:get_value(index) or {}
 local last_deps=last_value.deps
-if  not deps or  not table_equals(deps,last_deps) then 
+if  not deps or  not table_equals(deps,last_deps,2) then 
 
 local new_value={["deps"] = deps}
 hookstate:set_value_silent(index,new_value)

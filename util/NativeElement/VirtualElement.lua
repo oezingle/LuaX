@@ -44,7 +44,7 @@ function VirtualElement.create_element(type) return VirtualElement(type) end
 function VirtualElement.get_root() error"VirtualElements exist to host non-native components, and therefore cannot be used as root elements" end
 function VirtualElement:set_props(props) 
 
-if table_equals(props,self.props) and props ~= self.props then 
+if table_equals(props,self.props,2) and props ~= self.props then 
 return  end
 self.props=props
 self.new_props=true end

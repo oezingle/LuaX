@@ -60,7 +60,7 @@ local node=nil
 if can_modify then node=existing_child else if existing_child then container:delete_children_by_key(key) end
 node=create_native_element(component,container) end
 
-for prop,value in pairs(component.props) do if prop ~= "children" and  not table_equals(value,node:get_prop(prop)) then node:set_prop_safe(prop,value) end end
+for prop,value in pairs(component.props) do if prop ~= "children" and  not table_equals(value,node:get_prop(prop),2) then node:set_prop_safe(prop,value) end end
 
 
 
