@@ -7,6 +7,8 @@ local traceback = require("src.util.debug.traceback")
 
 local get_component_name = require("src.util.Renderer.helper.get_component_name")
 
+local this_file = (...)
+
 ---@alias LuaX.ComponentInstance.ChangeHandler fun(element: LuaX.ElementNode | nil)
 
 ---@class LuaX.ComponentInstance : Log.BaseFunctions
@@ -75,10 +77,14 @@ function FunctionComponentInstance:render(props)
     HookState.global.set(last_hookstate)
 
     if not ok then
-        local err = res
-        if err ~= ABORT_CURRENT_RENDER then        
-            -- TODO because we have traceback we should tune the error message.
-            err = "While rendering " .. self.friendly_name ..  ": " .. err
+        local err = res --[[ @as string ]]
+        -- even though err is types as a string, we can ignore that ABORT_CURRENT_RENDER isn't.
+        if err ~= ABORT_CURRENT_RENDER then
+            -- match everything up to 2 lines before the function. Inline, xpcall, then component.
+            err = err:match("(.*)[\n\r].-[\n\r].-[\n\r].-in function '" .. this_file .. ".-'" )
+            err = err:gsub("in upvalue 'chunk'", string.format("in function '%s'", self.friendly_name:match("^%S+")))
+
+            err = "While rendering " .. self.friendly_name ..  ":\n" .. err
 
             error(err)
         end
