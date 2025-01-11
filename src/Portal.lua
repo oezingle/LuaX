@@ -42,20 +42,20 @@ end
 -- - portal to non-root NativeElement on different renderer
 
 local rtfm = [[
-    Portal is a class that must be instanciated before use:
-        local MyPortal = Portal()
+Portal is a class that must be instanciated before use:
+    local MyPortal = Portal()
 
-        return (
-            <>
-                <MyPortal.Outlet />
+    return (
+        <>
+            <MyPortal.Outlet />
 
-                <MyPortal.Inlet>
-                    Hello World!
-                </MyPortal.Inlet>
-            </>
-        )
+            <MyPortal.Inlet>
+                Hello World!
+            </MyPortal.Inlet>
+        </>
+    )
 
-    consider reading doc/Portals.md
+consider reading doc/Portals.md
 ]]
 Portal.Inlet = function () error(rtfm) end
 Portal.Outlet = Portal.Inlet
@@ -89,7 +89,12 @@ function Portal:unobserve (cb)
 end
 
 function Portal:update ()
-    for cb in pairs(self.observers) do
+    local cbs = {}
+    for cb in pairs(self.observers) do 
+        cbs[cb] = true
+    end 
+
+    for cb in pairs(cbs) do
         cb()
     end
 end
