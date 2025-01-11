@@ -1,7 +1,7 @@
 #!/usr/bin/lua
 
 local argparse      = require("lib.argparse")
-local basename = require("src.util.polyfill.path.basename")
+local dirname = require("src.util.polyfill.path.dirname")
 local to_luapath = require ("src.cmd.to_luapath")
 local transpile = require("src.cmd.transpile")
 
@@ -56,8 +56,8 @@ local function cmd()
 
     if args.auto_remap then
         table.insert(remap, {
-            from = to_luapath(basename(args.input)),
-            to = to_luapath(basename(args.output))
+            from = to_luapath(dirname(args.input)),
+            to = to_luapath(dirname(args.output))
         })
     end
 
