@@ -18,6 +18,9 @@ do
     require_path = (...)
 end
 
+---@class LuaX.Language.Node.Comment
+---@field type "comment"
+
 ---@class LuaX.Language.Node.Literal
 ---@field type "literal"
 ---@field value string
@@ -28,15 +31,15 @@ end
 ---@field props LuaX.Props
 ---@field children LuaX.Language.Node[]
 
----@alias LuaX.Language.Node LuaX.Language.Node.Literal | LuaX.Language.Node.Element
+---@alias LuaX.Language.Node LuaX.Language.Node.Literal | LuaX.Language.Node.Element | LuaX.Language.Node.Comment
 
 ---@class LuaX.Parser.V3 : Log.BaseFunctions
 ---@field protected text string
 ---@field protected char integer
 ---
 ---@field protected indent string
----@field protected default_indent string
 ---
+---@field protected current_block_start integer?
 ---
 ---@field components { names: table<string, true>, mode: "global"|"local" } a table of component names
 ---
@@ -154,7 +157,11 @@ end
 ---@param msg string
 ---@return string
 function LuaXParser:error(msg)
-    local fmt = "LuaX Parser - In %s at %d:%d: %s"
+    local fmt = "LuaX Parser - In %s at %d:%d: %s\n\n%s"
+
+    -- TODO improve this.
+    local pos = self:get_cursor()
+    local context_line = self.text:sub(pos - 20, pos) .. "(HERE)" .. self.text:sub(pos, pos + 20)
 
     local chars_away = self:get_cursor()
     local n_line = 0
@@ -171,7 +178,7 @@ function LuaXParser:error(msg)
     end
 
     --- Cast to string here so technically any value can be thrown.
-    return string.format(fmt, self.src, n_line, n_col, tostring(msg))
+    return string.format(fmt, self.src, n_line, n_col, tostring(msg), context_line)
 end
 
 --- Get the next token. Returns the token string, or nil if no token is found
@@ -209,7 +216,17 @@ function LuaXParser:get_next_token()
     return nil
 end
 
---#region cursor manipulation
+function LuaXParser:get_indent()
+    -- get default indent
+    local default_slice = self.text:sub(1, self:get_cursor())
+    local default_indent = default_slice:match("[\n\r](%s*).-$") or ""
+
+    local indent = self:text_match(">[\n\r](%s*)%S") or ""
+
+    return indent:gsub("^" .. default_indent, "")
+end
+
+--#region cursor
 do
     ---@protected
     function LuaXParser:move_to_next_token()
@@ -259,13 +276,14 @@ do
     function LuaXParser:move_cursor(chars)
         self:set_cursor(self:get_cursor() + chars)
     end
+
+    function LuaXParser:is_at_end()
+        return self:get_cursor() == #self.text
+    end
 end
 --#endregion
 
 
-function LuaXParser:is_at_end()
-    return self:get_cursor() == #self.text
-end
 
 --#region string helpers
 do
@@ -322,6 +340,8 @@ do
 end
 --#endregion
 
+
+
 --#region variable handling
 do
     --- Set the way the parser handles variables. value must be valid lua
@@ -362,7 +382,8 @@ do
                 until not src:match("LuaXParser%.lua")
             end
 
-            warn((src and string.format("In %s: ", src) or "") .. string.format("LuaXParser: Variable %s not set: no on_set_variable", name))
+            warn((src and string.format("In %s: ", src) or "") ..
+                string.format("LuaXParser: Variable %s not set: no on_set_variable", name))
         end
     end
 
@@ -377,7 +398,7 @@ do
                 if already_set[name] == value then
                     return
                 else
-                    error("Attempt to set variable that is already set")
+                    error("Attempt to modify variable that is already set")
                 end
             end
 
@@ -385,6 +406,11 @@ do
 
             ---@diagnostic disable-next-line:invisible
             parser.text = insert .. parser.text
+
+            --- TODO if self.current_block_start ~= nil then self.current_block_start = self.current_block_start + #insert
+            if self.current_block_start then
+                self.current_block_start = self.current_block_start + #insert
+            end
 
             parser:move_cursor(#insert)
         end)
@@ -405,25 +431,13 @@ do
 end
 --#endregion
 
-function LuaXParser:get_default_indent()
-    local slice = self.text:sub(1, self:get_cursor())
-
-    return slice:match("[\n\r](%s*).-$") or ""
-end
-
-function LuaXParser:get_indent()
-    local indent = self:text_match(">[\n\r](%s*)%S") or ""
-
-    return indent:gsub("^" .. self.default_indent, "")
-end
 
 --#region parsing
 do
     --- Parse a child that is a literal - either a lua block (in {}) or just text
     ---@protected
-    ---@param depth integer
     ---@return LuaX.Language.Node[]
-    function LuaXParser:parse_literal(depth)
+    function LuaXParser:parse_literal()
         local tokenstack = TokenStack(self.text)
             :set_pos(self:get_cursor())
             :set_requires_literal(true)
@@ -449,6 +463,11 @@ do
                 local current = self.text:sub(pos, pos)
 
                 if current == "<" then
+                    -- found tag start
+                    break
+                elseif current == "-" and self.text:sub(pos):match("%-%-+>") then
+                    -- This pattern is somewhat slow but that's ok, slowness at compile time is ok.
+                    -- found comment end
                     break
                 elseif current == "{" then
                     -- no-op
@@ -473,14 +492,12 @@ do
 
         self:set_cursor(tokenstack:get_pos() - 1)
 
-        local indent_pattern = self.default_indent .. self.indent:rep(depth)
-
         local nodes = {}
 
         for i, slice in ipairs(slices) do
             local value = table.concat(slice.chars, "")
-                :gsub("\n" .. indent_pattern, "\n")
-                :gsub("^" .. indent_pattern, "")
+                :gsub("\n" .. self.indent, "\n")
+                :gsub("^" .. self.indent, "")
 
             -- TODO clean comments here
 
@@ -494,13 +511,25 @@ do
             -- check if this literal isn't just whitespace
             if not value:match("^%s*$") then
                 if slice.is_luablock then
+                    local on_set_variable = self.on_set_variable and function(name, value)
+                        -- hardwire parser argument to self, to prepend in the correct text location.
+                        return self.on_set_variable(name, value, self)
+                    end
+
                     -- parse internal LuaX expressions if they are found
                     value = LuaXParser()
                         :set_text(value)
                         :set_sourceinfo(self.src .. " subparser")
-                        :set_handle_variables(self.on_set_variable)
+                        :set_handle_variables(on_set_variable)
                         :set_components(self.components.names, self.components.mode)
                         :transpile()
+                elseif value:match("^%s*%-%-") then
+                    -- this is a comment
+
+                    value = {
+                        type = "comment",
+                        value = value
+                    }
                 else
                     value = value.format("%q", value)
                 end
@@ -518,21 +547,19 @@ do
 
     --- Parse text, returning a list of nodes
     ---@protected
-    ---@param depth integer
     ---@return LuaX.Language.Node[]
-    function LuaXParser:parse_text(depth)
+    function LuaXParser:parse_text()
         local nodes = {}
 
         -- stop iterating at </ - which we will only encounter at the end of the
-        -- parent tag. This is because of recursion!
-
-        while not (self:text_match("^%s*</") or self:is_at_end()) do
+        -- parent tag. This is because of the recursion we use.
+        while not (self:text_match("^%s*</") or self:text_match("^%s*%-%-+>") or self:is_at_end()) do
             if self:text_match("^%s*<") then
-                local node = self:parse_tag(depth)
+                local node = self:parse_tag()
 
                 table.insert(nodes, node)
             else
-                local new_nodes = self:parse_literal(depth)
+                local new_nodes = self:parse_literal()
 
                 for _, node in ipairs(new_nodes) do
                     table.insert(nodes, node)
@@ -595,10 +622,8 @@ do
 
     --- Parse text that we know is a LuaX tag
     ---@protected
-    ---@param depth integer
     ---@return LuaX.Language.Node
-    function LuaXParser:parse_tag(depth)
-        self.default_indent = self:get_default_indent()
+    function LuaXParser:parse_tag()
         self.indent = self:get_indent()
 
         self:move_to_pattern_end("^%s*")
@@ -617,22 +642,34 @@ do
             assert(type(tag_name) == "string", "Tag pattern does not capture")
         end
 
-        local props = is_fragment and {} or self:parse_props()
+        local is_comment = tag_name:match("^!%-%-+")
+
+        local is_propsless = is_fragment or is_comment
+        local props = is_propsless and {} or self:parse_props()
 
         local no_children = self:move_to_pattern_end("^%s*/%s*>")
 
-        if not (is_fragment or no_children) then
+        if not (is_propsless or no_children) then
             assert(self:move_to_pattern_end("^%s*>"), self:error("Cannot find end of props"))
         end
 
-        local children = no_children and {} or self:parse_text(depth + 1)
+        local children = no_children and {} or self:parse_text()
 
         if is_fragment then
             assert(self:move_to_pattern_end("^%s*<%s*/%s*>"), self:error("Cannot find fragment end"))
+        elseif is_comment then
+            assert(self:move_to_pattern_end("^%s*%-%-+>"), self:error("Cannot find comment end"))
         else
             local patt = "^%s*<%s*/%s*" .. escape(tag_name) .. "%s*>"
 
             assert(no_children or self:move_to_pattern_end(patt), self:error("Cannot find ending tag"))
+        end
+
+        if is_comment then
+            -- TODO preserve comments?
+            return {
+                type = "comment"
+            }
         end
 
         return {
@@ -645,110 +682,122 @@ do
 end
 --#endregion parsing
 
---- Transpile text that we know is a LuaX tag
-function LuaXParser:transpile_tag()
-    -- save cursor position
-    local cursor_start = self:get_cursor()
 
-    local node = self:parse_tag(0)
+--#region transpilation
+do
+    --- Transpile text that we know is a LuaX tag
+    function LuaXParser:transpile_tag()
+        -- save cursor position
+        self.current_block_start = self:get_cursor()
 
-    local transpiled = node_to_element(
-        node,
-        self.components.names,
-        self.components.mode,
-        self.vars.CREATE_ELEMENT.name
-    )
+        local node = self:parse_tag()
 
-    -- replace from old cursor to new with transpiled node
-    self:text_replace_range_move(cursor_start, self:get_cursor(), transpiled)
+        local transpiled = node_to_element(
+            node,
+            self.components.names,
+            self.components.mode,
+            self.vars.CREATE_ELEMENT.name
+        )
 
-    self:set_required_variables()
+        -- replace from old cursor to new with transpiled node
+        self:text_replace_range_move(self.current_block_start, self:get_cursor(), transpiled)
 
-    return self.text
+        self.current_block_start = nil
+
+        self:set_required_variables()
+
+        return self.text
+    end
+
+    --- Transpile the closest token
+    ---@protected
+    ---@return boolean continue
+    function LuaXParser:transpile_once()
+        local token, captured, _, luax_start = self:get_next_token()
+
+        if not token or not luax_start then
+            return false
+        end
+        captured = captured or ""
+
+        -- move to token start
+        self:move_to_next_token()
+
+        -- replace any start text, move cursor
+        self:text_replace_range_move_c(luax_start - 1, token.replacer .. captured)
+
+        self:transpile_tag()
+
+        local _, luax_end = self:text_find(token.end_pattern)
+
+        if not luax_end then
+            error(self:error("Unable to locate end of block"))
+        end
+        self:text_replace_range_move_c(luax_end, token.end_replacer)
+
+        return true
+    end
+
+    --- Transpile until no more tag tokens can be found
+    function LuaXParser:transpile()
+        if not self.components then
+            warn("Automatically setting parser components")
+
+            self:auto_set_components()
+        end
+
+        while self:transpile_once() do
+        end
+
+        return self.text
+    end
 end
+--#endregion
 
---- Transpile the closest token
----@protected
----@return boolean continue
-function LuaXParser:transpile_once()
-    local token, captured, _, luax_start = self:get_next_token()
 
-    if not token or not luax_start then
-        return false
+--#region constructors
+do
+    ---@param str string
+    ---@param src string?
+    ---@param variables table?
+    function LuaXParser.from_inline_string(str, src, variables)
+        local parser = LuaXParser()
+            :set_text(str)
+            :set_sourceinfo(src or "Unknown inline string")
+
+        if variables then
+            parser:handle_variables_as_table(variables)
+                :auto_set_components()
+        end
+
+        return parser
     end
 
-    captured = captured or ""
-
-    -- move to token start
-    self:move_to_next_token()
-
-    -- replace any start text, move cursor
-    self:text_replace_range_move_c(luax_start - 1, token.replacer .. captured)
-
-    self:transpile_tag()
-
-    local _, luax_end = self:text_find(token.end_pattern)
-
-    if not luax_end then
-        error(self:error("Unable to locate end of block"))
-    end
-    self:text_replace_range_move_c(luax_end, token.end_replacer)
-
-    return true
-end
-
---- Transpile until no more tag tokens can be found
-function LuaXParser:transpile()
-    if not self.components then
-        warn("Automatically setting parser components")
-
-        self:auto_set_components()
-    end
-
-    while self:transpile_once() do
-    end
-
-    return self.text
-end
-
----@param str string
----@param src string?
----@param variables table?
-function LuaXParser.from_inline_string(str, src, variables)
-    local parser = LuaXParser()
-        :set_text(str)
-        :set_sourceinfo(src or "Unknown inline string")
-
-    if variables then
-        parser:handle_variables_as_table(variables)
+    ---@param str string
+    ---@param src string?
+    function LuaXParser.from_file_content(str, src)
+        return LuaXParser()
+            :set_text(str)
+            :set_sourceinfo(src or "Unknown file string")
+            :handle_variables_prepend_text()
             :auto_set_components()
     end
 
-    return parser
-end
+    --- Autoset a parser from a file path
+    ---@param path string
+    function LuaXParser.from_file_path(path)
+        local f = io.open(path)
 
----@param str string
----@param src string?
-function LuaXParser.from_file_content(str, src)
-    return LuaXParser()
-        :set_text(str)
-        :set_sourceinfo(src or "Unknown file string")
-        :handle_variables_prepend_text()
-        :auto_set_components()
-end
+        if not f then
+            error(string.format("Unable to open file %q", path))
+        end
 
---- Autoset a parser from a file path
----@param path string
-function LuaXParser.from_file_path(path)
-    local f = io.open(path)
+        local content = f:read("a")
 
-    if not f then
-        error(string.format("Unable to open file %q", path))
+        return LuaXParser.from_file_content(content, path)
     end
-
-    local content = f:read("a")
-
-    return LuaXParser.from_file_content(content, path)
 end
+--#endregion
+
 
 return LuaXParser

@@ -19,6 +19,8 @@ local Inline = {
     transpile_cache = {},
     assertions = {},
     assert = {},
+
+    original_chunks = setmetatable({}, { __mode = "kv" })
 }
 
 function Inline.assert.can_use_decorator()
@@ -114,7 +116,9 @@ function Inline:cache_get(tag, locals)
         return cached
     end
 
-    local parser = LuaXParser.from_inline_string("return " .. tag, nil, locals)
+    local parser = LuaXParser.from_inline_string("return " .. tag, nil)
+
+    parser:set_components(locals, "local")
 
     local transpiled = parser:transpile()
 
@@ -149,11 +153,6 @@ function Inline.print_locals(locals)
     end
 end
 
--- TODO maybe load() can set custom debug info? in which case, we can create
--- decorator callback, dump it as a template, and then smash in binary-dumped transpile results.
----@protected
-local REQUEST_ORIGINAL_CHUNK = {}
-
 ---@param chunk function
 ---@param stackoffset number?
 ---@return LuaX.FunctionComponent
@@ -180,11 +179,6 @@ function Inline:transpile_decorator(chunk, stackoffset)
     setmetatable(chunk_names, { __index = _G })
 
     local inline_luax = function(...)
-        -- TODO honestly this feels like an evil hack. in practice it's okay, but jeez.
-        if ({ ... })[1] == REQUEST_ORIGINAL_CHUNK then
-            return chunk
-        end
-
         -- get hook & mask on debug ( if any ) to re-insert
         local prev_hook, prev_mask = debug.gethook()
 
@@ -222,13 +216,20 @@ function Inline:transpile_decorator(chunk, stackoffset)
         return node
     end
 
+    -- TODO remove REQUEST_ORIGINAL_CHUNK shit
+    -- Inline.original_chunks = setmetatable({}, { __mode = "kv" })
+    -- Inline.original_chunks[inline_luax] = chunk
+
+    self.original_chunks[inline_luax] = chunk
+
     return inline_luax
 end
+
 
 --- Get the original chunk from a function component that has been inline transpiled
 ---@param fn function
 function Inline:get_original_chunk(fn)
-    return fn(REQUEST_ORIGINAL_CHUNK)
+    return self.original_chunks[fn]
 end
 
 ---@param tag string

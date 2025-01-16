@@ -94,5 +94,4 @@ describe("Inline", function ()
             end)
         end)
     end)
-    
 end)

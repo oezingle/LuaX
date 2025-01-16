@@ -9,7 +9,7 @@ describe("LuaXParser (v3)", function()
         local parser = LuaXParser()
             :set_text(code)
 
-        local node = parser:parse_tag(0)
+        local node = parser:parse_tag()
 
         assert.equal(LuaXParser.vars.FRAGMENT.name, node.name)
         assert.equal(#code + 1, parser:get_cursor())
@@ -21,7 +21,7 @@ describe("LuaXParser (v3)", function()
         local parser = LuaXParser()
             :set_text(code)
 
-        local node = parser:parse_tag(0)
+        local node = parser:parse_tag()
 
         assert.equal("wibox.widget.textbox", node.name)
         assert.equal(#code + 1, parser:get_cursor())
@@ -34,7 +34,7 @@ describe("LuaXParser (v3)", function()
             :set_text(code)
 
 
-        local node = parser:parse_tag(0)
+        local node = parser:parse_tag()
 
         assert.equal("{variable}", node.props.class)
         assert.equal(#code + 1, parser:get_cursor())
@@ -46,7 +46,7 @@ describe("LuaXParser (v3)", function()
         local parser = LuaXParser()
             :set_text(code)
 
-        local node = parser:parse_tag(0)
+        local node = parser:parse_tag()
 
         assert.equal("a-class", node.props.class)
         assert.equal(#code + 1, parser:get_cursor())
@@ -58,7 +58,7 @@ describe("LuaXParser (v3)", function()
         local parser = LuaXParser()
             :set_text(code)
 
-        local node = parser:parse_tag(0)
+        local node = parser:parse_tag()
 
         assert.True(node.props.container)
         assert.equal(#code + 1, parser:get_cursor())
@@ -70,7 +70,7 @@ describe("LuaXParser (v3)", function()
         local parser = LuaXParser()
             :set_text(code)
 
-        local node = parser:parse_tag(0)
+        local node = parser:parse_tag()
 
         assert.equal(0, #node.children)
         assert.equal(#code + 1, parser:get_cursor())
@@ -83,7 +83,7 @@ describe("LuaXParser (v3)", function()
         local parser = LuaXParser()
             :set_text(code)
 
-        local node = parser:parse_tag(0)
+        local node = parser:parse_tag()
 
         assert.equal(0, #node.children)
         assert.equal(#code + 1, parser:get_cursor())
@@ -97,7 +97,7 @@ describe("LuaXParser (v3)", function()
         local parser = LuaXParser()
             :set_text(code)
 
-        local node = parser:parse_tag(0)
+        local node = parser:parse_tag()
 
         assert.equal(0, #node.children)
         assert.equal(LuaXParser.vars.FRAGMENT.name, node.name)
@@ -113,7 +113,7 @@ describe("LuaXParser (v3)", function()
         local parser = LuaXParser()
             :set_text(code)
 
-        local node = parser:parse_tag(0)
+        local node = parser:parse_tag()
 
         assert.equal(0, #node.children)
         assert.equal("Box", node.name)
@@ -130,7 +130,7 @@ describe("LuaXParser (v3)", function()
         local parser = LuaXParser()
             :set_text(code)
 
-        local node = parser:parse_tag(0)
+        local node = parser:parse_tag()
 
         assert.equal(2, #node.children)
         assert.equal(LuaXParser.vars.FRAGMENT.name, node.name)
@@ -150,7 +150,7 @@ describe("LuaXParser (v3)", function()
             :set_text(code)
         parser.indent = "    "
 
-        local node = parser:parse_tag(0)
+        local node = parser:parse_tag()
 
         assert.equal(3, #node.children)
 
@@ -197,7 +197,7 @@ describe("LuaXParser (v3)", function()
 
         parser.indent = "    "
 
-        local node = parser:parse_tag(3)
+        local node = parser:parse_tag()
 
         assert.Truthy(node.props['signal::button::press'])
 
@@ -211,7 +211,7 @@ describe("LuaXParser (v3)", function()
         local parser = LuaXParser()
             :set_text(code)
 
-        local node = parser:parse_tag(0)
+        local node = parser:parse_tag()
 
         assert.equal('message', node.children[1])
     end)
@@ -222,7 +222,7 @@ describe("LuaXParser (v3)", function()
         local parser = LuaXParser()
             :set_text(code)
 
-        local node = parser:parse_tag(0)
+        local node = parser:parse_tag()
 
         assert.equal("\"Message!\"", node.children[1])
     end)
@@ -319,15 +319,125 @@ describe("LuaXParser (v3)", function()
         assert.equal("a string!", element.props.children[1].props.value)
     end)
 
+    it("transpiles files with sub-fragments", function()
+        local code = [[
+            local LuaX = require("src.init")
+            local map = require("src.util.polyfill.list.map")
+
+            local Component = LuaX(function (props)
+                local strings = { "Hello", "World", "!" }
+
+                return (
+                    <>
+                        {map(strings, function (str)
+                            return (
+                                <>
+                                    <text>{str}</text>
+                                </>
+                            )
+                        end)}
+                    </>
+                )
+            end)
+        ]]
+        local parser = LuaXParser.from_file_content(code)
+
+        local transpiled = parser:transpile()
+
+        local _, load_err = load(transpiled)
+
+        assert.Nil(load_err)
+    end)
+
+    it("parses HTML-style comments", function ()
+        local code = [[
+            <>
+                <!-- I am just a comment! -->
+            </>
+        ]]
+        
+        local parser = LuaXParser(code)
+        
+        ---@diagnostic disable-next-line:invisible
+        local node = parser:parse_tag()
+        
+        assert.equal(1, #node.children)
+        assert.equal("comment", node.children[1].type)    
+    end)
+
+    it("parses lua-style single-line comments", function ()
+        local code = [[
+            <>
+                -- I am just a comment!
+            </>
+        ]]
+        
+        local parser = LuaXParser(code)
+        
+        local node = parser:parse_tag()
+        
+        assert.equal(1, #node.children)
+        assert.equal("comment", node.children[1].type)    
+    end)
+
+    it("parses lua-style multi-line comments", function ()
+        local code = [[
+            <>
+                --[[ I am just a comment! ]] .. "]]" .. [[
+            </>
+        ]]
+        
+        local parser = LuaXParser(code)
+        
+        local node = parser:parse_tag()
+        
+        assert.equal(1, #node.children)
+        assert.equal("comment", node.children[1].type)    
+    end)
+
+    
+    it("transpiles HTML-style comments", function ()
+        local code = [[
+            <!-- I am just a comment! -->
+        ]]
+        
+        local parser = LuaXParser(code)
+        
+        local transpiled = parser:transpile_tag()
+        assert.truthy(transpiled:match("^%s*$"))
+    end)
+
+    it("transpiles nested HTML-style comments", function ()
+        local code = [[
+            <!-- I am just a comment!
+                <!-- But so am I! -->
+            -->
+        ]]
+        
+        local parser = LuaXParser(code)
+        
+        local transpiled = parser:transpile_tag()
+        assert.truthy(transpiled:match("^%s*$"))
+    end)
+
+    it("doesn't have an indent issue", function ()
+        local code = [[
+            <>
+                <>
+                    I am nested!
+                </>
+            </>
+        ]]
+
+        local parser = LuaXParser(code)
+
+        local node = parser:parse_tag()
+        assert.equal("\"I am nested!\"", node.children[1].children[1])
+    end)
+
     -- TODO FIXME - spec for parsing comment literals - eg {--[[ Hello World! ]]}
 
     do
-        -- local function read_file(path)
-        --     local f = io.open(path)
-        --     assert(f, "no file handle")
-        --     return f:read("a")
-        -- end
-
         local components = {
             -- TODO these files were valid af!
             -- Button = read_file("awesome/Button.luax"),
