@@ -11,7 +11,7 @@ package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep)
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "hooks.")
 require(library_root .. "_shim") end
-local table_equals=require"lib_LuaX.util.table_equals"
+local deep_equals=require"lib_LuaX.util.deep_equals"
 ---@alias LuaX.Hooks.UseEffect.State { deps: any[]?, on_remove: function? }
 ---@alias LuaX.Hooks.UseEffect fun(callback: (fun(): function?), deps: any[]?)
 ---@param callback fun(): function? An effect function that optionally returns an unmount handler
@@ -22,7 +22,7 @@ local index=hookstate:get_index()
 
 local last_value=hookstate:get_value(index) or {}
 local last_deps=last_value.deps
-if  not deps or  not table_equals(deps,last_deps,2) then 
+if  not deps or  not deep_equals(deps,last_deps,2) then 
 
 local new_value={["deps"] = deps}
 hookstate:set_value_silent(index,new_value)

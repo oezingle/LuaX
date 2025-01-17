@@ -15,12 +15,12 @@ require(library_root .. "_shim") end
 local LuaXParser=require"lib_LuaX.util.parser.LuaXParser"
 local traceback=require"lib_LuaX.util.debug.traceback"
 local get_locals=require"lib_LuaX.util.debug.get_locals"
-local get_function_location=require"lib_LuaX.util.Renderer.helper.get_function_location"
-local get_component_name=require"lib_LuaX.util.Renderer.helper.get_component_name"
+local get_function_location=require"lib_LuaX.util.debug.get_function_location"
+local get_component_name=require"lib_LuaX.util.debug.get_component_name"
 local Fragment=require"lib_LuaX.components.Fragment"
 ---@class LuaX.Parser.Inline
 local create_element=require"lib_LuaX.create_element"
-local Inline={["debuginfo"] = {},["transpile_cache"] = {},["assertions"] = {},["assert"] = {}}
+local Inline={["debuginfo"] = {},["transpile_cache"] = {},["assertions"] = {},["assert"] = {},["original_chunks"] = setmetatable({},{["__mode"] = "kv"})}
 function Inline.assert.can_use_decorator() assert(debug.getinfo,"Cannot use inline parser decorator: debug.getinfo does not exist")
 local function test_function() return debug.getinfo(1,"f") end
 local info=test_function()
@@ -57,7 +57,8 @@ error(err) end end
 function Inline:cache_get(tag,locals) if  not tag then return "return nil" end
 local cached=self:cache_find(tag)
 if cached then return cached end
-local parser=LuaXParser.from_inline_string("return " .. tag,nil,locals)
+local parser=LuaXParser.from_inline_string("return " .. tag,nil)
+parser:set_components(locals,"local")
 local transpiled=parser:transpile()
 self:cache_set(tag,transpiled)
 return transpiled end
@@ -69,13 +70,9 @@ function Inline:cache_find(tag) return self.transpile_cache[tag] end
 function Inline:cache_clear(tag) if tag then self.transpile_cache[tag]=nil else self.transpile_cache={} end end
 
 function Inline.print_locals(locals) for k,v in pairs(locals) do print(k,v) end end
-
-
----@protected
 ---@param chunk function
 ---@param stackoffset number?
 ---@return LuaX.FunctionComponent
-local REQUEST_ORIGINAL_CHUNK={}
 function Inline:transpile_decorator(chunk,stackoffset) self:lazy_assert(Inline.assert.can_use_decorator)
 self:lazy_assert(Inline.assert.can_get_local)
 local stackoffset=stackoffset or 0
@@ -89,9 +86,10 @@ chunk_locals[LuaXParser.vars.CREATE_ELEMENT.name]=create_element
 chunk_locals[LuaXParser.vars.FRAGMENT.name]=Fragment
 setmetatable(chunk_locals,{["__index"] = _G})
 setmetatable(chunk_names,{["__index"] = _G})
-local inline_luax=function (...) 
-if ({...})[1] == REQUEST_ORIGINAL_CHUNK then return chunk end
 
+
+
+local inline_luax=function (...) 
 local prev_hook,prev_mask=debug.gethook()
 
 local inner_locals,inner_names
@@ -108,10 +106,11 @@ local element_str=self:cache_get(tag,inner_names)
 local chunk_src=get_function_location(chunk)
 local node=self.easy_load(element_str,inner_locals,chunk_src)
 return node end
+self.original_chunks[inline_luax]=chunk
 return inline_luax end
 
 ---@param fn function
-function Inline:get_original_chunk(fn) return fn(REQUEST_ORIGINAL_CHUNK) end
+function Inline:get_original_chunk(fn) return self.original_chunks[fn] end
 ---@param tag string
 ---@param stackoffset number?
 ---@return LuaX.ElementNode

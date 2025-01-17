@@ -31,7 +31,7 @@ local FunctionComponentInstance=require"lib_LuaX.util.FunctionComponentInstance"
 ---@field protected new_props boolean
 
 ---@field render function()
-local table_equals=require"lib_LuaX.util.table_equals"
+local deep_equals=require"lib_LuaX.util.deep_equals"
 local VirtualElement=class"LuaX.VirtualElement"
 function VirtualElement:init(component) if type(component) == "function" then self.instance=FunctionComponentInstance(component)
 self.type=component else self.instance=component end end
@@ -44,7 +44,7 @@ function VirtualElement.create_element(type) return VirtualElement(type) end
 function VirtualElement.get_root() error"VirtualElements exist to host non-native components, and therefore cannot be used as root elements" end
 function VirtualElement:set_props(props) 
 
-if table_equals(props,self.props,2) and props ~= self.props then 
+if deep_equals(props,self.props,2) and props ~= self.props then 
 return  end
 self.props=props
 self.new_props=true end

@@ -11,7 +11,7 @@ package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep)
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "hooks.")
 require(library_root .. "_shim") end
-local table_equals=require"lib_LuaX.util.table_equals"
+local deep_equals=require"lib_LuaX.util.deep_equals"
 ---@alias LuaX.Hooks.UseState.Dispatch<R> fun(new_value: R | (fun(old: R): R))
 ---@generic T
 ---@alias LuaX.Hooks.UseState fun(default?: T): T, fun(new_value: LuaX.Hooks.UseState.Dispatch<T>)
@@ -30,7 +30,7 @@ local setter=function (cb_or_new_value) local new_value=nil
 if type(cb_or_new_value) == "function" then new_value=cb_or_new_value(value) else new_value=cb_or_new_value end
 
 
-if type(new_value) == "function" or  not table_equals(value,new_value,2) then 
+if type(new_value) == "function" or  not deep_equals(value,new_value,2) then 
 value=new_value
 hookstate:set_value(index,new_value) end end
 hookstate:increment()

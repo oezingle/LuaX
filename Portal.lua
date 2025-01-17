@@ -44,7 +44,7 @@ function Portal:unique() return math.random(0xFFFF) end
 
 
 
-local rtfm="    Portal is a class that must be instanciated before use:\n        local MyPortal = Portal()\n\n        return (\n            <>\n                <MyPortal.Outlet />\n\n                <MyPortal.Inlet>\n                    Hello World!\n                </MyPortal.Inlet>\n            </>\n        )\n\n    consider reading doc/Portals.md\n"
+local rtfm="Portal is a class that must be instanciated before use:\n    local MyPortal = Portal()\n\n    return (\n        <>\n            <MyPortal.Outlet />\n\n            <MyPortal.Inlet>\n                Hello World!\n            </MyPortal.Inlet>\n        </>\n    )\n\nconsider reading doc/Portals.md\n"
 Portal.Inlet=function () error(rtfm) end
 Portal.Outlet=Portal.Inlet
 function Portal:init(name) self.name=name
@@ -57,7 +57,9 @@ self.Provider=function (props) return self:GenericProvider(props) end end
 function Portal:observe(cb) self.observers[cb]=true end
 ---@param cb function
 function Portal:unobserve(cb) self.observers[cb]=nil end
-function Portal:update() for cb in pairs(self.observers) do cb() end end
+function Portal:update() local cbs={}
+for cb in pairs(self.observers) do cbs[cb]=true end
+for cb in pairs(cbs) do cb() end end
 ---@param uid LuaX.Portal.UID
 ---@param child LuaX.ElementNode | LuaX.ElementNode[]
 function Portal:add_child(uid,child) for _,existing in ipairs(self.children) do 

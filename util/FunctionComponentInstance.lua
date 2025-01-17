@@ -16,6 +16,7 @@ local HookState=require"lib_LuaX.util.HookState"
 local ipairs_with_nil=require"lib_LuaX.util.ipairs_with_nil"
 local log=require"lib_LuaX._dep.lib.log"
 local traceback=require"lib_LuaX.util.debug.traceback"
+local get_component_name=require"lib_LuaX.util.debug.get_component_name"
 ---@alias LuaX.ComponentInstance.ChangeHandler fun(element: LuaX.ElementNode | nil)
 ---@class LuaX.ComponentInstance : Log.BaseFunctions
 ---@field protected change_handler LuaX.ComponentInstance.ChangeHandler
@@ -33,7 +34,7 @@ local traceback=require"lib_LuaX.util.debug.traceback"
 
 ---@field set_on_change fun(self: self, cb: LuaX.ComponentInstance.ChangeHandler)
 ---@operator call: LuaX.FunctionComponentInstance
-local get_component_name=require"lib_LuaX.util.Renderer.helper.get_component_name"
+local this_file=(...)
 local FunctionComponentInstance=class"FunctionComponentInstance"
 local ABORT_CURRENT_RENDER={}
 function FunctionComponentInstance:init(component) self.friendly_name=get_component_name(component)
@@ -57,9 +58,13 @@ local last_hookstate=HookState.global.set(self.hookstate)
 local ok,res=xpcall(component,traceback,props)
 _G.LuaX._context=last_context
 HookState.global.set(last_hookstate)
-if  not ok then local err=res
+if  not ok then 
+
+local err=res
 if err ~= ABORT_CURRENT_RENDER then 
-err="While rendering " .. self.friendly_name .. ": " .. err
+err=err:match("(.*)[\n\13].-[\n\13].-[\n\13].-in function '" .. this_file .. ".-'")
+err=err:gsub("in upvalue 'chunk'",string.format("in function '%s'",self.friendly_name:match"^%S+"))
+err="While rendering " .. self.friendly_name .. ":\n" .. err
 error(err) end
 return false,nil else log.trace(string.format("render %s end. rerender=%s",self.friendly_name,self.rerender and "true" or "false"))
 local element=res

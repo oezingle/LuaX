@@ -12,7 +12,7 @@ folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "cmd.")
 require(library_root .. "_shim") end
 local argparse=require"lib_LuaX._dep.lib.argparse"
-local basename=require"lib_LuaX.util.polyfill.path.basename"
+local dirname=require"lib_LuaX.util.polyfill.path.dirname"
 local to_luapath=require"lib_LuaX.cmd.to_luapath"
 local transpile=require"lib_LuaX.cmd.transpile"
 local function cmd() local parser=argparse"LuaX"
@@ -28,7 +28,7 @@ os.exit(1) end
 args.recursive=depth end else args.recursive=false end
 local remap={}
 for _,pair in ipairs(args.remap) do table.insert(remap,{["from"] = pair[1],["to"] = pair[2]}) end
-if args.auto_remap then table.insert(remap,{["from"] = to_luapath(basename(args.input)),["to"] = to_luapath(basename(args.output))}) end
+if args.auto_remap then table.insert(remap,{["from"] = to_luapath(dirname(args.input)),["to"] = to_luapath(dirname(args.output))}) end
 local transpile_options={["inpath"] = args.input,["outpath"] = args.output,["recursive"] = args.recursive,["remap"] = remap}
 transpile(transpile_options) end
 return cmd

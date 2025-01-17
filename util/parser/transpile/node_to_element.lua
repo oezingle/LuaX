@@ -33,7 +33,8 @@ if is_global then return string.format("%q",name) else return name end end
 ---@param components_mode "local" | "global"
 ---@param create_element string
 ---@return string
-local function transpile_node_to_element(node,components,components_mode,create_element) if node.type == "literal" then return string.format("%q",node.value) end
+local function transpile_node_to_element(node,components,components_mode,create_element) if node.type == "comment" then return "" end
+if node.type == "literal" then return string.format("%q",node.value) end
 if node.type == "element" then ---@type table<string, string|table>
 local props=node.props or {}
 local kids=node.children

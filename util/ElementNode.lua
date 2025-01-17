@@ -31,7 +31,7 @@ local ipairs_with_nil=require"lib_LuaX.util.ipairs_with_nil"
 ---@field create fun(component: LuaX.Component | LuaX.ElementNode.LiteralNode, props: LuaX.Props): self
 ---@field protected LITERAL_NODE LuaX.ElementNode.LiteralNode unique key
 
-local get_function_location=require"lib_LuaX.util.Renderer.helper.get_function_location"
+local get_function_location=require"lib_LuaX.util.debug.get_function_location"
 
 
 ---@param children LuaX.ElementNode.Children
