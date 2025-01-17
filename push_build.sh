@@ -45,6 +45,7 @@ function main () {
     git reset origin/$BRANCH
     git add -A
     git commit -m "$MESSAGE"
+    git branch -m $BRANCH
     git push origin $BRANCH
 }
 
