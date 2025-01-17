@@ -1,0 +1,10 @@
+local load=loadstring or load
+local lua53=_VERSION >= "Lua 5.3"
+local symbolscode="\n\9-- which fields are unary operators\n\9local unary = {\n\9\9unm = true,\n\9\9bnot = true,\n\9\9len = true,\n\9\9lnot = true,\n\9}\n\n\9local symbols = {\n\9\9add = '+',\n\9\9sub = '-',\n\9\9mul = '*',\n\9\9div = '/',\n\9\9mod = '%',\n\9\9pow = '^',\n\9\9unm = '-',\9\9\9-- unary\n\9\9concat = '..',\n\9\9eq = '==',\n\9\9ne = '~=',\n\9\9lt = '<',\n\9\9le = '<=',\n\9\9gt = '>',\n\9\9ge = '>=',\n\9\9land = 'and',\9\9-- non-overloadable\n\9\9lor = 'or',\9\9\9-- non-overloadable\n\9\9len = '#',\9\9\9-- unary\n\9\9lnot = 'not',\9\9-- non-overloadable, unary\n"
+if lua53 then symbolscode=symbolscode .. "\9\9idiv = '//',\9\9-- 5.3\n\9\9band = '&',\9\9\9-- 5.3\n\9\9bor = '|',\9\9\9-- 5.3\n\9\9bxor = '~',\9\9\9-- 5.3\n\9\9shl = '<<',\9\9\9-- 5.3\n\9\9shr = '>>',\9\9\9-- 5.3\n\9\9bnot = '~',\9\9\9-- 5.3, unary\n" end
+symbolscode=symbolscode .. "\9}\n"
+local symbols,unary=assert(load(symbolscode .. " return symbols, unary"))()
+local code=symbolscode .. "\9-- functions for operators\n\9local ops\n\9ops = {\n"
+for name,symbol in pairs(symbols) do if unary[name] then code=code .. "\9\9" .. name .. " = function(a) return " .. symbol .. " a end,\n" else code=code .. "\9\9" .. name .. " = function(a,b) return a " .. symbol .. " b end,\n" end end
+code=code .. "\9\9index = function(t, k) return t[k] end,\n\9\9newindex = function(t, k, v)\n\9\9\9t[k] = v\n\9\9\9return t, k, v\9-- ? should it return anything ?\n\9\9end,\n\9\9call = function(f, ...) return f(...) end,\n\n\9\9symbols = symbols,\n\n\9\9-- special pcall wrapping index, thanks luajit.  thanks.\n\9\9-- while i'm here, multiple indexing, so it bails out nil early, so it's a chained .? operator\n\9\9safeindex = function(t, ...)\n\9\9\9if select('#', ...) == 0 then return t end\n\9\9\9local res, v = pcall(ops.index, t, ...)\n\9\9\9if not res then return nil, v end\n\9\9\9return ops.safeindex(v, select(2, ...))\n\9\9end,\n\9}\n\9return ops\n"
+return assert(load(code))()
