@@ -1,0 +1,15 @@
+local function parser_shim() package.loaded["ext.op"]=require"lib_LuaX._dep.lib.lua-ext.op"
+package.loaded["ext.table"]=require"lib_LuaX._dep.lib.lua-ext.table"
+package.loaded["ext.class"]=require"lib_LuaX._dep.lib.lua-ext.class"
+package.loaded["ext.string"]=require"lib_LuaX._dep.lib.lua-ext.string"
+package.loaded["ext.tolua"]=require"lib_LuaX._dep.lib.lua-ext.tolua"
+package.loaded["ext.assert"]=require"lib_LuaX._dep.lib.lua-ext.assert"
+package.loaded["parser.base.ast"]=require"lib_LuaX._dep.lib.lua-parser.base.ast"
+package.loaded["parser.lua.ast"]=require"lib_LuaX._dep.lib.lua-parser.lua.ast"
+package.loaded["parser.base.datareader"]=require"lib_LuaX._dep.lib.lua-parser.base.datareader"
+package.loaded["parser.base.tokenizer"]=require"lib_LuaX._dep.lib.lua-parser.base.tokenizer"
+package.loaded["parser.lua.tokenizer"]=require"lib_LuaX._dep.lib.lua-parser.lua.tokenizer"
+package.loaded["parser.base.parser"]=require"lib_LuaX._dep.lib.lua-parser.base.parser"
+package.loaded["parser.lua.parser"]=require"lib_LuaX._dep.lib.lua-parser.lua.parser"
+return require"lib_LuaX._dep.lib.lua-parser.parser" end
+return parser_shim()
