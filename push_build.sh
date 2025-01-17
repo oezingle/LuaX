@@ -36,7 +36,10 @@ function main () {
         MESSAGE="Automated build push"
     fi
 
+    cd build
+
     git init
+    git checkout -b build-temp
     git remote add origin https://github.com/oezingle/LuaX
     git fetch origin $BRANCH
     git reset origin/$BRANCH
