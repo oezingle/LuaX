@@ -2,7 +2,7 @@
 
 local class                     = require("lib.30log")
 local FunctionComponentInstance = require("src.util.FunctionComponentInstance")
-local table_equals              = require("src.util.table_equals")
+local deep_equals              = require("src.util.deep_equals")
 
 --- This class doesn't actually extend NativeElement because
 ---  1. VirtualElement's minimal API is all that is needed for its specific use
@@ -59,7 +59,7 @@ end
 function VirtualElement:set_props(props)
     -- Identical table references would make searching for prop changes impossible.
     -- Lucikly this rarely happens in real-world scenarios
-    if table_equals(props, self.props, 2) and props ~= self.props then
+    if deep_equals(props, self.props, 2) and props ~= self.props then
         -- no change to props, no rerender, ignore!
         return
     end

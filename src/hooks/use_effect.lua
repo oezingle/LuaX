@@ -1,4 +1,4 @@
-local table_equals = require("src.util.table_equals")
+local deep_equals = require("src.util.deep_equals")
 local HookState    = require("src.util.HookState")
 
 ---@alias LuaX.Hooks.UseEffect.State { deps: any[]?, on_remove: function? }
@@ -15,7 +15,7 @@ local function use_effect(callback, deps)
     local last_value = hookstate:get_value(index) or {} --[[@as LuaX.Hooks.UseEffect.State]]
     local last_deps = last_value.deps
 
-    if not deps or not table_equals(deps, last_deps, 2) then
+    if not deps or not deep_equals(deps, last_deps, 2) then
         local new_value = { deps = deps }
         -- new_value.hook_name = "use_effect"
 

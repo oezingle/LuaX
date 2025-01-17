@@ -22,7 +22,7 @@ end
 --- - 2 - return false for functions, threads
 --- - 3 - error for function / thread / userdata values that cannot be checked
 ---@param traversed table<any, any[]>? Internally used to track objects that are accounted for
-local function any_equals(a, b, level, traversed)
+local function deep_equals(a, b, level, traversed)
     level = level or 3
 
     traversed = traversed or {}
@@ -64,7 +64,7 @@ local function any_equals(a, b, level, traversed)
             return true
         end
 
-        if not any_equals(getmetatable(a), getmetatable(b), nil, traversed) then
+        if not deep_equals(getmetatable(a), getmetatable(b), nil, traversed) then
             return false
         end
 
@@ -77,7 +77,7 @@ local function any_equals(a, b, level, traversed)
             for k, value_a in pairs(a) do
                 local value_b = b[k]
 
-                if not any_equals(value_a, value_b, nil, traversed) then
+                if not deep_equals(value_a, value_b, nil, traversed) then
                     return false
                 end
             end
@@ -89,7 +89,7 @@ local function any_equals(a, b, level, traversed)
             for i, value_a in ipairs(a) do
                 local value_b = b[i]
 
-                if not any_equals(value_a, value_b, nil, traversed) then
+                if not deep_equals(value_a, value_b, nil, traversed) then
                     return false
                 end
             end
@@ -117,7 +117,7 @@ local function any_equals(a, b, level, traversed)
 
         -- TODO can I use mt ~= mt here? genuinely unsure!
         -- check mt
-        if not any_equals(getmetatable(a), getmetatable(b), level, traversed) then
+        if not deep_equals(getmetatable(a), getmetatable(b), level, traversed) then
             return false
         end
 
@@ -133,8 +133,8 @@ local function any_equals(a, b, level, traversed)
                 local has_key_match = false
 
                 for _, k_b in pairs(exotic_b) do
-                    if any_equals(k, k_b, level, traversed) then
-                        if not any_equals(value_a, b[k_b], level, traversed) then
+                    if deep_equals(k, k_b, level, traversed) then
+                        if not deep_equals(value_a, b[k_b], level, traversed) then
                             return false
                         end
 
@@ -146,7 +146,7 @@ local function any_equals(a, b, level, traversed)
                 if not has_key_match then
                     return false
                 end
-            elseif not any_equals(value_a, b[k], level, traversed) then
+            elseif not deep_equals(value_a, b[k], level, traversed) then
                 return false
             end
         end
@@ -187,7 +187,7 @@ fchk_table_keys = function(a, b, traversed)
 
             local has_match = false
             for i, k_a in ipairs(exotic_keys_a) do
-                if any_equals(k_a, k_b, nil, traversed) then
+                if deep_equals(k_a, k_b, nil, traversed) then
                     has_match = true
                     table.remove(exotic_keys_a, i)
 
@@ -202,4 +202,4 @@ fchk_table_keys = function(a, b, traversed)
     return next(primitive_keys_a) == nil and # exotic_keys_a == 0, exotic_keys_b
 end
 
-return any_equals
+return deep_equals

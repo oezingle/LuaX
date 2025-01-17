@@ -1,5 +1,5 @@
 
-local table_equals = require("src.util.table_equals")
+local deep_equals = require("src.util.deep_equals")
 local HookState    = require("src.util.HookState")
 
 ---@alias LuaX.Hooks.UseState.Dispatch<R> fun(new_value: R | (fun(old: R): R))
@@ -39,7 +39,7 @@ local function use_state (default)
 
         -- Functions cannot be accurately checked, so assume they've changed.
         -- Note that passing a function requires set_value(function () return function () ... end end)
-        if type(new_value) == "function" or not table_equals(value, new_value, 2) then
+        if type(new_value) == "function" or not deep_equals(value, new_value, 2) then
             -- modify the value we compare against
             value = new_value
 

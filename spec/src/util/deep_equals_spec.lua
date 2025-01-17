@@ -1,45 +1,45 @@
-local table_equals = require("src.util.table_equals")
+local deep_equals = require("src.util.deep_equals")
 
-describe("table_equals", function()
+describe("deep_equals", function()
     it("catches type mismatch", function()
-        assert.False(table_equals(nil, false))
+        assert.False(deep_equals(nil, false))
     end)
 
     it("takes numbers", function()
-        assert.True(table_equals(1, 1))
-        assert.False(table_equals(0, 1))
+        assert.True(deep_equals(1, 1))
+        assert.False(deep_equals(0, 1))
     end)
 
     it("takes floats", function()
-        assert.True(table_equals(0.9, 0.9))
-        assert.False(table_equals(0.9, 0.99))
+        assert.True(deep_equals(0.9, 0.9))
+        assert.False(deep_equals(0.9, 0.99))
     end)
 
     it("takes booleans", function()
-        assert.True(table_equals(false, false))
-        assert.False(table_equals(false, true))
+        assert.True(deep_equals(false, false))
+        assert.False(deep_equals(false, true))
     end)
 
     it("takes strings", function()
-        assert.True(table_equals("hello", "hello"))
-        assert.False(table_equals("hello", "world"))
+        assert.True(deep_equals("hello", "hello"))
+        assert.False(deep_equals("hello", "world"))
     end)
 
     it("Takes nil vs table", function ()
-        assert.False(table_equals(nil, {}))
-        assert.False(table_equals({}, nil))
+        assert.False(deep_equals(nil, {}))
+        assert.False(deep_equals({}, nil))
     end)
 
     it("Takes empty table", function()
-        assert.True(table_equals({}, {}))
+        assert.True(deep_equals({}, {}))
     end)
 
     it("Works with missing primitive keys in a", function()
-        assert.False(table_equals({}, { 1 }))
+        assert.False(deep_equals({}, { 1 }))
     end)
 
     it("Works with missing primitive keys in b", function()
-        assert.False(table_equals({ 1 }, {}))
+        assert.False(deep_equals({ 1 }, {}))
     end)
 
     it("Doesn't hang for self-referencing tables", function ()
@@ -49,7 +49,7 @@ describe("table_equals", function()
         local parent2 = { child = {} }
         parent2.child.parent = parent2
 
-        assert.True(table_equals(parent, parent2))
+        assert.True(deep_equals(parent, parent2))
     end)
 
     it("Doesn't hang for self-referencing keys", function ()
@@ -61,7 +61,7 @@ describe("table_equals", function()
         local parent2 = { [child2] = "Hello World!" }
         child2.parent = parent2
 
-        assert.True(table_equals(parent, parent2))
+        assert.True(deep_equals(parent, parent2))
     end)
 
     it("Doesn't allow traversed table to ignore unequal values", function ()
@@ -73,6 +73,6 @@ describe("table_equals", function()
         local k_b_2 = { "bruh" }
         local b = { k_b_1, k_b_2, k_b_1 }
 
-        assert.False(table_equals(a, b))
+        assert.False(deep_equals(a, b))
     end)
 end)
