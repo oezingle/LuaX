@@ -36,19 +36,13 @@ function main () {
         MESSAGE="Automated build push"
     fi
 
-    mkdir -p build-temp
-    cd $_
-    git clone -b $BRANCH https://github.com/oezingle/LuaX
-    cp -r ../build/* LuaX
-
-    cd LuaX
+    git init
+    git remote add origin https://github.com/oezingle/LuaX
+    git fetch origin $BRANCH
+    git reset origin/$BRANCH
     git add -A
-    git commit -m "Automated build push"
-    git push
-
-    cd ../../
-
-    rm -rf build-temp
+    git commit -m "$MESSAGE"
+    git push origin $BRANCH
 }
 
 main $@
