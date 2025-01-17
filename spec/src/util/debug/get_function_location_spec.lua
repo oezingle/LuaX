@@ -1,4 +1,4 @@
-local get_function_location = require "src.util.Renderer.helper.get_function_location"
+local get_function_location = require "src.util.debug.get_function_location"
 
 describe("get_function_location", function ()
     it("knows where a function is defined", function ()

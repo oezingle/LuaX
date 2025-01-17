@@ -1,5 +1,5 @@
-local get_function_location = require("src.util.Renderer.helper.get_function_location")
-local get_function_name = require("src.util.Renderer.helper.get_function_name")
+local get_function_location = require("src.util.debug.get_function_location")
+local get_function_name = require("src.util.debug.get_function_name")
 
 
 describe("get_function_name", function()

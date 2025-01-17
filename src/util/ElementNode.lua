@@ -1,5 +1,5 @@
 local ipairs_with_nil = require("src.util.ipairs_with_nil")
-local get_function_location = require("src.util.Renderer.helper.get_function_location")
+local get_function_location = require("src.util.debug.get_function_location")
 
 ---@alias LuaX.ElementNode.LiteralNode string
 

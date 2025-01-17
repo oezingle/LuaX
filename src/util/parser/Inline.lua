@@ -6,9 +6,9 @@
 local LuaXParser = require("src.util.parser.LuaXParser")
 local traceback = require("src.util.debug.traceback")
 local get_locals = require("src.util.debug.get_locals")
-local get_function_location = require("src.util.Renderer.helper.get_function_location")
+local get_function_location = require("src.util.debug.get_function_location")
 
-local get_component_name = require("src.util.Renderer.helper.get_component_name")
+local get_component_name = require("src.util.debug.get_component_name")
 
 local Fragment = require("src.components.Fragment")
 local create_element = require("src.create_element")

@@ -1,4 +1,4 @@
-local get_element_name = require("src.util.Renderer.helper.get_element_name")
+local get_element_name = require("src.util.debug.get_element_name")
 
 ---@param children LuaX.NativeElement.ChildrenByKey
 ---@param prev_key string?

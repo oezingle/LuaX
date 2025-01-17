@@ -1,4 +1,4 @@
-local get_component_name = require("src.util.Renderer.helper.get_component_name")
+local get_component_name = require("src.util.debug.get_component_name")
 local ElementNode        = require("src.util.ElementNode")
 local NativeElement      = require("src.util.NativeElement.NativeElement")
 local class              = require("lib.30log")

@@ -411,6 +411,10 @@ describe("LuaXParser (v3)", function()
         local code = [[
             <!-- I am just a comment!
                 <!-- But so am I! -->
+
+                <>
+
+                </>
             -->
         ]]
         
