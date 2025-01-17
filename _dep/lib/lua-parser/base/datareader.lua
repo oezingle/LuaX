@@ -26,13 +26,13 @@ self.index=to + 1
 self:updatelinecol()
 return self:setlasttoken(self.data:sub(from,to),skipped) end
 function DataReader:canbe(pattern) return self:seekpast("^" .. pattern) end
-function DataReader:mustbe(pattern,msg) if  not self:canbe(pattern) then error(msg or "expected " .. pattern) end
+function DataReader:mustbe(pattern,msg) if  not self:canbe(pattern) then error{["msg"] = msg or "expected " .. pattern} end
 return self.lasttoken end
 function DataReader:readblock() if  not self:canbe"%[=*%[" then return  end
 local eq=assert(self.lasttoken:match"^%[(=*)%[$")
 self:canbe"\n"
 local start=self.index
-if  not self:seekpast("%]" .. eq .. "%]") then error"expected closing block" end
+if  not self:seekpast("%]" .. eq .. "%]") then error{["msg"] = "expected closing block"} end
 self.lasttoken=self.data:sub(start,self.index -  # self.lasttoken - 1)
 return self.lasttoken end
 return DataReader

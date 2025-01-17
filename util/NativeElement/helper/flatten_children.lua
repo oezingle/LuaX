@@ -11,20 +11,14 @@ package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep)
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "util.NativeElement.helper.")
 require(library_root .. "_shim") end
-local ipairs_with_nil=require"lib_LuaX.util.ipairs_with_nil"
-local key_first=require"lib_LuaX.util.key.key_first"
-
+local key_add=require"lib_LuaX.util.key.key_add"
 ---@param children_by_key LuaX.NativeElement.ChildrenByKey
 ---@param key LuaX.Key
----@param include_virtual boolean?
-local VirtualElement=require"lib_LuaX.util.NativeElement.VirtualElement"
-local function count_children_by_key(children_by_key,key,include_virtual) 
-local count=0
-local first,restkey=key_first(key)
-for index,child in ipairs_with_nil(children_by_key,first) do if child then if child.class then if child.class ~= VirtualElement and  not include_virtual then count=count + 1 end else 
-
-local pass_key=index == first
-local passed_key=pass_key and restkey or {}
-count=count + count_children_by_key(child,passed_key,include_virtual) end end end
-return count end
-return count_children_by_key
+---@param elements { element: LuaX.NativeElement, key: LuaX.Key }[]?
+local ipairs_with_nil=require"lib_LuaX.util.ipairs_with_nil"
+local function flatten_children(children_by_key,key,elements) elements=elements or {}
+if  not children_by_key then  elseif children_by_key.class then 
+table.insert(elements,{["key"] = key,["element"] = children_by_key}) else for i,entry in ipairs_with_nil(children_by_key) do local new_key=key_add(key,i)
+flatten_children(entry,new_key,elements) end end
+return elements end
+return flatten_children

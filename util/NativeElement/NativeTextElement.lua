@@ -19,6 +19,7 @@ local NativeElement=require"lib_LuaX.util.NativeElement"
 
 
 
+---@field get_value fun (self: self): string
 ---@field set_value fun(self: self, value: string)
 local ElementNode=require"lib_LuaX.util.ElementNode"
 local NativeTextElement=NativeElement:extend"NativeTextElement"
@@ -29,8 +30,11 @@ function NativeTextElement:init(value,parent) self.parent=parent
 self:set_value(value) end
 function NativeTextElement:set_prop(prop,value) if prop ~= "value" then error"Literal nodes do not support props other than value" end
 self:set_value(value) end
+function NativeTextElement:get_prop(prop) if prop ~= "value" then return nil end
+return self:get_value() end
 
 function NativeTextElement:insert_child() error"NativeTextElement may not have children" end
 function NativeTextElement:delete_child() error"NativeTextElement may not have children" end
-function NativeTextElement:get_type() return ElementNode.LITERAL_NODE end
+function NativeTextElement:get_type() ---@diagnostic disable-next-line:invisible
+return ElementNode.LITERAL_NODE end
 return NativeTextElement

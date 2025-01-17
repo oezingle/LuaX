@@ -24,7 +24,7 @@ local parse_file=require"lib_LuaX.cmd.parse_file"
 ---@field recursive boolean|number
 ---@field remap { from: string, to: string }[]
 ---@param options LuaX.Cmd.TranspileOptions
-local basename=require"lib_LuaX.util.polyfill.path.basename"
+local dirname=require"lib_LuaX.util.polyfill.path.dirname"
 local function transpile(options) local inpath=options.inpath
 local outpath=options.outpath
 local should_recurse=(type(options.recursive) == "boolean" and options.recursive) or (type(options.recursive) == "number" and options.recursive >= 1)
@@ -35,7 +35,7 @@ local outfile=io.open(outpath,"w")
 if  not outfile then error(string.format("Unable to transpile %q: cannot open %q",inpath,outpath)) end
 outfile:write(parsed)
 outfile:flush()
-outfile:close() elseif is_dir(inpath) and should_recurse then local outdir=basename(outpath)
+outfile:close() elseif is_dir(inpath) and should_recurse then local outdir=dirname(outpath)
 mkdir(outdir)
 for _,file in ipairs(ls(inpath)) do local new_inpath=join(inpath,file)
 local new_outpath=join(outpath,file)
