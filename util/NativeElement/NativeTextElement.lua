@@ -17,8 +17,6 @@ local NativeElement=require"lib_LuaX.util.NativeElement"
 ---@field init fun (self: self, props: string, parent: LuaX.NativeElement)
 
 
-
-
 ---@field get_value fun (self: self): string
 ---@field set_value fun(self: self, value: string)
 local ElementNode=require"lib_LuaX.util.ElementNode"

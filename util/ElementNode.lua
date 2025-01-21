@@ -17,8 +17,6 @@ local ipairs_with_nil=require"lib_LuaX.util.ipairs_with_nil"
 ---@alias LuaX.ElementNode.Children LuaX.ElementNode.Child | (LuaX.ElementNode.Child)[]
 
 
-
-
 ---@class LuaX.ElementNode
 
 

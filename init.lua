@@ -40,6 +40,8 @@ if table.pack(...)[1] ~= (arg or {})[1] then
 ---@field register fun() Register the LuaX loader
 ---@field Parser LuaX.Parser.V3
 ---@field transpile { from_path: (fun(path: string): string), from_string: (fun(content: string, source?: string): string)}
+
+---@operator call:function 
 ---@param path string
 ---@param content string
 ---@param source string?
@@ -49,6 +51,7 @@ export.create_portal=export.Portal.create
 setmetatable(export,{["__call"] = function (table,tag) return table.transpile.inline(tag) end})
 if  not LuaX or  not next(LuaX) then ---@class LuaX : LuaX.Exported
 ---@field _hookstate LuaX.HookState
+
 LuaX=export end
 return export else local cmd=require"lib_LuaX.cmd.cmd"
 cmd() end

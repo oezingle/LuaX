@@ -24,13 +24,15 @@ function WiboxElement:init(native,type)
 self.widget=native
 self.texts={}
 self.signal_handlers={}
+self.has_had_onload=false
 self.type=type end
 ---@param prop string
 ---@param value any
 function WiboxElement:set_prop(prop,value) 
 local widget=self.widget
 if prop:match"^LuaX::" then local prop_name=prop:sub(7)
-if prop_name == "onload" then value(self,widget) end elseif prop:match"^signal::" then local signal_name=prop:sub(9)
+if prop_name == "onload" and  not self.has_had_onload then value(self,widget)
+self.has_had_onload=true end elseif prop:match"^signal::" then local signal_name=prop:sub(9)
 if value then widget:weak_connect_signal(signal_name,value) end
 self.signal_handlers[prop]=value else widget[prop]=value end end
 function WiboxElement:get_prop(prop) if self.signal_handlers[prop] then return self.signal_handlers[prop] end
