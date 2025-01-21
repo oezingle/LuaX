@@ -34,6 +34,8 @@ if table.pack(...)[1] ~= (arg or {})[1] then
     ---@field register fun() Register the LuaX loader
     ---@field Parser LuaX.Parser.V3
     ---@field transpile { from_path: (fun(path: string): string), from_string: (fun(content: string, source?: string): string)}
+    ---
+    ---@operator call:function 
 
     local export = {
         Renderer       = require("src.util.Renderer"),
@@ -87,6 +89,7 @@ if table.pack(...)[1] ~= (arg or {})[1] then
     if not LuaX or not next(LuaX) then
         ---@class LuaX : LuaX.Exported
         ---@field _hookstate LuaX.HookState
+        -- field _render_info LuaX.RenderInfo
         LuaX = export
     end
 

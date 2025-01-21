@@ -6,8 +6,6 @@ local ElementNode   = require("src.util.ElementNode")
 ---@field protected parent LuaX.NativeElement
 ---@field init fun (self: self, props: string, parent: LuaX.NativeElement)
 ---
--- ---@field get_prop fun(self: self, prop: string): any
----
 --- Abstract fields
 ---@field get_value fun (self: self): string
 ---@field set_value fun(self: self, value: string)

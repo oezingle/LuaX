@@ -5,7 +5,7 @@ local HookState    = require("src.util.HookState")
 ---@alias LuaX.Hooks.UseState.Dispatch<R> fun(new_value: R | (fun(old: R): R))
 
 ---@generic T
----@alias LuaX.Hooks.UseState fun(default?: T): T, fun(new_value: LuaX.Hooks.UseState.Dispatch<T>)
+---@alias LuaX.Hooks.UseState fun(default?: T): T, LuaX.Hooks.UseState.Dispatch<T>
 
 ---@generic T
 ---@param default T?

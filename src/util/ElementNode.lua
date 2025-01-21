@@ -6,9 +6,6 @@ local get_function_location = require("src.util.debug.get_function_location")
 ---@alias LuaX.ElementNode.Child false | string | LuaX.ElementNode | nil
 ---@alias LuaX.ElementNode.Children LuaX.ElementNode.Child | (LuaX.ElementNode.Child)[]
 
--- ---@alias LuaX.Generic.ElementNode<Props> { type: LuaX.Generic.Component<Props>, props: Props, _component: LuaX.ComponentInstance }
--- ---@alias LuaX.ElementNode LuaX.Generic.ElementNode<{ [string]: any }>
-
 --[[
     returning to a super old comment i left here - see
     spec/special/table_equality_slow.lua
