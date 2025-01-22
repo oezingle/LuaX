@@ -15,7 +15,7 @@ local function use_memo(callback, deps)
 
     local index = hookstate:get_index()
 
-    local last_value = hookstate:get_value(index) or {} --[[ @asLuaX.Hooks.UseMemoStatee ]]
+    local last_value = hookstate:get_value(index) or {} --[[ @as LuaX.Hooks.UseMemo.State ]]
     local last_deps = last_value.deps
 
     local memo_value = last_value.cached

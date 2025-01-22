@@ -60,10 +60,13 @@ describe("stringify_table", function ()
         assert.equal(expected, stringified)
     end)
 
+    -- TODO FIXME finish test.
     -- honestly wrote this in because of its usage in HookState - might be useful regardless
-    it("stringifies functions", function ()
+    --[[
+        it("stringifies functions", function ()
         local table = { function () return true end }
 
         local stringified = stringify_table(table)
     end)
+    ]]
 end)
