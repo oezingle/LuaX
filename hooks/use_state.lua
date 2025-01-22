@@ -15,24 +15,21 @@ local deep_equals=require"lib_LuaX.util.deep_equals"
 ---@alias LuaX.Hooks.UseState.Dispatch<R> fun(new_value: R | (fun(old: R): R))
 ---@generic T
 ---@alias LuaX.Hooks.UseState fun(default?: T): T, LuaX.Hooks.UseState.Dispatch<T>
+
 ---@generic T
 ---@param default T?
 ---@return T, LuaX.Hooks.UseState.Dispatch<T>
 local HookState=require"lib_LuaX.util.HookState"
 local function use_state(default) local hookstate=HookState.global.get(true)
 local index=hookstate:get_index()
-local value=hookstate:get_value(index)
-if value == nil then if type(default) == "function" then default=default() end
-value=default
-hookstate:set_value_silent(index,value) end
-
-local setter=function (cb_or_new_value) local new_value=nil
-if type(cb_or_new_value) == "function" then new_value=cb_or_new_value(value) else new_value=cb_or_new_value end
-
-
-if type(new_value) == "function" or  not deep_equals(value,new_value,2) then 
-value=new_value
-hookstate:set_value(index,new_value) end end
+local state=hookstate:get_value(index)
 hookstate:increment()
-return value,setter end
+if state == nil then if type(default) == "function" then default=default() end
+local setter=function (new_value) local state=hookstate:get_value(index)
+local new_value=type(new_value) == "function" and new_value(state[1]) or new_value
+if  not deep_equals(state[1],new_value,2) then state[1]=new_value
+hookstate:modified(index,state) end end
+state={default,setter}
+hookstate:set_value_silent(index,state) end
+return state[1],state[2] end
 return use_state
