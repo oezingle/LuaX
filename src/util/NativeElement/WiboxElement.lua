@@ -26,6 +26,8 @@ function WiboxElement:init(native, type)
 
     self.signal_handlers = {}
 
+    self.has_had_onload = false
+
     self.type = type
 end
 
@@ -38,8 +40,10 @@ function WiboxElement:set_prop(prop, value)
     if prop:match("^LuaX::") then
         local prop_name = prop:sub(7)
 
-        if prop_name == "onload" then
+        if prop_name == "onload" and not self.has_had_onload then
             value(self, widget)
+
+            self.has_had_onload = true
         end
     elseif prop:match("^signal::") then
         local signal_name = prop:sub(9)
