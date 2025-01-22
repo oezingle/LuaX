@@ -17,8 +17,6 @@ local function is_primitive(value)
     return t == "nil" or t == "string" or t == "number" or t == "boolean"
 end
 
---- TODO compare functions via debug info & upvalues, if debug exists
-
 ---@param a any first object to check
 ---@param b any second object to check
 ---@param level number? to what degree objects should be checked for equality:

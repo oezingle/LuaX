@@ -22,7 +22,6 @@ local function luax_loader(modulename)
 
             local transpiled = parser:transpile()
 
-            -- TODO FIXME provide ... global
             local get_module, err = load(transpiled, filename)
 
             if not get_module then

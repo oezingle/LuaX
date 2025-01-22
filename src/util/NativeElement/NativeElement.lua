@@ -39,7 +39,7 @@ local key_to_string         = require("src.util.key.key_to_string")
 ---
 --- Optional Methods (recommended)
 ---@field get_type  nil | fun(self: self): string
----@field create_literal nil | fun(value: string, parent: LuaX.NativeElement): LuaX.NativeElement TODO special rules here?
+---@field create_literal nil | fun(value: string, parent: LuaX.NativeElement): LuaX.NativeElement
 ---
 ---@field get_prop nil|fun(self: self, prop: string): any
 ---
@@ -69,13 +69,6 @@ function NativeElement:get_children_by_key(key)
         if not children then
             return nil
         end
-
-        -- TODO could be a nice warning?
-        --[[
-        if children.class then
-            warn("Child NativeElement but expected keyed")
-        end
-        ]]
 
         return children[key_slice]
     end, children or {})

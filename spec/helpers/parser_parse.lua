@@ -6,7 +6,7 @@ local function parse(tag)
         :set_text(tag)
 
     ---@diagnostic disable-next-line:invisible
-    return parser:parse_tag(0)
+    return parser:parse_tag()
 end
 
 return parse

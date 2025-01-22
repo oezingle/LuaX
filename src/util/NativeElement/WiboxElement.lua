@@ -206,8 +206,8 @@ WiboxElement.rebuild_component_list()
 ---@param widget function | table
 function WiboxElement.add_mod(name, widget)
     -- TODO check for legal name
-    if name:match("%s") then
-        error("wibox mod names may not contain whitespace")
+    if name:match("[%s.]") then
+        error("wibox mod names may not contain whitespace, or the period character")
     end
 
     WiboxElement.widgets.wibox.mod[name] = widget

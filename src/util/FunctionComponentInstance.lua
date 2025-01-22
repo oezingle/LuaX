@@ -107,6 +107,8 @@ function FunctionComponentInstance:cleanup()
 
     for _, hook in ipairs_with_nil(hooks, length) do
         -- TODO this breaks use_effect -> HookState -> FunctionComponentInstance encapsulation.
+        -- TODO maybe create a HookState destructor API?
+
         -- hooks can sometimes be garbage collected before components - how do I protect against this?
         if type(hook) == "table" and hook.on_remove then
             hook.on_remove()

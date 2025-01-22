@@ -27,6 +27,7 @@ local function_a = function(component, props)
                     ))
                 end
 
+                ---@diagnostic disable-next-line:invisible
                 child = create_element(ElementNode.LITERAL_NODE, { value = tostring(child) })
             end
 
@@ -66,6 +67,7 @@ local function_b = function(component, props)
                     ))
                 end
 
+                ---@diagnostic disable-next-line:invisible
                 child = create_element(ElementNode.LITERAL_NODE, { value = tostring(child) })
             end
 

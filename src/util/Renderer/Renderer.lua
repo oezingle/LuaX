@@ -89,8 +89,6 @@ function Renderer:render_native_component(component, container, key, caller)
     -- handle children using workloop
     local children = component.props['children']
 
-    -- TODO this kind of optimization would be nice but can't work as of rn.
-    -- if not caller or caller.props['children'] ~= children then
     local current_children = node:get_children_by_key({}) or {}
     if children then
         local workloop = self.workloop
@@ -104,8 +102,7 @@ function Renderer:render_native_component(component, container, key, caller)
 
         workloop:start()
     end
-    -- end
-
+    
     -- Append to parent node
     if not can_modify then
         container:insert_child_by_key(key, node)

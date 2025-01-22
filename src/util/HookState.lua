@@ -97,7 +97,6 @@ function HookState.global.get(required)
     local hookstate = _G.LuaX._hookstate
 
     if required then
-        -- TODO more in depth error message
         assert(hookstate, "No global hookstate!")
     end
 

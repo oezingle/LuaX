@@ -6,8 +6,6 @@ local HookState   = require("src.util.HookState")
 ---@generic T
 ---@alias LuaX.Hooks.UseState fun(default?: T): T, LuaX.Hooks.UseState.Dispatch<T>
 
--- todo build closure once, save it, then republish the closure
-
 ---@generic T
 ---@param default T?
 ---@return T, LuaX.Hooks.UseState.Dispatch<T>

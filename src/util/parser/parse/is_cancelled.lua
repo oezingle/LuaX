@@ -1,6 +1,4 @@
 
--- TODO currently tested in LuaXParser_spec - move this!
-
 --- Check if the character at pos of text is cancelled
 ---@param text string
 ---@param pos integer

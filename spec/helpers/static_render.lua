@@ -2,9 +2,8 @@
 local render_set_up = require("spec.helpers.render_set_up")
 
 ---@param element LuaX.ElementNode
----@param options { profiled?: boolean }?
-local function static_render (element, options)
-    local root, render = render_set_up(element, options)
+local function static_render (element)
+    local root, render = render_set_up(element)
 
     render()
 

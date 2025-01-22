@@ -216,10 +216,6 @@ function Inline:transpile_decorator(chunk, stackoffset)
         return node
     end
 
-    -- TODO remove REQUEST_ORIGINAL_CHUNK shit
-    -- Inline.original_chunks = setmetatable({}, { __mode = "kv" })
-    -- Inline.original_chunks[inline_luax] = chunk
-
     self.original_chunks[inline_luax] = chunk
 
     return inline_luax

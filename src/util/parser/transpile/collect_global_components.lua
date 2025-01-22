@@ -1,7 +1,6 @@
 local NativeElement      = require("src.util.NativeElement")
 local warn_once          = require("src.util.warn_once")
 
--- TODO cache this work. duh!
 local function collect_global_components()
     -- Check if we can safely use global mode for component names
     local globals = {}

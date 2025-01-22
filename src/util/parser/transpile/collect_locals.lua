@@ -16,7 +16,6 @@ local function list_to_map(list)
     return map
 end
 
---- TODO could do a much better job - get current scope by position, then find parent expressions to ignore variables outside scope
 --- Recursively collect locals given a lua-parser tree
 ---@param vars string[]
 ---@param node Lua-Parser.Node

@@ -21,17 +21,13 @@ end
 ---@class LuaX.Language.Node.Comment
 ---@field type "comment"
 
----@class LuaX.Language.Node.Literal
----@field type "literal"
----@field value string
-
 ---@class LuaX.Language.Node.Element
 ---@field type "element"
 ---@field name string
 ---@field props LuaX.Props
 ---@field children LuaX.Language.Node[]
 
----@alias LuaX.Language.Node LuaX.Language.Node.Literal | LuaX.Language.Node.Element | LuaX.Language.Node.Comment
+---@alias LuaX.Language.Node LuaX.Language.Node.Element | LuaX.Language.Node.Comment | string
 
 ---@class LuaX.Parser.V3 : Log.BaseFunctions
 ---@field protected text string
@@ -135,7 +131,7 @@ do
     end
 
     function LuaXParser:auto_set_components()
-        assert(self.text, "Parser text must be set before components names are queried")
+        assert(self.text, "Parser input text must be set before components names are queried")
 
         local globals = collect_global_components()
 
@@ -407,7 +403,6 @@ do
             ---@diagnostic disable-next-line:invisible
             parser.text = insert .. parser.text
 
-            --- TODO if self.current_block_start ~= nil then self.current_block_start = self.current_block_start + #insert
             if self.current_block_start then
                 self.current_block_start = self.current_block_start + #insert
             end
@@ -492,14 +487,13 @@ do
 
         self:set_cursor(tokenstack:get_pos() - 1)
 
+        ---@type LuaX.Language.Node[]
         local nodes = {}
 
         for i, slice in ipairs(slices) do
             local value = table.concat(slice.chars, "")
                 :gsub("\n" .. self.indent, "\n")
                 :gsub("^" .. self.indent, "")
-
-            -- TODO clean comments here
 
             if i == 1 then
                 value = value:gsub("^%s-[\n\r]", "")
@@ -526,6 +520,7 @@ do
                 elseif value:match("^%s*%-%-") then
                     -- this is a comment
 
+                    ---@diagnostic disable-next-line:cast-local-type
                     value = {
                         type = "comment",
                         value = value
@@ -666,9 +661,9 @@ do
         end
 
         if is_comment then
-            -- TODO preserve comments?
+            -- TODO fetch comment value. self.text:sub() works in my mind.
             return {
-                type = "comment"
+                type = "comment",
             }
         end
 
