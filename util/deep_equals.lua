@@ -11,7 +11,6 @@ local fchk_table_keys
 local fchk_functions
 local function is_primitive(value) local t=type(value)
 return t == "nil" or t == "string" or t == "number" or t == "boolean" end
-
 ---@param a any first object to check
 ---@param b any second object to check
 ---@param level number? to what degree objects should be checked for equality:

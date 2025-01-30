@@ -1,5 +1,4 @@
 
-
 ---@param text string
 ---@param pos integer
 ---@return boolean

@@ -62,15 +62,12 @@ node=create_native_element(component,container) end
 
 for prop,value in pairs(component.props) do if prop ~= "children" and  not deep_equals(value,node:get_prop(prop),2) then node:set_prop_safe(prop,value) end end
 
-
-
 local children=component.props.children
 local current_children=node:get_children_by_key{} or {}
 if children then local workloop=self.workloop
 local size=max( # current_children, # children)
 for index,child in ipairs_with_nil(children,size) do workloop:add(function () self:render_keyed_child(child,node,{index},caller) end) end
 workloop:start() end
-
 
 if  not can_modify then container:insert_child_by_key(key,node) end end
 ---@protected

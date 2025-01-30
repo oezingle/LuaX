@@ -12,7 +12,6 @@ folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "util.parser.transpile.")
 require(library_root .. "_shim") end
 local NativeElement=require"lib_LuaX.util.NativeElement"
-
 local warn_once=require"lib_LuaX.util.warn_once"
 local function collect_global_components() 
 ---@type LuaX.NativeElement[]

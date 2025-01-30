@@ -55,8 +55,7 @@ return string.format("HookState {\n%s\n}",table.concat(hooks,"\n")) end
 ---@return LuaX.HookState
 HookState.global={}
 function HookState.global.get(required) local hookstate=_G.LuaX._hookstate
-if required then 
-assert(hookstate,"No global hookstate!") end
+if required then assert(hookstate,"No global hookstate!") end
 return hookstate end
 ---@param hookstate LuaX.HookState?
 ---@return LuaX.HookState? last_hookstate

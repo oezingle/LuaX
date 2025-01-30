@@ -74,5 +74,6 @@ local hooks=self.hookstate.values
 local length=math.max( # self.hookstate.values,self.hookstate.index)
 for _,hook in ipairs_with_nil(hooks,length) do 
 
+
 if type(hook) == "table" and hook.on_remove then hook.on_remove() end end end
 return FunctionComponentInstance

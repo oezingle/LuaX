@@ -21,7 +21,6 @@ for path in string.gmatch(match_module_files,"([^;]+)") do local filename=string
 local file=io.open(filename,"r")
 if file then local content=file:read"a"
 local parser=LuaXParser.from_file_content(content,filename)
-
 local transpiled=parser:transpile()
 local get_module,err=load(transpiled,filename)
 if  not get_module then error(err) end

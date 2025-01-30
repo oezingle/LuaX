@@ -25,15 +25,12 @@ os.exit(1) end
 require_path=(...) end
 ---@class LuaX.Language.Node.Comment
 ---@field type "comment"
----@class LuaX.Language.Node.Literal
----@field type "literal"
----@field value string
 ---@class LuaX.Language.Node.Element
 ---@field type "element"
 ---@field name string
 ---@field props LuaX.Props
 ---@field children LuaX.Language.Node[]
----@alias LuaX.Language.Node LuaX.Language.Node.Literal | LuaX.Language.Node.Element | LuaX.Language.Node.Comment
+---@alias LuaX.Language.Node LuaX.Language.Node.Element | LuaX.Language.Node.Comment | string
 ---@class LuaX.Parser.V3 : Log.BaseFunctions
 ---@field protected text string
 ---@field protected char integer
@@ -77,7 +74,7 @@ components=components_new end
 if mode == "local" then components[self.vars.FRAGMENT.name]=true end
 self.components={["names"] = components,["mode"] = mode}
 return self end
-function LuaXParser:auto_set_components() assert(self.text,"Parser text must be set before components names are queried")
+function LuaXParser:auto_set_components() assert(self.text,"Parser input text must be set before components names are queried")
 local globals=collect_global_components()
 if globals then return self:set_components(globals,"global") end
 local locals=collect_locals(self.text)
@@ -208,7 +205,6 @@ local insert=string.format(fmt,name,value)
 if already_set[name] then if already_set[name] == value then return  else error"Attempt to modify variable that is already set" end end
 ---@diagnostic disable-next-line:invisible
 already_set[name]=value
-
 parser.text=insert .. parser.text
 if self.current_block_start then self.current_block_start=self.current_block_start +  # insert end
 parser:move_cursor( # insert) end) end
@@ -238,10 +234,10 @@ local last_slice=slices[ # slices]
 if  not last_slice or last_slice.is_luablock == true then table.insert(slices,{["is_luablock"] = false,["chars"] = {},["start"] = pos})
 last_slice=slices[ # slices] end
 table.insert(last_slice.chars,current) end end end
+---@type LuaX.Language.Node[]
 self:set_cursor(tokenstack:get_pos() - 1)
 local nodes={}
-for i,slice in ipairs(slices) do 
-local value=table.concat(slice.chars,""):gsub("\n" .. self.indent,"\n"):gsub("^" .. self.indent,"")
+for i,slice in ipairs(slices) do local value=table.concat(slice.chars,""):gsub("\n" .. self.indent,"\n"):gsub("^" .. self.indent,"")
 if i == 1 then value=value:gsub("^%s-[\n\13]","") end
 if i ==  # slices then value=value:gsub("[\n\13]%s-$","") end
 
@@ -249,6 +245,7 @@ if  not value:match"^%s*$" then if slice.is_luablock then
 local on_set_variable=self.on_set_variable and function (name,value) 
 return self.on_set_variable(name,value,self) end
 value=LuaXParser():set_text(value):set_sourceinfo(self.src .. " subparser"):set_handle_variables(on_set_variable):set_components(self.components.names,self.components.mode):transpile() elseif value:match"^%s*%-%-" then 
+---@diagnostic disable-next-line:cast-local-type
 value={["type"] = "comment",["value"] = value} else value=value.format("%q",value) end
 table.insert(nodes,value) end end
 

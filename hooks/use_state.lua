@@ -15,7 +15,6 @@ local deep_equals=require"lib_LuaX.util.deep_equals"
 ---@alias LuaX.Hooks.UseState.Dispatch<R> fun(new_value: R | (fun(old: R): R))
 ---@generic T
 ---@alias LuaX.Hooks.UseState fun(default?: T): T, LuaX.Hooks.UseState.Dispatch<T>
-
 ---@generic T
 ---@param default T?
 ---@return T, LuaX.Hooks.UseState.Dispatch<T>

@@ -83,7 +83,7 @@ WiboxElement.components=components end
 ---@param widget function | table
 WiboxElement.rebuild_component_list()
 function WiboxElement.add_mod(name,widget) 
-if name:match"%s" then error"wibox mod names may not contain whitespace" end
+if name:match"[%s.]" then error"wibox mod names may not contain whitespace, or the period character" end
 WiboxElement.widgets.wibox.mod[name]=widget
 WiboxElement.rebuild_component_list() end
 return WiboxElement

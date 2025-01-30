@@ -86,9 +86,6 @@ chunk_locals[LuaXParser.vars.CREATE_ELEMENT.name]=create_element
 chunk_locals[LuaXParser.vars.FRAGMENT.name]=Fragment
 setmetatable(chunk_locals,{["__index"] = _G})
 setmetatable(chunk_names,{["__index"] = _G})
-
-
-
 local inline_luax=function (...) 
 local prev_hook,prev_mask=debug.gethook()
 

@@ -45,7 +45,7 @@ local flatten_children=require"lib_LuaX.util.NativeElement.helper.flatten_childr
 
 
 ---@field get_type  nil | fun(self: self): string
----@field create_literal nil | fun(value: string, parent: LuaX.NativeElement): LuaX.NativeElement TODO special rules here?
+---@field create_literal nil | fun(value: string, parent: LuaX.NativeElement): LuaX.NativeElement
 
 ---@field get_prop nil|fun(self: self, prop: string): any
 
@@ -62,8 +62,6 @@ function NativeElement:init() error"NativeElement must be extended to use for co
 function NativeElement:get_type_safe() return self.get_type and self:get_type() or "UNKNOWN" end
 function NativeElement:get_children_by_key(key) local children=self._children_by_key
 return list_reduce(key,function (children,key_slice) if  not children then return nil end
-
-
 return children[key_slice] end,children or {}) end
 function NativeElement:set_prop_virtual(prop,value) self._virtual_props=self._virtual_props or {}
 self._virtual_props[prop]=value

@@ -21,7 +21,6 @@ local function list_to_map(list) local map={}
 for _,item in pairs(list) do map[tostring(item)]=true end
 return map end
 
-
 ---@param vars string[]
 ---@param node Lua-Parser.Node
 local function collect_vars(vars,node) for _,expression in ipairs(node) do 
