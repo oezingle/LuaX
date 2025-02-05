@@ -11,25 +11,14 @@ package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep)
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "")
 require(library_root .. "_shim") end
----@class LuaX.Context<T> : Log.BaseFunctions, { default: T, Provider: LuaX.Component }
----@field protected default table
----@field Provider LuaX.Component
----@operator call:LuaX.Context
 local class=require"lib_LuaX._dep.lib.30log"
----@param default table
 local Context=class"Context"
-function Context:init(default) 
-self.default=default
+function Context:init(default) self.default=default
 self.Provider=function (props) return self:GenericProvider(props) end end
 function Context:GenericProvider(props) props.__luax_internal.context[self]=props.value
 return props.children end
----@generic T
----@param default T?
----@return LuaX.Context<T>
 function Context.create(default) return Context(default) end
----@param caller LuaX.ElementNode?
 function Context.inherit(caller) if  not caller then return {} end
----@diagnostic disable-next-line:undefined-field
 local inherit=caller.props.__luax_internal.context
 local new={}
 for k,v in pairs(inherit) do new[k]=v end

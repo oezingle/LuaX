@@ -11,18 +11,12 @@ package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep)
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "")
 require(library_root .. "_shim") end
-
----@param element LuaX.ElementNode | LuaX.ElementNode[]
----@param props LuaX.Props?
 local create_element=require"lib_LuaX.create_element"
 local function clone_element(element,props) if element.type then local component=element.type
-
 local newprops={}
 for k,v in pairs(element.props or {}) do newprops[k]=v end
-
 for k,v in pairs(props or {}) do newprops[k]=v end
-return create_element(component,newprops) else 
-local ret={}
+return create_element(component,newprops) else local ret={}
 for i,child in ipairs(element) do ret[i]=clone_element(child,props) end
 return ret end end
 return clone_element

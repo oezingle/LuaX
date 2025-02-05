@@ -11,8 +11,6 @@ package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep)
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "cmd.")
 require(library_root .. "_shim") end
----@param path string
----@return string
 local LuaXParser=require"lib_LuaX.util.parser.LuaXParser"
 local function parse_file(path) local transpiled=LuaXParser.from_file_path(path):transpile()
 return transpiled end

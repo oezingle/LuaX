@@ -1,5 +1,3 @@
----@param inpath string
----@param outpath string
 local function cp(inpath,outpath) local f_in=io.open(inpath,"r")
 if  not f_in then error(string.format("Unable to open file %q for reading",inpath)) end
 local f_out=io.open(outpath,"w")

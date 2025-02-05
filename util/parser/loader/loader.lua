@@ -11,9 +11,7 @@ package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep)
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "util.parser.loader.")
 require(library_root .. "_shim") end
-
 local LuaXParser=require"lib_LuaX.util.parser.LuaXParser"
----@param modulename string
 local sep=require"lib_LuaX.util.polyfill.path.sep"
 local function luax_loader(modulename) local modulepath=string.gsub(modulename,"%.",sep)
 local match_module_files="." .. sep .. "?.luax;." .. sep .. "?" .. sep .. "init.luax"

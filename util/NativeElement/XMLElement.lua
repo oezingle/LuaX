@@ -13,10 +13,6 @@ local library_root=folder_of_this_file:sub(1, - 1 -  # "util.NativeElement.")
 require(library_root .. "_shim") end
 local NativeElement=require"lib_LuaX.util.NativeElement.NativeElement"
 local split=require"lib_LuaX.util.polyfill.string.split"
-
----@class LuaX.XMLElement : LuaX.NativeElement
----@field native { type: string, props: table<string, any>, children: LuaX.XMLElement[] }
----@operator call:LuaX.XMLElement
 local ElementNode=require"lib_LuaX.util.ElementNode"
 local XMLElement=NativeElement:extend"XMLElement"
 function XMLElement:init(native) self.type=native.type
@@ -24,13 +20,10 @@ self.props=native.props
 self.children=native.children end
 function XMLElement.create_element(element_type) return XMLElement{["type"] = element_type,["props"] = {},["children"] = {}} end
 function XMLElement:set_prop(prop,value) self.props[prop]=value end
-
 function XMLElement:insert_child(index,element) table.insert(self.children,index,element) end
 function XMLElement:delete_child(index) table.remove(self.children,index) end
----@return LuaX.XMLElement
 function XMLElement.get_root(xml) return XMLElement(xml or {["type"] = "ROOT",["props"] = {},["children"] = {}}) end
 function XMLElement:get_type() return self.type end
-
 function XMLElement:__tostring() if ElementNode.is_literal(self.type) then return tostring(self.props.value) end
 local type=self.type
 local props={}

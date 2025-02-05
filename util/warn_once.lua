@@ -1,7 +1,3 @@
-
----@nospec
-
----@param ... any
 local warn_history={}
 local function warn_once(...) local strs={}
 for i,sub in ipairs(...) do strs[i]=tostring(sub) end

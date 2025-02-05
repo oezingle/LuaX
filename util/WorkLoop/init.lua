@@ -11,20 +11,7 @@ package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep)
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "util.WorkLoop.")
 require(library_root .. "_shim") end
----@nospec
 local class=require"lib_LuaX._dep.lib.30log"
----@class LuaX.WorkLoop : Log.BaseFunctions
----@field protected list_dequue fun(self: self): function
----@field protected list LinkedList<function>
----@field protected list_enqueue fun(self: self, cb: function)
----@field protected list_is_empty fun(self: self): boolean
-
-
----@field is_running boolean
----@field start fun(self: self) Must not crash if double-started. write yourself a guard.
-
-
----@field add fun(self: self, cb: function)
 local LinkedList=require"lib_LuaX.util.LinkedList"
 local WorkLoop=class"WorkLoop"
 function WorkLoop:init() self.list=LinkedList() end

@@ -18,12 +18,6 @@ local is_dir=require"lib_LuaX.cmd.fs.is_dir"
 local cp=require"lib_LuaX.cmd.fs.cp"
 local is_lua_file=require"lib_LuaX.cmd.fs.is_lua_file"
 local parse_file=require"lib_LuaX.cmd.parse_file"
----@class LuaX.Cmd.TranspileOptions
----@field inpath string
----@field outpath string
----@field recursive boolean|number
----@field remap { from: string, to: string }[]
----@param options LuaX.Cmd.TranspileOptions
 local dirname=require"lib_LuaX.util.polyfill.path.dirname"
 local function transpile(options) local inpath=options.inpath
 local outpath=options.outpath

@@ -13,7 +13,6 @@ local library_root=folder_of_this_file:sub(1, - 1 -  # "util.parser.loader.")
 require(library_root .. "_shim") end
 local luax_loader=require"lib_LuaX.util.parser.loader.loader"
 local has_registered=false
-local function luax_loader_register() if  not has_registered then ---@diagnostic disable-next-line:deprecated
-table.insert(package.searchers or package.loaders,luax_loader) end
+local function luax_loader_register() if  not has_registered then table.insert(package.searchers or package.loaders,luax_loader) end
 has_registered=true end
 return luax_loader_register

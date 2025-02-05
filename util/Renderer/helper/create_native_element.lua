@@ -11,9 +11,6 @@ package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep)
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "util.Renderer.helper.")
 require(library_root .. "_shim") end
----@param component LuaX.ElementNode
----@param container LuaX.NativeElement
----@return LuaX.NativeElement
 local ElementNode=require"lib_LuaX.util.ElementNode"
 local function create_native_element(component,container) local NativeElementImplementation=container:get_class()
 local component_type=component.type

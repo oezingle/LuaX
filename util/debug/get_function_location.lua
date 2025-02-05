@@ -1,6 +1,3 @@
-
----@param fn function
----@return string
 local function get_function_location(fn) if  not debug then return "UNKNOWN (no debug library)" end
 if  not debug.getinfo then return "UNKNOWN (no debug.getinfo)" end
 local ok,ret=pcall(function () local info=debug.getinfo(fn,"S")

@@ -11,22 +11,9 @@ package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep)
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "util.parser.transpile.")
 require(library_root .. "_shim") end
-
-
----@param input any
----@return string
 local ipairs_with_nil=require"lib_LuaX.util.ipairs_with_nil"
-
-
-
-
-
-
----@param input table
----@return string
 local stringify=function (input) error"should have been replaced!" end
-local function stringify_table(input) 
-local elements={}
+local function stringify_table(input) local elements={}
 for k,v in pairs(input) do if type(k) ~= "number" then local key=stringify(k)
 local value=stringify(v)
 local format=string.format("[%s]=%s",key,value)
@@ -36,13 +23,9 @@ if  # value ~= 0 then table.insert(elements,value) end end
 return string.format("{ %s }",table.concat(elements,", ")) end
 stringify=function (input) local t=type(input)
 if t == "nil" or t == "number" or t == "boolean" then return tostring(input) end
-if t == "string" then if input:match"^{.*}$" then 
-return input:sub(2, - 2) else return string.format("%q",input) end end
+if t == "string" then if input:match"^{.*}$" then return input:sub(2, - 2) else return string.format("%q",input) end end
 if t == "table" then return stringify_table(input) end
-
-if t == "function" then 
-
-local dump=string.dump(input)
+if t == "function" then local dump=string.dump(input)
 return string.format("load(%q)",dump) end
 error(string.format("Cannot stringify %s",t)) end
 return stringify_table
