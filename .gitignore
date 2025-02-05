@@ -3,6 +3,4 @@
 
 callgrind.out.*
 
-awesome_dist/
-
 build

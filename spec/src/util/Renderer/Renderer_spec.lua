@@ -188,7 +188,7 @@ describe("Renderer", function()
         local Child = LuaX(function(props)
             local hook, set_hook = use_state(false)
 
-            --- Doing some fucked shit
+            -- This is evil
             set_child_hook = set_hook
 
             table.insert(parent_state_values, props.state)
@@ -227,5 +227,62 @@ describe("Renderer", function()
         assert.True(parent_state_values[2])
         assert.True(parent_state_values[3])
         assert.True(parent_state_values[4])
+    end)
+
+    describe("Fails if", function()
+        local root = XMLElement.get_root()
+
+        local app = create_element("div", {})
+
+        describe("self is", function()
+            it("omitted", function()
+                ---@diagnostic disable-next-line
+                local ok, err = pcall(r.render, app, root)
+
+                assert.False(ok)
+                assert.match("\"self\"", err)
+                assert.match("instance of class 'Renderer'", err)
+            end)
+
+            it("a table", function()
+                ---@diagnostic disable-next-line
+                local ok, err = pcall(r.render, {}, app, root)
+
+                assert.False(ok)
+                assert.match("\"self\"", err)
+                assert.match("instance of class 'Renderer'", err)
+            end)
+        end)
+
+        describe("component is", function ()
+            it("omitted", function()
+                ---@diagnostic disable-next-line
+                local ok, err = pcall(r.render, r, root)
+
+                assert.False(ok)
+                assert.match("\"component\"", err)
+                assert.match("type table", err)
+            end)
+        end)
+
+        describe("container is", function ()
+            it("omitted", function()
+                ---@diagnostic disable-next-line
+                local ok, err = pcall(r.render, r, app)
+
+                assert.False(ok)
+                assert.match("\"container\"", err)
+                assert.match("instance of class 'NativeElement'", err)
+            end)
+
+            it("a table", function()
+                ---@diagnostic disable-next-line
+                local ok, err = pcall(r.render, r, app, {})
+
+                assert.False(ok)
+                assert.match("\"container\"", err)
+                assert.match("instance of class 'NativeElement'", err)
+            end)
+        end)
     end)
 end)

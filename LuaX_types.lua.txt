@@ -1,0 +1,234 @@
+---@class LuaX : LuaX.Runtime
+---@field register fun() Register the LuaX loader
+---@field Parser LuaX.Parser.V3
+---@field transpile { from_path: (fun(path: string): string), from_string: (fun(content: string, source?: string): string), inline: (fun(tag: string): string)|(fun(fn: function): function) }
+---@field NativeElement LuaX.NativeElement
+---@field NativeTextElement LuaX.NativeTextElement
+---@field GtkElement LuaX.GtkElement
+---@field WiboxElement LuaX.WiboxElement
+---@field WebElement LuaX.WebElement
+---@operator call:function
+---@class LuaX.Runtime
+---@field Renderer LuaX.Renderer
+---@field Children LuaX.Children
+---@field create_element fun(type: LuaX.Component, props: LuaX.Props): LuaX.ElementNode
+---@field clone_element (fun(element: LuaX.ElementNode, props: LuaX.Props): LuaX.ElementNode) | (fun(element: LuaX.ElementNode[], props: LuaX.Props): LuaX.ElementNode[])
+---@field Fragment LuaX.Component.Fragment
+---@field Suspense LuaX.Component.Suspense
+---@field ErrorBoundary LuaX.Component.ErrorBoundary
+---@field Portal LuaX.Portal
+---@field Context LuaX.Context
+---@field use_callback LuaX.Hooks.UseCallback
+---@field use_context LuaX.Hooks.UseContext
+---@field use_effect LuaX.Hooks.UseEffect
+---@field use_memo LuaX.Hooks.UseMemo
+---@field use_portal LuaX.Hooks.UsePortal
+---@field use_ref LuaX.Hooks.UseRef
+---@field use_state LuaX.Hooks.UseState
+---@field use_suspense LuaX.Hooks.UseSuspense
+---@class LuaX.Portal : Log.BaseFunctions
+---@field Inlet LuaX.Component<LuaX.PropsWithChildren>
+---@field Outlet LuaX.Component
+---@field Context LuaX.Context<LuaX.Portal>
+---@field name string | "LuaX.Portal"
+---@field protected children { uid: number, child: LuaX.ElementNode[] }[]
+---@field protected GenericProvider LuaX.Component<LuaX.PropsWithChildren>
+---@field protected GenericInlet LuaX.Component<LuaX.PropsWithChildren>
+---@field protected GenericOutlet LuaX.Component
+---@alias LuaX.Portal.UID number
+---@generic T
+---@alias LuaX.Hooks.UseCallback fun (callback: T, deps: any[]): T
+---@alias LuaX.Hooks.UseEffect.State { deps: any[]?, on_remove: function? }
+---@alias LuaX.Hooks.UseEffect fun(callback: (fun(): function?), deps: any[]?)
+---@alias LuaX.Hooks.UseState.Dispatch<R> fun(new_value: R | (fun(old: R): R))
+---@generic T
+---@alias LuaX.Hooks.UseState fun(default?: T): T, LuaX.Hooks.UseState.Dispatch<T>
+---@alias LuaX.Hooks.UsePortal fun (name?: string): LuaX.Portal
+---@generic T
+---@alias LuaX.Hooks.UseContext fun(context: LuaX.Context<T>): T
+---@alias LuaX.Hooks.UseSuspense fun(): (suspend: fun(), resolve: fun())
+---@alias LuaX.Hooks.UseMemo.State { deps: any[], cached: any }
+---@generic T
+---@alias LuaX.Hooks.UseMemo fun (callback: (fun(): T), deps: any[]): T
+---@generic T
+---@alias LuaX.Hooks.UseRef fun(default: T?): { current: T }
+---@alias LuaX.Generic.FunctionComponent<Props> fun(props: Props): (LuaX.ElementNode | LuaX.ElementNode[] | nil)
+---@alias LuaX.FunctionComponent LuaX.Generic.FunctionComponent<LuaX.Props>
+---@alias LuaX.Generic.Component<Props> string | LuaX.Generic.FunctionComponent<Props>
+---@alias LuaX.Component LuaX.Generic.Component<LuaX.Props>
+---@alias LuaX.Props { [string]: any }
+---@alias LuaX.Props.WithInternal<Props> { __luax_internal: LuaX.RenderInfo.Info } | Props
+---@alias LuaX.PropsWithChildren<Props> { children: LuaX.ElementNode[] } | Props
+---@alias LuaX.Key number[]
+---@class LuaX.Context<T> : Log.BaseFunctions, { default: T, Provider: LuaX.Component }
+---@field protected default table
+---@field Provider LuaX.Component
+---@operator call:LuaX.Context
+---@alias LuaX.Component.ErrorBoundary LuaX.Generic.Component<LuaX.PropsWithChildren<{ fallback?: string|function|LuaX.ElementNode }>>
+---@alias LuaX.Component.Fragment LuaX.Generic.FunctionComponent<LuaX.PropsWithChildren<{}>>
+---@alias LuaX.Component.Suspense LuaX.Generic.Component<LuaX.PropsWithChildren<{ fallback?: LuaX.ElementNode|string|function }>>
+---@alias LuaX.HookState.Listener fun(index: number, value: any)
+---@class LuaX.HookState : Log.BaseFunctions
+---@field index number
+---@field values any[]
+---@field listeners LuaX.HookState.Listener
+---@field current LuaX.HookState
+---@operator call:LuaX.HookState
+---@alias LuaX.ComponentInstance.ChangeHandler fun(element: LuaX.ElementNode | nil)
+---@class LuaX.ComponentInstance : Log.BaseFunctions
+---@field protected change_handler LuaX.ComponentInstance.ChangeHandler
+---@field render fun(self: self, props: LuaX.Props): boolean, (LuaX.ElementNode | nil)
+---@field set_on_change fun(self: self, cb: LuaX.ComponentInstance.ChangeHandler)
+---@operator call:LuaX.ComponentInstance
+---@class LuaX.FunctionComponentInstance : LuaX.ComponentInstance
+---@field protected hookstate LuaX.HookState
+---@field init fun(self: self, renderer: LuaX.FunctionComponent)
+---@field rerender boolean
+---@field set_on_change fun(self: self, cb: LuaX.ComponentInstance.ChangeHandler)
+---@operator call: LuaX.FunctionComponentInstance
+---@alias LuaX.ElementNode.LiteralNode string
+---@alias LuaX.ElementNode.Child false | string | LuaX.ElementNode | nil
+---@alias LuaX.ElementNode.Children LuaX.ElementNode.Child | (LuaX.ElementNode.Child)[]
+---@class LuaX.ElementNode
+---@field type LuaX.Component
+---@field props LuaX.Props
+---@field protected element_node self
+---@field inherit_props fun(self: self, inherit_props: LuaX.Props): self
+---@field create fun(component: LuaX.Component | LuaX.ElementNode.LiteralNode, props: LuaX.Props): self
+---@field protected LITERAL_NODE LuaX.ElementNode.LiteralNode unique key
+---@class LuaX.WorkLoop.GLibIdle : LuaX.WorkLoop
+---@class LuaX.WorkLoop.Gears : LuaX.WorkLoop
+---@class LuaX.WorkLoop.Default : LuaX.WorkLoop
+---@alias LuaX.WorkLoop.Item { [1]: function, number: any }
+---@class LuaX.WorkLoop : Log.BaseFunctions
+---@field protected list_dequue fun(self: self): LuaX.WorkLoop.Item
+---@field protected list_enqueue fun(self: self, cb: function, ...)
+---@field protected list_is_empty fun(self: self): boolean
+---@field protected list LuaX.WorkLoop.Item[]
+---@field protected head integer
+---@field protected tail integer
+---@field protected run_once fun(self: self)
+---@field protected is_running boolean
+---@field protected stop fun(self: self)
+---@field protected start fun(self: self)
+---@field safe_start fun(self: self)
+---@field add fun(self: self, cb: function, ...: any)
+---@class LinkedList.Node<T> : Log.BaseFunctions
+---@operator call:LinkedList.Node
+---@field value any
+---@field next LinkedList.Node|nil
+---@field prev LinkedList.Node|nil
+---@alias LinkedListFilter table|any|fun(value: any): boolean
+---@class LinkedList<T> : Log.BaseFunctions, { prepend: (fun(self: LinkedList<T>, value: T): LinkedList<T>), append: (fun(self: LinkedList<T>, value: T): LinkedList<T>), push: (fun(self: LinkedList<T>, value: T): LinkedList<T>), pop: (fun(self: LinkedList<T>): T), is_empty: (fun(): boolean), first: (fun(self: LinkedList<T>, filter: LinkedListFilter): T|nil), filter: (fun(self: LinkedList<T>, filter: LinkedListFilter): T[]), to_table: (fun(self: LinkedList<T>): T[]), filter_remove: (fun(self: LinkedList<T>, filter: LinkedListFilter): LinkedList<T>), enqueue: (fun(self: LinkedList<T>, value: T): LinkedList<T>), dequeue: (fun(self: LinkedList<T>): T), iterator: (fun(self: LinkedList<T>): fun(): (integer|nil, T|nil)) }
+---@operator call:LinkedList
+---@field protected head LinkedList.Node|nil
+---@field protected tail LinkedList.Node|nil
+---@class LuaX.TokenStack : Log.BaseFunctions
+---@field pos integer
+---@field text string
+---@field tokens table<string, true>
+---@field requires_literal boolean
+---@operator call:LuaX.TokenStack
+---@class LuaX.Language.Node.Comment
+---@field type "comment"
+---@class LuaX.Language.Node.Element
+---@field type "element"
+---@field name string
+---@field props LuaX.Props
+---@field children LuaX.Language.Node[]
+---@alias LuaX.Language.Node LuaX.Language.Node.Element | LuaX.Language.Node.Comment | string
+---@class LuaX.Parser.V3 : Log.BaseFunctions
+---@field protected text string
+---@field protected char integer
+---@field protected indent string
+---@field protected current_block_start integer?
+---@field components { names: table<string, true>, mode: "global"|"local" } a table of component names
+---@operator call:LuaX.Parser.V3
+---@class LuaX.Parser.Inline
+---@class LuaX.Parser.V2.Token
+---@field pattern string
+---@field replacer string
+---@field end_pattern string
+---@field end_replacer string
+---@class LuaX.NativeTextElement : LuaX.NativeElement
+---@field protected parent LuaX.NativeElement
+---@field init fun (self: self, props: string, parent: LuaX.NativeElement)
+---@field get_value fun (self: self): string
+---@field set_value fun(self: self, value: string)
+---@class LuaX.GtkElement : LuaX.NativeElement
+---@field set_lowercase fun(lowercase: boolean)
+---@class LuaX.GtkElement.LGI_V3 : LuaX.GtkElement
+---@class LuaX.WiboxElement : LuaX.NativeElement
+---@field texts LuaX.WiboxText[]
+---@class LuaX.WiboxText : LuaX.NativeTextElement
+---@field protected parent LuaX.WiboxElement
+---@field value string
+---@class LuaX.XMLElement : LuaX.NativeElement
+---@field native { type: string, props: table<string, any>, children: LuaX.XMLElement[] }
+---@operator call:LuaX.XMLElement
+---@class LuaX.NativeElement.Virtual : LuaX.NativeElement
+---@field protected type LuaX.Component
+---@field protected props LuaX.Props
+---@field protected new_props boolean
+---@field render function()
+---@alias LuaX.NativeElement.ChildrenByKey LuaX.NativeElement | LuaX.NativeElement.ChildrenByKey[] | LuaX.NativeElement.ChildrenByKey[][]
+---@class LuaX.NativeElement : Log.BaseFunctions
+---@field private _children_by_key LuaX.NativeElement.ChildrenByKey
+---@field get_children_by_key fun(self: self, key: LuaX.Key): LuaX.NativeElement.ChildrenByKey
+---@field insert_child_by_key fun(self: self, key: LuaX.Key, child: LuaX.NativeElement)
+---@field delete_children_by_key fun(self: self, key: LuaX.Key)
+---@field private count_children_by_key fun(self: self, key: LuaX.Key, ignore_virtual?: boolean): number
+---@field private set_child_by_key fun(self: self, key: LuaX.Key, child: LuaX.NativeElement | nil)
+---@field private flatten_children fun(self: self, key: LuaX.Key): { element: LuaX.NativeElement, key: LuaX.Key }[]
+---@field set_prop_safe fun (self: self, prop: string, value: any)
+---@field private set_prop_virtual fun (self: self, prop: string, value: any)
+---@field private _virtual_props table<string, any>
+---@field get_prop_safe fun (self: self, prop: string): any
+---@field set_render_name fun(self: self, name: string)
+---@field get_render_name fun(self: self): string name
+---@field set_prop fun(self: self, prop: string, value: any)
+---@field insert_child fun(self: self, index: number, element: LuaX.NativeElement, is_text: boolean)
+---@field delete_child fun(self: self, index: number, is_text: boolean)
+---@field create_element fun(type: string): LuaX.NativeElement
+---@field get_root fun(native: any): LuaX.NativeElement Convert a passed object to a root node
+---@field get_native fun(self: self): any Get this element's native (UI library) representation.
+---@field get_name  nil | fun(self: self): string Return a friendly name for this element
+---@field create_literal nil | fun(value: string, parent: LuaX.NativeElement): LuaX.NativeElement
+---@field get_prop nil|fun(self: self, prop: string): any
+---@field cleanup nil|fun(self: self)
+---@field components string[]? class static property - components implemented by this class.
+---@operator call : LuaX.NativeElement
+---@class LuaX.WebElement : LuaX.NativeElement
+---@class LuaX.WebText : LuaX.NativeTextElement
+---@class LuaX.Renderer : Log.BaseFunctions
+---@field workloop LuaX.WorkLoop instance of a workloop
+---@field native_element LuaX.NativeElement class here, not instance
+---@field set_workloop fun (self: self, workloop: LuaX.WorkLoop): self set workloop using either a class or an instance
+---@field render fun(self: self, component: LuaX.ElementNode, container: LuaX.NativeElement)
+---@operator call: LuaX.Renderer
+---@alias LuaX.DrawGroup.OnComplete fun()
+---@alias LuaX.DrawGroup.OnRestart fun()
+---@alias LuaX.DrawGroup.OnError fun(err: any)
+---@class LuaX.DrawGroup.Group
+---@field refs integer
+---@field on_error LuaX.DrawGroup.OnError
+---@field on_complete LuaX.DrawGroup.OnComplete
+---@field on_restart LuaX.DrawGroup.OnRestart
+---@class LuaX.DrawGroup
+---@class LuaX.RenderInfo.Info.Minimal
+---@field key LuaX.Key
+---@field container LuaX.NativeElement
+---@field renderer LuaX.Renderer
+---@class LuaX.RenderInfo.Info : LuaX.RenderInfo.Info.Minimal
+---@field context table<LuaX.Context<any>, any>
+---@field draw_group LuaX.DrawGroup.Group
+---@class LuaX.RenderInfo 
+---@field current LuaX.RenderInfo.Info
+---@alias LuaX.CLI.Mkdir fun (path: string): nil
+---@alias LuaX.CLI.LsDir fun (path: string): string[]
+---@class LuaX.Cmd.TranspileOptions
+---@field inpath string
+---@field outpath string
+---@field recursive boolean|number
+---@field remap { from: string, to: string }[]
+---@class LuaX.Children

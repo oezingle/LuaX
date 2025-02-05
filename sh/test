@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+
+set -e
+
+echo "Testing under Lua 5.4"
+LUA_ENV=production busted --lua=lua5.4
+
+echo "Testing under Lua 5.3"
+LUA_ENV=production busted --lua=lua5.3
+
+echo "Testing under LuaJIT"
+LUA_ENV=production busted --lua=luajit
+
+echo "Updating types"
+lua sh/get_all_types.lua

@@ -21,7 +21,6 @@ if false then
     ]]
 
     ---@generic T
-    -- ---@alias LogClassExtender<B> (fun(self: LogClass, name: string, properties: T): (LogClass<T>|B))|(fun(self: LogClass, name: string): (LogClass<table>|B))
     ---@alias Log.ClassExtender (fun(self: LogClass, name: string, properties: T): LogClass<T>)|(fun(self: LogClass, name: string): LogClass<table>)
 
     ---@class Log.BaseFunctions

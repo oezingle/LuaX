@@ -1,33 +1,34 @@
-local class                 = require("lib.30log")
-local count_children_by_key = require("src.util.NativeElement.helper.count_children_by_key")
-local set_child_by_key      = require("src.util.NativeElement.helper.set_child_by_key")
-local list_reduce           = require("src.util.polyfill.list.reduce")
-local log                   = require("lib.log")
-local VirtualElement        = require("src.util.NativeElement.VirtualElement")
-local flatten_children      = require("src.util.NativeElement.helper.flatten_children")
-local key_to_string         = require("src.util.key.key_to_string")
+local class                                   = require("lib.30log")
+local count_children_by_key                   = require("src.util.NativeElement.helper.count_children_by_key")
+local set_child_by_key                        = require("src.util.NativeElement.helper.set_child_by_key")
+local list_reduce                             = require("src.util.polyfill.list.reduce")
+local VirtualElement                          = require("src.util.NativeElement.VirtualElement")
+local flatten_children                        = require("src.util.NativeElement.helper.flatten_children")
+local DrawGroup                               = require("src.util.Renderer.DrawGroup")
 
---[[
-    - count_children_by_key seems like it could have performance issues.
-        - pretty much any key function is probably disaterously slow
-]]
+local table_pack                              = require("src.util.polyfill.table.pack")
+local table_unpack                            = require("src.util.polyfill.table.unpack")
+local traceback                               = require("src.util.debug.traceback")
 
--- Helper type
 ---@alias LuaX.NativeElement.ChildrenByKey LuaX.NativeElement | LuaX.NativeElement.ChildrenByKey[] | LuaX.NativeElement.ChildrenByKey[][]
 
 ---@class LuaX.NativeElement : Log.BaseFunctions
 ---
----@field protected _children_by_key LuaX.NativeElement.ChildrenByKey
+---@field private _children_by_key LuaX.NativeElement.ChildrenByKey
 ---@field get_children_by_key fun(self: self, key: LuaX.Key): LuaX.NativeElement.ChildrenByKey
 ---@field insert_child_by_key fun(self: self, key: LuaX.Key, child: LuaX.NativeElement)
 ---@field delete_children_by_key fun(self: self, key: LuaX.Key)
----@field protected count_children_by_key fun(self: self, key: LuaX.Key, ignore_virtual?: boolean): number
----@field protected set_child_by_key fun(self: self, key: LuaX.Key, child: LuaX.NativeElement | nil)
----@field protected flatten_children fun(self: self, key: LuaX.Key): { element: LuaX.NativeElement, key: LuaX.Key }[]
+---@field private count_children_by_key fun(self: self, key: LuaX.Key, ignore_virtual?: boolean): number
+---@field private set_child_by_key fun(self: self, key: LuaX.Key, child: LuaX.NativeElement | nil)
+---@field private flatten_children fun(self: self, key: LuaX.Key): { element: LuaX.NativeElement, key: LuaX.Key }[]
 ---
----@field set_prop_safe fun (self: self ,prop: string, value: any)
----@field set_prop_virtual fun (self: self, prop: string, value: any)
----@field protected _virtual_props table<string, any>
+---@field set_prop_safe fun (self: self, prop: string, value: any)
+---@field private set_prop_virtual fun (self: self, prop: string, value: any)
+---@field private _virtual_props table<string, any>
+---@field get_prop_safe fun (self: self, prop: string): any
+---
+---@field set_render_name fun(self: self, name: string)
+---@field get_render_name fun(self: self): string name
 ---
 --- Abstract Methods
 ---@field set_prop fun(self: self, prop: string, value: any)
@@ -36,10 +37,11 @@ local key_to_string         = require("src.util.key.key_to_string")
 ---
 ---@field create_element fun(type: string): LuaX.NativeElement
 ---@field get_root fun(native: any): LuaX.NativeElement Convert a passed object to a root node
+---@field get_native fun(self: self): any Get this element's native (UI library) representation.
 ---
 --- Optional Methods (recommended)
----@field get_type  nil | fun(self: self): string
----@field create_literal nil | fun(value: string, parent: LuaX.NativeElement): LuaX.NativeElement TODO special rules here?
+---@field get_name  nil | fun(self: self): string Return a friendly name for this element
+---@field create_literal nil | fun(value: string, parent: LuaX.NativeElement): LuaX.NativeElement
 ---
 ---@field get_prop nil|fun(self: self, prop: string): any
 ---
@@ -47,9 +49,9 @@ local key_to_string         = require("src.util.key.key_to_string")
 ---
 ---@field components string[]? class static property - components implemented by this class.
 ---@operator call : LuaX.NativeElement
-local NativeElement = class("NativeElement")
+local NativeElement                           = class("NativeElement")
 
-NativeElement._dependencies = {}
+NativeElement._dependencies                   = {}
 
 ---@type LuaX.NativeTextElement
 NativeElement._dependencies.NativeTextElement = nil
@@ -58,8 +60,17 @@ function NativeElement:init()
     error("NativeElement must be extended to use for components")
 end
 
-function NativeElement:get_type_safe()
-    return self.get_type and self:get_type() or "UNKNOWN"
+function NativeElement:get_render_name()
+    return self.__render_name
+end
+
+function NativeElement:set_render_name(name)
+    self.__render_name = name
+end
+
+-- Child classes are recommended to overload.
+function NativeElement:get_name()
+    return self:get_render_name() or "unknown NativeElement"
 end
 
 function NativeElement:get_children_by_key(key)
@@ -69,13 +80,6 @@ function NativeElement:get_children_by_key(key)
         if not children then
             return nil
         end
-
-        -- TODO could be a nice warning?
-        --[[
-        if children.class then
-            warn("Child NativeElement but expected keyed")
-        end
-        ]]
 
         return children[key_slice]
     end, children or {})
@@ -89,18 +93,54 @@ function NativeElement:set_prop_virtual(prop, value)
     self:set_prop(prop, value)
 end
 
+-- Table of { protected = original } functions for get_prop_safe
+local NativeElement_function_cache = setmetatable({}, { __mode = "kv" })
+
 --- Set props, using virtual props if get_props isn't implemented, or set_prop if it is
 function NativeElement:set_prop_safe(prop, value)
-    if self.get_prop ~= NativeElement.get_prop then
-        ---@diagnostic disable-next-line:inject-field
-        self.class.set_prop_safe = self.set_prop
+    local prop_method = self.get_prop ~= NativeElement.get_prop and
+        self.set_prop or self.set_prop_virtual
+
+    if type(value) == "function" then
+        local cached = NativeElement_function_cache[value]
+        if cached then
+            prop_method(self, prop, cached)
+        else
+            local group = DrawGroup.current()
+
+            local fn = function (...)
+                local ret = table_pack(xpcall(value, traceback, ...))
+
+                local ok = ret[1]
+
+                if not ok then
+                    DrawGroup.error(group, table_unpack(ret, 2))
+                    return
+                end
+
+                return table_unpack(ret, 2)
+            end
+
+            NativeElement_function_cache[fn] = value
+
+            prop_method(self, prop, fn)
+        end
     else
-        ---@diagnostic disable-next-line:inject-field
-        self.class.set_prop_safe = self.set_prop_virtual
+        prop_method(self, prop, value)
+    end
+end
+
+function NativeElement:get_prop_safe(prop)
+    local value = self:get_prop(prop)
+
+    if type(value) == "function" then
+        local cached = NativeElement_function_cache[value]
+        if cached then
+            return cached
+        end
     end
 
-    -- magicially replaced
-    self:set_prop_safe(prop, value)
+    return value
 end
 
 function NativeElement:get_prop(prop)
@@ -131,7 +171,7 @@ function NativeElement:flatten_children(key)
 end
 
 function NativeElement:insert_child_by_key(key, child)
-    log.trace(self:get_type_safe(), "insert_child_by_key", key_to_string(key))
+    -- log.trace(self:get_name(), "insert_child_by_key", key_to_string(key))
 
     if not self._children_by_key then
         self._children_by_key = {}
@@ -144,7 +184,7 @@ function NativeElement:insert_child_by_key(key, child)
 
         local is_text = NativeTextElement and NativeTextElement:classOf(child.class) or false
 
-        log.trace(" ↳ insert native child", child:get_type_safe(), tostring(insert_index))
+        -- log.trace(" ↳ insert native child", child:get_name(), tostring(insert_index))
 
         self:insert_child(insert_index, child, is_text)
     end
@@ -154,7 +194,7 @@ function NativeElement:insert_child_by_key(key, child)
 end
 
 function NativeElement:delete_children_by_key(key)
-    log.trace(self:get_type_safe(), "delete_children_by_key", key_to_string(key))
+    -- log.trace(self:get_name(), "delete_children_by_key", key_to_string(key))
 
     -- No need to delete anything
     if not self._children_by_key then
@@ -164,6 +204,14 @@ function NativeElement:delete_children_by_key(key)
     end
 
     local flattened = self:flatten_children(key)
+
+    -- child already deleted. This seems like bad practice but is valid in cases
+    -- like ErrorBoundary handling, where a fallback is rendered (therefore
+    -- deleting the child by this key) before the child can be deleted by the
+    -- render_function_component result handler
+    if #flattened == 0 then
+        return
+    end
 
     -- count_children_by_key gets the last index of this key
     local delete_index = self:count_children_by_key(key)
@@ -175,19 +223,21 @@ function NativeElement:delete_children_by_key(key)
     for i = #flattened, 1, -1 do
         local child = flattened[i].element
 
-        child:cleanup()
-
         if child.class ~= VirtualElement then
             local is_text = NativeTextElement and
                 NativeTextElement:classOf(child.class) or
                 false
 
-            log.trace(" ↳ delete native child", child:get_type_safe(), tostring(delete_index))
+            -- log.trace(" ↳ delete native child", child:get_name(), tostring(delete_index))
 
             self:delete_child(delete_index, is_text)
 
             delete_index = delete_index - 1
         end
+
+        -- calling cleanup after delete_child means that any memory management
+        -- functionality won't result in unexpected behaviour.
+        child:cleanup()
     end
 
     self:set_child_by_key(key, nil)
@@ -217,31 +267,6 @@ function NativeElement:set_props(props)
         if prop ~= "children" then
             self:set_prop(prop, value)
         end
-    end
-end
-
----@param children LuaX.NativeElement.ChildrenByKey
-function NativeElement.recursive_children_string(children)
-    if type(children) ~= "table" then
-        return tostring(children)
-    end
-
-    if #children ~= 0 then
-        local children_strs = {}
-
-        for index, child in ipairs(children) do
-            table.insert(children_strs, NativeElement.recursive_children_string(child))
-        end
-
-        return string.format("{ %s }", table.concat(children_strs, ", "))
-    else
-        --[[
-        for k, v in pairs(children) do
-            print("", k, v)
-        end
-        ]]
-
-        return "Child " .. tostring(children)
     end
 end
 

@@ -5,7 +5,7 @@ local list_reduce = require("src.util.polyfill.list.reduce")
 local wibox = require("wibox")
 
 ---@class LuaX.WiboxElement : LuaX.NativeElement
----@field texts WiboxText[]
+---@field texts LuaX.WiboxText[]
 local WiboxElement = NativeElement:extend("WiboxElement")
 
 WiboxElement.widgets = {
@@ -17,16 +17,12 @@ WiboxElement.widgets = {
     }
 }
 
-function WiboxElement:init(native, type)
-    -- print(type, "create")
-
+function WiboxElement:init(native)
     self.widget = native
 
     self.texts = {}
 
     self.signal_handlers = {}
-
-    self.type = type
 end
 
 ---@param prop string
@@ -34,14 +30,7 @@ end
 function WiboxElement:set_prop(prop, value)
     local widget = self.widget
 
-    -- support LuaX::onload
-    if prop:match("^LuaX::") then
-        local prop_name = prop:sub(7)
-
-        if prop_name == "onload" then
-            value(self, widget)
-        end
-    elseif prop:match("^signal::") then
+    if prop:match("^signal::") then
         local signal_name = prop:sub(9)
 
         if value then
@@ -102,8 +91,8 @@ function WiboxElement:delete_child(index, is_text)
     end
 end
 
-function WiboxElement:get_type()
-    return self.type
+function WiboxElement:get_native()
+    return self.widget
 end
 
 ---@param element_name string
@@ -122,7 +111,7 @@ function WiboxElement.create_element(element_name)
 end
 
 function WiboxElement.get_root(native)
-    return WiboxElement(native, "UNKNOWN (root element)")
+    return WiboxElement(native)
 end
 
 function WiboxElement:_reload_text()
@@ -137,7 +126,7 @@ function WiboxElement:_reload_text()
     self:set_prop("text", text)
 end
 
----@class WiboxText : LuaX.NativeTextElement
+---@class LuaX.WiboxText : LuaX.NativeTextElement
 ---@field protected parent LuaX.WiboxElement
 ---@field value string
 local WiboxText = NativeTextElement:extend("WiboxText")
@@ -202,8 +191,8 @@ WiboxElement.rebuild_component_list()
 ---@param widget function | table
 function WiboxElement.add_mod(name, widget)
     -- TODO check for legal name
-    if name:match("%s") then
-        error("wibox mod names may not contain whitespace")
+    if name:match("[%s.]") then
+        error("wibox mod names may not contain whitespace, or the period character")
     end
 
     WiboxElement.widgets.wibox.mod[name] = widget

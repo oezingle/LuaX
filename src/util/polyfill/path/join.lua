@@ -1,8 +1,9 @@
-local sep = require("src.util.polyfill.path.sep")
+local sep        = require("src.util.polyfill.path.sep")
+local table_pack = require("src.util.polyfill.table.pack")
 
 ---@param ... string
 local function join(...)
-    local elements = table.pack(...)
+    local elements = table_pack(...)
 
     local ret = {}
 
@@ -11,7 +12,7 @@ local function join(...)
         -- local is_last  = i == #elements
 
         -- Remove starts with slash
-        if item:sub(1,1) == sep and not is_first then
+        if item:sub(1, 1) == sep and not is_first then
             item = item:sub(2)
         end
 

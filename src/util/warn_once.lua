@@ -1,13 +1,15 @@
 --- Can't be tested because of warn() usage
 ---@nospec
 
+local table_pack = require("src.util.polyfill.table.pack")
+
 local warn_history = {}
 
 --- Like warn(), but will cache previous warnings.
 ---@param ... any
 local function warn_once (...)
     local strs = {}
-    for i, sub in ipairs(...) do
+    for i, sub in ipairs(table_pack(...)) do
         strs[i] = tostring(sub)
     end
     

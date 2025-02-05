@@ -28,3 +28,23 @@ end
 
 main()
 ```
+
+LuaX will now render components using that library! You can use elements from
+the UI library, but you can also write reusable functions that implement logic
+tied to these elements. See [Components](./components.md)
+
+## WorkLoops
+
+LuaX uses a lightweight WorkLoop class to store rendering tasks. Because Lua
+doesn't feature an event loop, the default WorkLoop is blocking. The WorkLoop
+base class ([src/util/WorkLoop/WorkLoop.lua](../src/util/WorkLoop/WorkLoop.lua))
+is easily extensible for non-blocking event loops.
+[GLibIdleWorkLoop](../src/util/WorkLoop/GLibIdle.lua) is a good example,
+providing support for Gtk/GLib's `GLib.MainLoop`. 
+
+In order to render content in the proper hierarchical manner, WorkLoops
+internally use Queues. However, neither a user of LuaX nor a WorkLoop
+implementation developer must worry about these details. the WorkLoop base class
+provides `WorkLoop:run_once()`, which will call and consume the next item in the
+list. A WorkLoop implementation must only implement `:start()`, and in some cases
+`:stop()`. Again, see GLibIdleWorkLoop for an example.

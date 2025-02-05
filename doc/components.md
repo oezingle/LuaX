@@ -1,11 +1,17 @@
 # Developing components
 
-As a user of LuaX, most of your work will be in writing components. Components are written in a HTML-like syntax, enabling you
-to work on visual elements with a familiar coding style.
+As a user of LuaX, most of your work will be in writing components. Components
+are written in a HTML-like syntax, enabling you to work on visual elements with
+a familiar coding style.
+
+If the syntax in this article is unfamiliar, consider reading the syntax
+definition in the article that covers the [LuaX Parser](./Parser.md)
 
 ## LuaX in Vanilla Lua
 
-LuaX provides a number of facilities to write LuaX components within a `.lua` file, although you can also use `.luax` files to write LuaX code as if it were a native language feature. That feature will be covered later in this article.
+LuaX provides a number of facilities to write LuaX components within a `.lua`
+file, although you can also use `.luax` files to write LuaX code as if it were a
+native language feature. That feature will be covered later in this article.
 
 ### Decorator syntax
 
@@ -52,7 +58,7 @@ end
 
 ### LuaX without LuaX syntax
 
-Using LuaX's rendering features without HTML-like syntax is possible too.
+Using LuaX's rendering features without its HTML-like syntax is possible too.
 
 `src/components/MyComponent.lua`
 ```lua
@@ -94,3 +100,7 @@ end
 Vanilla lua programs can load `.luax` files once `LuaX.register()` has been
 called. This adds the luax loader into `package.loaders` or `package.searchers`
 (depending on Lua version) 
+
+## Tracking state using hooks
+
+LuaX provides "hooks", which are functions that preserve their state between renders. For information on these, see [Hooks](./hooks.md)

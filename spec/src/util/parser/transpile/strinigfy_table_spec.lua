@@ -50,20 +50,22 @@ describe("stringify_table", function ()
         end
     end)
 
-    -- holy awesome!! does mean that tables need to be double brackets but that's standard to React too.
     it("is chill about literals", function ()
-        local gross_list = { "{function () error('evil shit') end}" }
+        local gross_list = { "{function () error('evil') end}" }
 
         local stringified = stringify_table(gross_list)
-        local expected = "{ function () error('evil shit') end }"
+        local expected = "{ function () error('evil') end }"
 
         assert.equal(expected, stringified)
     end)
 
+    -- TODO FIXME finish test.
     -- honestly wrote this in because of its usage in HookState - might be useful regardless
-    it("stringifies functions", function ()
+    --[[
+        it("stringifies functions", function ()
         local table = { function () return true end }
 
         local stringified = stringify_table(table)
     end)
+    ]]
 end)

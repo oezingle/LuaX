@@ -13,6 +13,9 @@ local MyNativeElement = NativeElement:extend("MyNativeElement")
 --- Set a property by name. get_prop is optional (see below)
 function MyNativeElement:set_prop(prop_name: string, value: any)
 
+--- Get this element's native (UI library) representation.
+function MyNativeElement:get_native (): any
+
 --- Insert a child element by index. is_text may be useful if your UI library handles text differently to other elements
 function MyNativeElement:insert_child(index: number, element: MyNativeElement, is_text: boolean)
 --- Delete a child element by index. see above for information on is_text
@@ -21,28 +24,17 @@ function MyNativeElement:delete_child(index: number, is_text: boolean)
 --- class function to create a new element given an element type name
 function MyNativeElement.create_element(type: string): MyNativeElement
 
---- class function to create a new element given its native representation
+--- class function to create a new element given its native representation. 
+--- Note that nil is a valid argument to this function due to Suspenses
 function MyNativeElement.get_root(native: any): MyNativeElement
 ```
 
 On top of these mandatory methods, it's recommended that NativeElement 
 subclasses implement the following:
 
-<!-- 
---- Optional Methods (recommended)
----@field get_type  nil | fun(self: self): string
----@field create_literal nil | fun(value: string, parent: LuaX.NativeElement): LuaX.NativeElement TODO special rules here?
----
----@field get_prop nil|fun(self: self, prop: string): any
----
----@field cleanup nil|fun(self: self)
----
----@field components string[]? class static property - components implemented by this class.
--->
-
 ```lua
---- Get the element's type name. This is extremely useful for debugging your interface programs.
-function MyNativeElement:get_type(): string
+--- Get a friendly name for the element. Otherwise, the string passed to create_element will be used for debug logs.
+function MyNativeElement:get_name(): string
 
 --- Get an element's property by its name. NativeElement will fall back to a virtual list of properties otherwise, which uses excessive memory.
 function MyNativeElement:get_prop(prop: string): any
@@ -61,6 +53,8 @@ same way as other elements.
 ```lua
 function MyNativeElement.create_literal (value: string, parent: MyNativeElement): LuaX.NativeElement
 ```
+
+## Special properties
 
 ## Recommendations
 

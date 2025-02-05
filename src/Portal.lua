@@ -1,15 +1,17 @@
-local class = require("lib.30log")
-local use_effect = require("src.hooks.use_effect")
-local use_memo   = require("src.hooks.use_memo")
-local use_state  = require("src.hooks.use_state")
-local Context    = require("src.Context")
-local use_context= require("src.hooks.use_context")
+local class          = require("lib.30log")
+local use_effect     = require("src.hooks.use_effect")
+local use_memo       = require("src.hooks.use_memo")
+local use_state      = require("src.hooks.use_state")
+local Context        = require("src.Context")
+local use_context    = require("src.hooks.use_context")
 local create_element = require("src.create_element")
 
-local map = require("src.util.polyfill.list.map")
+local map            = require("src.util.polyfill.list.map")
 
--- I'm ignoring major.minor.patch for Portals for now.
-warn("Portals are an experimental feature and are subject to change until the next minor release")
+if warn then
+    -- I'm ignoring major.minor.patch for Portals for now.
+    warn("Portals are an experimental feature and are subject to change until the next minor release")
+end
 
 ---@class LuaX.Portal : Log.BaseFunctions
 ---
@@ -31,7 +33,7 @@ local Portal = class("LuaX.Portal")
 -- Probably fine for our usages
 -- TODO run the stats on this.
 ---@return LuaX.Portal.UID
-function Portal:unique ()
+function Portal:unique()
     return math.random(0xFFFF)
 end
 
@@ -57,42 +59,42 @@ Portal is a class that must be instanciated before use:
 
 consider reading doc/Portals.md
 ]]
-Portal.Inlet = function () error(rtfm) end
+Portal.Inlet = function() error(rtfm) end
 Portal.Outlet = Portal.Inlet
 
 function Portal:init(name)
     self.name = name
-    
-    self.children = {}
-    
-    self.observers = setmetatable({}, { __mode ="k" })
 
-    self.Outlet = function ()
+    self.children = {}
+
+    self.observers = setmetatable({}, { __mode = "k" })
+
+    self.Outlet = function()
         return self:GenericOutlet()
     end
-    self.Inlet = function (props)
+    self.Inlet = function(props)
         return self:GenericInlet(props)
     end
-    self.Provider = function (props)
+    self.Provider = function(props)
         return self:GenericProvider(props)
     end
 end
 
 ---@param cb function
-function Portal:observe (cb)
+function Portal:observe(cb)
     self.observers[cb] = true
 end
 
 ---@param cb function
-function Portal:unobserve (cb)
+function Portal:unobserve(cb)
     self.observers[cb] = nil
 end
 
-function Portal:update ()
+function Portal:update()
     local cbs = {}
-    for cb in pairs(self.observers) do 
+    for cb in pairs(self.observers) do
         cbs[cb] = true
-    end 
+    end
 
     for cb in pairs(cbs) do
         cb()
@@ -101,13 +103,13 @@ end
 
 ---@param uid LuaX.Portal.UID
 ---@param child LuaX.ElementNode | LuaX.ElementNode[]
-function Portal:add_child (uid, child)
+function Portal:add_child(uid, child)
     for _, existing in ipairs(self.children) do
         -- check if this existing child entry has the given UID
         if existing.uid == uid then
             existing.child = child
             self:update()
-            
+
             return
         end
     end
@@ -119,7 +121,7 @@ end
 
 ---@param uid LuaX.Portal.UID
 ---@return boolean
-function Portal:remove_child (uid)
+function Portal:remove_child(uid)
     for i, existing in ipairs(self.children) do
         if existing.uid == uid then
             table.remove(self.children, i)
@@ -133,17 +135,17 @@ function Portal:remove_child (uid)
 end
 
 ---@param props LuaX.PropsWithChildren<{}>
-function Portal:GenericInlet (props)
+function Portal:GenericInlet(props)
     local children = props.children
 
-    local uid = use_memo(function ()
+    local uid = use_memo(function()
         return self:unique()
     end, {})
 
-    use_effect(function ()
+    use_effect(function()
         self:add_child(uid, children)
 
-        return function ()
+        return function()
             self:remove_child(uid)
         end
     end, { children })
@@ -153,19 +155,19 @@ end
 
 function Portal:GenericOutlet()
     local re, set_re = use_state(0)
-    local rerender = function ()
+    local rerender = function()
         set_re(re + 1)
     end
 
-    use_effect(function ()
+    use_effect(function()
         self:observe(rerender)
 
-        return function ()
+        return function()
             self:unobserve(rerender)
         end
     end)
 
-    return map(self.children, function (data)        
+    return map(self.children, function(data)
         return data.child
     end)
 end
@@ -173,7 +175,7 @@ end
 ---@type LuaX.Context<LuaX.Portal>
 Portal.Context = Context()
 
-function Portal:GenericProvider (props)
+function Portal:GenericProvider(props)
     local table = use_context(Portal.Context) or {}
 
     local name = self.name
@@ -186,9 +188,8 @@ function Portal:GenericProvider (props)
     return create_element(Portal.Context.Provider, { children = props.children, value = new_table })
 end
 
-
 ---@param name string?
-function Portal.create (name)
+function Portal.create(name)
     return Portal(name)
 end
 

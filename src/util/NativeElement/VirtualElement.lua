@@ -33,7 +33,7 @@ function VirtualElement:init(component)
     end
 end
 
-function VirtualElement:get_type()
+function VirtualElement:get_render_name()
     return self.type
 end
 

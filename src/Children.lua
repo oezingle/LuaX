@@ -18,14 +18,14 @@ function Children.count (children)
     end
 end
 
+-- TODO FIXME these APIs seem shitty. What happens if we have doubly nested children?
+
 ---@generic T
 ---@param children LuaX.ElementNode[] | LuaX.ElementNode | nil
 ---@param cb fun(child: LuaX.ElementNode, index: number): T
 ---@return T[]
 function Children.map(children, cb)
-    if not children or children.type then
-        children = { children }
-    end
+    children = Children.flatten(children)
 
     local mapped = {}
 
@@ -34,6 +34,16 @@ function Children.map(children, cb)
     end
 
     return mapped
+end
+
+---@param children LuaX.ElementNode[] | LuaX.ElementNode | nil
+---@return LuaX.ElementNode[]
+function Children.flatten (children)
+    if not children or children.type then
+        children = { children }
+    end
+
+    return children
 end
 
 return Children

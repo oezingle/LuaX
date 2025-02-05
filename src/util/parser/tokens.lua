@@ -25,15 +25,15 @@ local function bake_tokens()
     local tokens = {
         {
             -- Capture here to keep whitespace & allow indent features to work nicely.
-            pattern = "return%s*%[%[(%s*)<",
-            replacer = "return ",
-            end_pattern = "%s*%]%]",
+            pattern = "return%s*%[(=*)%[(%s*)<",
+            replacer = "return %2",
+            end_pattern = "%s*%]%1%]",
             end_replacer = ""
         },
         {
-            pattern = "LuaX%s*%(%[%[(%s*)<",
-            replacer = "",
-            end_pattern = "%s*%]%]%s*%)",
+            pattern = "LuaX%s*%(%[(=*)%[(%s*)<",
+            replacer = "%2",
+            end_pattern = "%s*%]%1%]%s*%)",
             end_replacer = ""
         }
     }

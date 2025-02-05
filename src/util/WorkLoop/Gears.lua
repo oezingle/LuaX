@@ -18,27 +18,11 @@ function GearsWorkLoop:init()
     }
 end
 
-function GearsWorkLoop:run_once()
-    if self:list_is_empty() then
-        self.is_running = false
-
-        self.timer:stop()
-
-        return
-    end
-
-    local cb = self:list_dequue()
-
-    cb()
+function GearsWorkLoop:stop()
+    self.timer:stop()
 end
 
 function GearsWorkLoop:start()
-    if self.is_running then
-        return
-    end
-
-    self.is_running = true
-
     self.timer:start()
 end
 

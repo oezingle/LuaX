@@ -1,55 +1,47 @@
-
 local deep_equals = require("src.util.deep_equals")
-local HookState    = require("src.util.HookState")
+local HookState   = require("src.util.HookState")
 
 ---@alias LuaX.Hooks.UseState.Dispatch<R> fun(new_value: R | (fun(old: R): R))
 
 ---@generic T
----@alias LuaX.Hooks.UseState fun(default?: T): T, fun(new_value: LuaX.Hooks.UseState.Dispatch<T>)
+---@alias LuaX.Hooks.UseState fun(default?: T): T, LuaX.Hooks.UseState.Dispatch<T>
 
 ---@generic T
 ---@param default T?
 ---@return T, LuaX.Hooks.UseState.Dispatch<T>
-local function use_state (default)
+local function use_state(default)
     local hookstate = HookState.global.get(true)
 
     local index = hookstate:get_index()
+    local state = hookstate:get_value(index)
 
-    local value = hookstate:get_value(index)
-    
-    if value == nil then
+    hookstate:increment()
+
+    if state == nil then
         if type(default) == "function" then
             default = default()
         end
 
-        value = default
+        local setter = function(new_value)
+            local state = hookstate:get_value(index)
+            
+            if type(new_value) == "function" then
+                new_value = new_value(state[1])
+            end
 
-        hookstate:set_value_silent(index, value)
-    end
+            if not deep_equals(state[1], new_value, 2) then
+                state[1] = new_value
 
-    -- TODO closure here supposedly is bad for performance - can it be generic at all?
-    local setter = function (cb_or_new_value)
-        local new_value = nil
-
-        if type(cb_or_new_value) == "function" then
-            new_value = cb_or_new_value(value)
-        else
-            new_value = cb_or_new_value
+                hookstate:modified(index, state)
+            end
         end
 
-        -- Functions cannot be accurately checked, so assume they've changed.
-        -- Note that passing a function requires set_value(function () return function () ... end end)
-        if type(new_value) == "function" or not deep_equals(value, new_value, 2) then
-            -- modify the value we compare against
-            value = new_value
+        state = { default, setter }
 
-            hookstate:set_value(index, new_value)
-        end
+        hookstate:set_value_silent(index, state)
     end
 
-    hookstate:increment()
-
-    return value, setter
+    return state[1], state[2]
 end
 
 return use_state

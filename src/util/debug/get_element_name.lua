@@ -33,11 +33,7 @@ local function get_element_name(element)
     then
         local element = element --[[ @as LuaX.NativeElement ]]
 
-        if element.get_type then
-            return element:get_type()
-        end
-
-        return "UNKNOWN (NativeElement)"
+        return element:get_name()
     end
 
     if #element ~= 0 then

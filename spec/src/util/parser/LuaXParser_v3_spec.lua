@@ -1,4 +1,5 @@
 local LuaXParser = require("src.util.parser.LuaXParser")
+local create_element = require("src.create_element")
 
 ---@diagnostic disable:invisible
 
@@ -76,7 +77,6 @@ describe("LuaXParser (v3)", function()
         assert.equal(#code + 1, parser:get_cursor())
     end)
 
-    -- TODO doesn't track whitespace here goodly.
     it("Parses tags with no children", function()
         local code = "<Box />"
 
@@ -148,7 +148,6 @@ describe("LuaXParser (v3)", function()
 
         local parser = LuaXParser()
             :set_text(code)
-        parser.indent = "    "
 
         local node = parser:parse_tag()
 
@@ -258,20 +257,20 @@ describe("LuaXParser (v3)", function()
     end)
 
     it("transpiles files with inline calls", function()
-        local parser = LuaXParser.from_file_content([[
+        local parser = LuaXParser.from_file_content([=[
             local LuaX = require("src.init")
 
             local Component = function (props)
-                return ]] .. "LuaX([[" .. [[
+                return LuaX([[
 
                     <>
                         {props.message}
                     </>
-                ]] .. "]])" .. [[
+                ]])
             end
 
             return Component
-        ]])
+        ]=])
 
         local transpiled = parser:transpile()
 
@@ -300,6 +299,37 @@ describe("LuaXParser (v3)", function()
                     </>
                 ]] .. "]]" .. [[
             end)
+
+            return Component
+        ]])
+
+        local transpiled = parser:transpile()
+
+        local run_transpiled, err = load(transpiled, "transpiled LuaX")
+
+        if not run_transpiled then
+            error(err)
+        end
+
+        local Component = run_transpiled()
+
+        local element = Component({ message = "a string!" })
+
+        assert.equal("a string!", element.props.children[1].props.value)
+    end)
+
+    it("transpiles files with weird strings", function()
+        local parser = LuaXParser.from_file_content([[
+            local LuaX = require("src.init")
+
+            local Component = function (props)
+                return LuaX([=[
+
+                    <>
+                        {props.message}
+                    </>
+                ]=])
+            end
 
             return Component
         ]])
@@ -349,65 +379,79 @@ describe("LuaXParser (v3)", function()
         assert.Nil(load_err)
     end)
 
-    it("parses HTML-style comments", function ()
+    it("parses HTML-style comments", function()
         local code = [[
             <>
                 <!-- I am just a comment! -->
             </>
         ]]
-        
+
         local parser = LuaXParser(code)
-        
+
         ---@diagnostic disable-next-line:invisible
         local node = parser:parse_tag()
-        
+
         assert.equal(1, #node.children)
-        assert.equal("comment", node.children[1].type)    
+        assert.equal("comment", node.children[1].type)
     end)
 
-    it("parses lua-style single-line comments", function ()
+    it("parses lua-style single-line comments", function()
         local code = [[
             <>
                 -- I am just a comment!
             </>
         ]]
-        
+
         local parser = LuaXParser(code)
-        
+
         local node = parser:parse_tag()
-        
+
         assert.equal(1, #node.children)
-        assert.equal("comment", node.children[1].type)    
+        assert.equal("comment", node.children[1].type)
     end)
 
-    it("parses lua-style multi-line comments", function ()
-        local code = [[
+    it("parses lua-style multi-line comments", function()
+        local code = [=[
             <>
-                --[[ I am just a comment! ]] .. "]]" .. [[
+                --[[ I am just a comment! ]]
             </>
-        ]]
-        
+        ]=]
+
         local parser = LuaXParser(code)
-        
+
         local node = parser:parse_tag()
-        
+
         assert.equal(1, #node.children)
-        assert.equal("comment", node.children[1].type)    
+        assert.equal("comment", node.children[1].type)
     end)
 
-    
-    it("transpiles HTML-style comments", function ()
+    it("parses funny lua-style multi-line comments", function()
+        local code = [=[
+            <>
+                --[==[ I am just a comment! ]==]
+            </>
+        ]=]
+
+        local parser = LuaXParser(code)
+
+        local node = parser:parse_tag()
+
+        assert.equal(1, #node.children)
+        assert.equal("comment", node.children[1].type)
+    end)
+
+    it("transpiles HTML-style comments", function()
         local code = [[
             <!-- I am just a comment! -->
         ]]
-        
+
         local parser = LuaXParser(code)
-        
+
         local transpiled = parser:transpile_tag()
         assert.truthy(transpiled:match("^%s*$"))
     end)
 
-    it("transpiles nested HTML-style comments", function ()
+    it("transpiles nested HTML-style comments", function()
         local code = [[
             <!-- I am just a comment!
                 <!-- But so am I! -->
@@ -417,14 +461,44 @@ describe("LuaXParser (v3)", function()
                 </>
             -->
         ]]
-        
+
         local parser = LuaXParser(code)
-        
+
         local transpiled = parser:transpile_tag()
         assert.truthy(transpiled:match("^%s*$"))
     end)
 
-    it("doesn't have an indent issue", function ()
+    it("parses comments in props", function ()
+        local code = [[
+            <Element 
+                --commented
+            />
+        ]]
+
+        local parser = LuaXParser(code)
+
+        local node = parser:parse_tag()
+
+        assert.Nil(next(node.props))
+    end)
+
+    it("parses multiline comments in props", function ()
+        local code = [[
+            <Element 
+                --[=[
+                    commented 
+                ]=]
+            />
+        ]]
+
+        local parser = LuaXParser(code)
+
+        local node = parser:parse_tag()
+
+        assert.Nil(next(node.props))
+    end)
+
+    it("doesn't have an inline indent issue", function()
         local code = [[
             <>
                 <>
@@ -439,7 +513,163 @@ describe("LuaXParser (v3)", function()
         assert.equal("\"I am nested!\"", node.children[1].children[1])
     end)
 
-    -- TODO FIXME - spec for parsing comment literals - eg {--[[ Hello World! ]]}
+    it("doesn't automatically indent in transpiled mode", function()
+        local code = [==[
+            local MyComponent = function (props)
+                return [=[
+                    <>
+                        I'm a component!
+                    </>
+                ]=]
+            end
+
+            return MyComponent
+        ]==]
+
+        local parser = LuaXParser(code)
+
+        local transpiled = parser:transpile()
+
+        local get_output, err = load(transpiled, nil, nil, setmetatable({
+            _LuaX_create_element = create_element
+        }, { __index = _G }))
+
+        if not get_output then
+            error(err)
+        end
+
+        local Component = get_output()
+
+        local node = Component()
+
+        assert.equal("I'm a component!", node.props.children[1].props.value)
+    end)
+
+    it("allows indent in transpiled mode", function()
+        local code = [==[
+            local MyComponent = function (props)
+                return [=[
+                    <>
+                            I'm a component!
+                    </>
+                ]=]
+            end
+
+            return MyComponent
+        ]==]
+
+        local parser = LuaXParser(code)
+
+        local transpiled = parser:transpile()
+
+        local get_output, err = load(transpiled, nil, nil, setmetatable({
+            _LuaX_create_element = create_element
+        }, { __index = _G }))
+
+        if not get_output then
+            error(err)
+        end
+
+        local Component = get_output()
+
+        local node = Component()
+
+        assert.equal("    I'm a component!", node.props.children[1].props.value)
+    end)
+
+    it("transpiles LuaX tags within prop literals", function()
+        local code = [[
+            <ErrorBoundary fallback={<FallbackElement />}>
+                <Child />
+            </ErrorBoundary>
+        ]]
+
+        local parser = LuaXParser(code)
+
+        local node = parser:parse_tag()
+
+        assert.no.match("[<>]", tostring(node.props.fallback))
+    end)
+
+    it("transpiles LuaX tags within literal children", function()
+        local code = [[
+            <Parent>
+                {<Child />}
+            </Parent>
+        ]]
+
+        local parser = LuaXParser(code)
+
+        local node = parser:parse_tag()
+
+        assert.no.match("[<>]", tostring(node.children[1]))
+    end)
+
+    it("does not transpile single-line Comments", function()
+        local code = [[
+            -- local element = <asdf>
+        ]]
+
+        local parser = LuaXParser(code)
+
+        -- this would fail in previous versions of the parser
+        parser:transpile()
+    end)
+
+    it("does not transpile multi-line Comments", function()
+        local code = [==[
+            --[[
+                local element = <asdf>
+            ]]
+        ]==]
+
+        local parser = LuaXParser(code)
+
+        -- this would fail in previous versions of the parser
+        parser:transpile()
+
+        local code = [==[
+            --[=[
+                local element = <asdf>
+            ]=]
+        ]==]
+
+        local parser = LuaXParser(code)
+
+        -- this would fail in previous versions of the parser
+        parser:transpile()
+    end)
+
+    it("Parses tags with single-line comments", function ()
+        local code = [[
+            <Element>
+                -- I am commenting!
+                <Child />
+            </Element>
+        ]]
+
+        local parser = LuaXParser(code)
+
+        local node = parser:parse_tag()
+
+        assert.equal("Child", node.children[2].name)
+    end)
+
+    it("Parses tags with multi-line comments", function ()
+        local code = [[
+            <Element>
+                --[=[ I am commenting! ]=]
+                <Child />
+            </Element>
+        ]]
+
+        local parser = LuaXParser(code)
+
+        local node = parser:parse_tag()
+
+        assert.equal("Child", node.children[2].name)
+    end)
+
 
     do
         local components = {

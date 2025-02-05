@@ -6,8 +6,6 @@ local ElementNode   = require("src.util.ElementNode")
 ---@field protected parent LuaX.NativeElement
 ---@field init fun (self: self, props: string, parent: LuaX.NativeElement)
 ---
--- ---@field get_prop fun(self: self, prop: string): any
----
 --- Abstract fields
 ---@field get_value fun (self: self): string
 ---@field set_value fun(self: self, value: string)
@@ -53,7 +51,7 @@ function NativeTextElement:delete_child()
     error("NativeTextElement may not have children")
 end
 
-function NativeTextElement:get_type()
+function NativeTextElement:get_render_name()
     ---@diagnostic disable-next-line:invisible
     return ElementNode.LITERAL_NODE
 end

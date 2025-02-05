@@ -1,0 +1,6 @@
+return {
+    default = {
+        verbose = true,
+        helper = "sh/busted_entry.lua"
+    }    
+}

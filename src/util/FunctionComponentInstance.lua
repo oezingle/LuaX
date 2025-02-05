@@ -1,13 +1,13 @@
-
 local class = require("lib.30log")
 local HookState = require("src.util.HookState")
 local ipairs_with_nil = require("src.util.ipairs_with_nil")
-local log = require("lib.log")
 local traceback = require("src.util.debug.traceback")
+local DrawGroup = require("src.util.Renderer.DrawGroup")
+local table_pack = require("src.util.polyfill.table.pack")
 
 local get_component_name = require("src.util.debug.get_component_name")
 
-local this_file = (...)
+local this_file = table_pack(...)[1]
 
 ---@alias LuaX.ComponentInstance.ChangeHandler fun(element: LuaX.ElementNode | nil)
 
@@ -35,7 +35,7 @@ local ABORT_CURRENT_RENDER = {}
 function FunctionComponentInstance:init(component)
     self.friendly_name = get_component_name(component)
 
-    log.debug("new FunctionComponentInstance " .. self.friendly_name)
+    -- log.debug("new " .. self.friendly_name)
 
     self.hookstate = HookState()
 
@@ -61,52 +61,60 @@ end
 function FunctionComponentInstance:render(props)
     local component = self.component
 
-    log.debug(string.format("FunctionComponentInstance render %s", self.friendly_name))
+    -- log.debug(string.format("render %s start", self.friendly_name))
 
     self.rerender = false
     self.hookstate:reset()
 
-    -- TODO optionally use setfenv hack here to set _G.LuaX._context and _G.LuaX._hookstate for only self.component
-    local last_context = _G.LuaX._context
-    _G.LuaX._context = props.__luax_internal.context
+    -- TODO should I roll hookstate in to RenderInfo?
     local last_hookstate = HookState.global.set(self.hookstate)
 
     local ok, res = xpcall(component, traceback, props)
 
-    _G.LuaX._context = last_context
     HookState.global.set(last_hookstate)
 
     if not ok then
         local err = res --[[ @as string ]]
-        -- even though err is types as a string, we can ignore that ABORT_CURRENT_RENDER isn't.
-        if err ~= ABORT_CURRENT_RENDER then
-            -- match everything up to 2 lines before the function. Inline, xpcall, then component.
-            err = err:match("(.*)[\n\r].-[\n\r].-[\n\r].-in function '" .. this_file .. ".-'" )
-            err = err:gsub("in upvalue 'chunk'", string.format("in function '%s'", self.friendly_name:match("^%S+")))
-
-            err = "While rendering " .. self.friendly_name ..  ":\n" .. err
-
-            error(err)
+        -- even though err is typed as a string, we can ignore that ABORT_CURRENT_RENDER isn't.
+        if err == ABORT_CURRENT_RENDER then
+            -- errors bubble up nicely.
+            return false, nil
         end
 
-        return false, nil
+        err = tostring(err)
+
+        -- match everything up to 2 lines before the function. Inline, xpcall, then component.
+        local err_trunc = err:match("(.*)[\n\r].-[\n\r].-[\n\r].-in function '" .. this_file .. ".-'")
+        if err_trunc then
+            err_trunc = err_trunc:gsub("in upvalue 'chunk'",
+                string.format("in function '%s'", self.friendly_name:match("^%S+")))
+
+            err_trunc = "While rendering " .. self.friendly_name .. ":\n" .. err_trunc
+        end
+
+        DrawGroup.error(nil, err_trunc or err)
+        -- if DrawGroup.error fails without terminating the program, we have to
+        -- leave the render loop
+        return true, nil
     else
-        log.trace(string.format("render %s end. rerender=%s", self.friendly_name, self.rerender and "true" or "false"))
-        
+        -- log.trace(string.format("render %s end", self.friendly_name))
+
         local element = res
-        
+
         return not self.rerender, element
     end
 end
 
 function FunctionComponentInstance:cleanup()
-    log.debug("FunctionComponentInstance cleanup")
+    -- log.debug("FunctionComponentInstance cleanup")
 
     local hooks = self.hookstate.values
     local length = math.max(#self.hookstate.values, self.hookstate.index)
 
     for _, hook in ipairs_with_nil(hooks, length) do
         -- TODO this breaks use_effect -> HookState -> FunctionComponentInstance encapsulation.
+        -- TODO maybe create a HookState destructor API?
+
         -- hooks can sometimes be garbage collected before components - how do I protect against this?
         if type(hook) == "table" and hook.on_remove then
             hook.on_remove()

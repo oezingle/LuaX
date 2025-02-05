@@ -1,5 +1,6 @@
 
 local class = require("lib.30log")
+local RenderInfo = require("src.util.Renderer.RenderInfo")
 
 ---@class LuaX.Context<T> : Log.BaseFunctions, { default: T, Provider: LuaX.Component }
 ---@field protected default table
@@ -18,7 +19,8 @@ function Context:init(default)
 end
 
 function Context:GenericProvider (props)
-    props.__luax_internal.context[self] = props.value
+    RenderInfo.get().context[self] = props.value
+    -- props.__luax_internal.context[self] = props.value
 
     return props.children
 end
@@ -28,22 +30,6 @@ end
 ---@return LuaX.Context<T>
 function Context.create (default)
     return Context(default)
-end
-
----@param caller LuaX.ElementNode?
-function Context.inherit (caller)
-    if not caller then
-        return {}
-    end
-
-    ---@diagnostic disable-next-line:undefined-field
-    local inherit = caller.props.__luax_internal.context
-
-    local new = {}
-    for k, v in pairs(inherit) do
-        new[k] = v
-    end
-    return new
 end
 
 return Context

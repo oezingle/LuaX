@@ -1,9 +1,6 @@
 [submodule "lib/30log"]
 	path = lib/30log
 	url = https://github.com/Yonaba/30log.git
-[submodule "lib/pprint"]
-	path = lib/pprint
-	url = https://github.com/jagt/pprint.lua
 [submodule "lib/lua-parser"]
 	path = lib/lua-parser
 	url = https://github.com/thenumbernine/lua-parser.git
@@ -22,3 +19,6 @@
 [submodule "lib/profiler"]
 	path = lib/profiler
 	url = https://github.com/oezingle/LuaProfiler
+[submodule "lib/inspect"]
+	path = lib/inspect
+	url = https://github.com/kikito/inspect.lua

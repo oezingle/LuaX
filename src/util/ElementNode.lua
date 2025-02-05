@@ -6,9 +6,6 @@ local get_function_location = require("src.util.debug.get_function_location")
 ---@alias LuaX.ElementNode.Child false | string | LuaX.ElementNode | nil
 ---@alias LuaX.ElementNode.Children LuaX.ElementNode.Child | (LuaX.ElementNode.Child)[]
 
--- ---@alias LuaX.Generic.ElementNode<Props> { type: LuaX.Generic.Component<Props>, props: Props, _component: LuaX.ComponentInstance }
--- ---@alias LuaX.ElementNode LuaX.Generic.ElementNode<{ [string]: any }>
-
 --[[
     returning to a super old comment i left here - see
     spec/special/table_equality_slow.lua
@@ -75,26 +72,6 @@ function ElementNode.clean_children(children)
 
     return children
 end
-
---- API for LuaX environment to hand elements internal props
----
----@param node LuaX.ElementNode
----@param inherit_props { [string]: any }
----@return self
-function ElementNode.inherit_props(node, inherit_props)
-    setmetatable(node.props, {
-        __index = inherit_props
-    })
-
-    return node
-end
-
--- Bonus constructor to keep src/ API DEAD simple
---[[
-function ElementNode.create(component, props)
-    return ElementNode(component, props)
-end
-]]
 
 function ElementNode.create(component, props)
     props.children = ElementNode.clean_children(props.children)
