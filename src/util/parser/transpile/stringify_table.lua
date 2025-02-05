@@ -34,7 +34,9 @@ local function stringify_table(input)
     for _, v in ipairs_with_nil(input) do
         local value = stringify(v)
 
-        table.insert(elements, value)
+        if #value ~= 0 then
+            table.insert(elements, value)
+        end
     end
 
     return string.format("{ %s }", table.concat(elements, ", "))

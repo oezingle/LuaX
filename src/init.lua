@@ -4,7 +4,7 @@ local Inline = require("src.util.parser.Inline")
 local LuaXParser = require("src.util.parser.LuaXParser")
 local ensure_warn = require("src.util.ensure_warn")
 
-local _VERSION = "0.4.0"
+local _VERSION = "0.4.1"
 
 ensure_warn()
 
