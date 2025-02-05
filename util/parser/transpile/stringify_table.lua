@@ -32,7 +32,7 @@ local value=stringify(v)
 local format=string.format("[%s]=%s",key,value)
 table.insert(elements,format) end end
 for _,v in ipairs_with_nil(input) do local value=stringify(v)
-table.insert(elements,value) end
+if  # value ~= 0 then table.insert(elements,value) end end
 return string.format("{ %s }",table.concat(elements,", ")) end
 stringify=function (input) local t=type(input)
 if t == "nil" or t == "number" or t == "boolean" then return tostring(input) end

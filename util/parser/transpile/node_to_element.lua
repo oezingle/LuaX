@@ -37,10 +37,10 @@ local function transpile_node_to_element(node,components,components_mode,create_
 if node.type == "literal" then return string.format("%q",node.value) end
 if node.type == "element" then ---@type table<string, string|table>
 local props=node.props or {}
-local kids=node.children
-if kids and  # kids >= 1 then local children={}
-for i,kid in ipairs(kids) do if type(kid) == "string" then children[i]="{" .. kid .. "}" else children[i]="{" .. transpile_node_to_element(kid,components,components_mode,create_element) .. "}" end end
-props.children=children end
+local children=node.children
+if children and  # children >= 1 then local str_children={}
+for i,kid in ipairs(children) do if type(kid) == "string" then str_children[i]="{" .. kid .. "}" else str_children[i]="{" .. transpile_node_to_element(kid,components,components_mode,create_element) .. "}" end end
+props.children=str_children end
 local name=node.name
 local component=component_name(components,components_mode,name)
 return transpile_create_element(create_element,component,props) end
