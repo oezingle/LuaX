@@ -11,7 +11,7 @@ function build () {
 
     rm -rf ./build
 
-    lua lib/bundler/build/stage-1/init.lua src build --log-level error --preserve annotations \
+    lua lib/bundler/build/stage-1/init.lua src build --log-level error \
         --uid lib_LuaX \
         -i gears -i wibox \
         -i ext -i parser -i table \
