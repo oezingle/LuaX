@@ -58,18 +58,18 @@ end
 LuaXParser.vars = {
     FRAGMENT = {
         name = "_LuaX_Fragment",
-        value = luax_export "Fragment",
+        value = luax_export("Fragment"),
         required = false
     },
     IS_COMPILED = {
         name = "_LuaX_is_compiled",
         value = "true",
-        required = true
+        required = false
     },
     CREATE_ELEMENT = {
         name = "_LuaX_create_element",
-        value = luax_export "create_element",
-        required = true
+        value = luax_export("create_element"),
+        required = false
     }
 }
 
@@ -682,6 +682,10 @@ end
 do
     --- Transpile text that we know is a LuaX tag
     function LuaXParser:transpile_tag()
+        -- we need the minimal set of variables for any tag
+        self.vars.CREATE_ELEMENT.required = true
+        self.vars.IS_COMPILED.required = true
+
         -- save cursor position
         self.current_block_start = self:get_cursor()
 
