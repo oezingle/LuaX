@@ -25,7 +25,7 @@ local LuaXParser=class"LuaXParser (V3)"
 local collect_locals=require"lib_LuaX.util.parser.transpile.collect_locals"(LuaXParser)
 local function luax_export(export_name) local luax_root=require_path:gsub("%.util%.parser%.LuaXParser$","")
 return string.format("require(%q)[%q]",luax_root,export_name) end
-LuaXParser.vars={["FRAGMENT"] = {["name"] = "_LuaX_Fragment",["value"] = luax_export"Fragment",["required"] = false},["IS_COMPILED"] = {["name"] = "_LuaX_is_compiled",["value"] = "true",["required"] = true},["CREATE_ELEMENT"] = {["name"] = "_LuaX_create_element",["value"] = luax_export"create_element",["required"] = true}}
+LuaXParser.vars={["FRAGMENT"] = {["name"] = "_LuaX_Fragment",["value"] = luax_export"Fragment",["required"] = false},["IS_COMPILED"] = {["name"] = "_LuaX_is_compiled",["value"] = "true",["required"] = false},["CREATE_ELEMENT"] = {["name"] = "_LuaX_create_element",["value"] = luax_export"create_element",["required"] = false}}
 function LuaXParser:init(text) if text then self:set_text(text) end
 self:set_sourceinfo()
 self:set_cursor(1)
@@ -83,7 +83,9 @@ function LuaXParser:set_cursor(char) self.char=char
 return self end
 function LuaXParser:get_cursor() return self.char end
 function LuaXParser:move_cursor(chars) self:set_cursor(self:get_cursor() + chars) end
-function LuaXParser:is_at_end() return self:get_cursor() ==  # self.text end end
+function LuaXParser:is_at_end() return self:get_cursor() ==  # self.text end
+function LuaXParser:get_text() return self.text end
+function LuaXParser:has_transpiled() return self.vars.IS_COMPILED.required end end
 do function LuaXParser:text_find(pattern) return self.text:find(pattern,self:get_cursor()) end
 function LuaXParser:text_match(pattern) return self.text:match(pattern,self:get_cursor()) end
 function LuaXParser:text_replace_range(range_start,range_end,replacer) self.text=self.text:sub(1,range_start - 1) .. replacer .. self.text:sub(range_end + 1) end
@@ -167,7 +169,9 @@ if is_fragment then assert(self:move_to_pattern_end"^%s*<%s*/%s*>",self:error"Ca
 assert(no_children or self:move_to_pattern_end(patt),self:error"Cannot find ending tag") end
 if is_comment then return {["type"] = "comment"} end
 return {["type"] = "element",["name"] = tag_name,["props"] = props,["children"] = children} end end
-do function LuaXParser:transpile_tag() self.current_block_start=self:get_cursor()
+do function LuaXParser:transpile_tag() self.vars.CREATE_ELEMENT.required=true
+self.vars.IS_COMPILED.required=true
+self.current_block_start=self:get_cursor()
 local node=self:parse_tag()
 local transpiled=node_to_element(node,self.components.names,self.components.mode,self.vars.CREATE_ELEMENT.name)
 self:text_replace_range_move(self.current_block_start,self:get_cursor(),transpiled)
