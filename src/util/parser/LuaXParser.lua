@@ -276,6 +276,16 @@ do
     function LuaXParser:is_at_end()
         return self:get_cursor() == #self.text
     end
+
+    -- Get the text, regardless of if it is transpiled yet or not.
+    function LuaXParser:get_text ()
+        return self.text
+    end
+
+    -- Check if this parser has performed transpilation to any text
+    function LuaXParser:has_transpiled ()
+        return self.vars.IS_COMPILED.required
+    end
 end
 --#endregion
 
