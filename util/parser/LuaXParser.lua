@@ -47,7 +47,8 @@ if globals then return self:set_components(globals,"global") end
 local locals=collect_locals(self.text)
 locals[self.vars.FRAGMENT.name]=true
 return self:set_components(locals,"local") end end
-function LuaXParser:error(msg) local fmt="LuaX Parser - In %s at %d:%d: %s\n\n%s"
+function LuaXParser:error(msg,...) if ... then msg=string.format(msg,...) end
+local fmt="LuaX Parser - In %s at %d:%d: %s\n\n%s"
 local pos=self:get_cursor()
 local context_line=self.text:sub(pos - 20,pos) .. "(HERE)" .. self.text:sub(pos,pos + 20)
 local chars_away=self:get_cursor()
@@ -166,7 +167,7 @@ local no_children=self:move_to_pattern_end"^%s*/%s*>"
 if  not (is_propsless or no_children) then assert(self:move_to_pattern_end"^%s*>",self:error"Cannot find end of props") end
 local children=no_children and {} or self:parse_text()
 if is_fragment then assert(self:move_to_pattern_end"^%s*<%s*/%s*>",self:error"Cannot find fragment end") elseif is_comment then assert(self:move_to_pattern_end"^%s*%-%-+>",self:error"Cannot find comment end") else local patt="^%s*<%s*/%s*" .. escape(tag_name) .. "%s*>"
-assert(no_children or self:move_to_pattern_end(patt),self:error"Cannot find ending tag") end
+assert(no_children or self:move_to_pattern_end(patt),self:error("Cannot find ending tag for %q",tag_name)) end
 if is_comment then return {["type"] = "comment"} end
 return {["type"] = "element",["name"] = tag_name,["props"] = props,["children"] = children} end end
 do function LuaXParser:transpile_tag() self.vars.CREATE_ELEMENT.required=true
