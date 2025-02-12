@@ -14,6 +14,7 @@ function build () {
     lua lib/bundler/build/stage-1/init.lua src build --log-level error \
         --uid lib_LuaX \
         -i gears -i wibox \
+        -i lgi \
         -i ext -i parser -i table \
         -i bit \
         -i template.showcode
