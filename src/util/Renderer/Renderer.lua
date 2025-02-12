@@ -3,7 +3,7 @@ local ipairs_with_nil       = require("src.util.ipairs_with_nil")
 local key_add               = require("src.util.key.key_add")
 local get_element_name      = require("src.util.debug.get_element_name")
 local create_native_element = require("src.util.Renderer.helper.create_native_element")
-local deep_equals          = require("src.util.deep_equals")
+local deep_equals           = require("src.util.deep_equals")
 local can_modify_child      = require("src.util.Renderer.helper.can_modify_child")
 local ElementNode           = require("src.util.ElementNode")
 local log                   = require("lib.log")
@@ -19,6 +19,7 @@ local max      = math.max
 ---@field workloop LuaX.WorkLoop instance of a workloop
 ---@field native_element LuaX.NativeElement class here, not instance
 ---@field set_workloop fun (self: self, workloop: LuaX.WorkLoop): self set workloop using either a class or an instance
+---@field render fun(self: self, component: LuaX.ElementNode, container: LuaX.NativeElement)
 ---
 ---@field protected render_function_component fun(self: self, element: LuaX.ElementNode, container: LuaX.NativeElement, key: LuaX.Key, caller?: LuaX.ElementNode)
 ---@field protected render_native_component fun(self: self, component: LuaX.ElementNode | nil, container: LuaX.NativeElement, key: LuaX.Key, caller?: LuaX.ElementNode)
@@ -102,7 +103,7 @@ function Renderer:render_native_component(component, container, key, caller)
 
         workloop:start()
     end
-    
+
     -- Append to parent node
     if not can_modify then
         container:insert_child_by_key(key, node)
@@ -126,6 +127,7 @@ function Renderer:render_function_component(element, container, key, caller)
     end
 
     local virtual_key = key_add(key, 1)
+    local render_key = key_add(key, 2)
     local can_modify, existing_child = can_modify_child(element, container, virtual_key)
 
     ---@type LuaX.NativeElement.Virtual
@@ -150,8 +152,6 @@ function Renderer:render_function_component(element, container, key, caller)
         container = container,
         context = Context.inherit(caller)
     }
-
-    local render_key = key_add(key, 2)
 
     node:set_on_change(function()
         self.workloop:add(function()

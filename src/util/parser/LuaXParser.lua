@@ -1,7 +1,7 @@
 local class                     = require("lib.30log")
 local tokens                    = require("src.util.parser.tokens")
 local node_to_element           = require("src.util.parser.transpile.node_to_element")
-local collect_global_components = require("src.util.parser.transpile.collect_global_components")
+local get_global_components = require("src.util.parser.transpile.get_global_components")
 -- collect_locals required below, as collect_locals cyclically requires LuaXParser
 local TokenStack                = require("src.util.parser.parse.TokenStack")
 local escape                    = require("src.util.polyfill.string.escape")
@@ -133,7 +133,7 @@ do
     function LuaXParser:auto_set_components()
         assert(self.text, "Parser input text must be set before components names are queried")
 
-        local globals = collect_global_components()
+        local globals = get_global_components()
 
         if globals then
             return self:set_components(globals, "global")
@@ -151,8 +151,13 @@ end
 --- Get an error message for the current parsing position
 ---@protected
 ---@param msg string
+---@param ... any
 ---@return string
-function LuaXParser:error(msg)
+function LuaXParser:error(msg, ...)
+    if ... then
+        msg = string.format(msg, ...)
+    end
+
     local fmt = "LuaX Parser - In %s at %d:%d: %s\n\n%s"
 
     -- TODO improve this.
@@ -667,7 +672,7 @@ do
         else
             local patt = "^%s*<%s*/%s*" .. escape(tag_name) .. "%s*>"
 
-            assert(no_children or self:move_to_pattern_end(patt), self:error("Cannot find ending tag"))
+            assert(no_children or self:move_to_pattern_end(patt), self:error("Cannot find ending tag for %q", tag_name))
         end
 
         if is_comment then
