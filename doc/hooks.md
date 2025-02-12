@@ -114,9 +114,13 @@ local function use_memo (callback, deps)
         
         set_computed(new_value)
     end, deps)
+
+    return computed
 end
 ```
 
 In practice, `use_memo` lets us save the work of expensive computations every time a component re-renders, instead recomputing only if any of the dependencies in the `deps` table change.
 
 <!-- TODO code example -->
+
+<!-- TODO use_ref -->

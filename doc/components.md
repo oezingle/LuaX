@@ -1,7 +1,11 @@
 # Developing components
 
-As a user of LuaX, most of your work will be in writing components. Components are written in a HTML-like syntax, enabling you
-to work on visual elements with a familiar coding style.
+As a user of LuaX, most of your work will be in writing components. Components
+are written in a HTML-like syntax, enabling you to work on visual elements with
+a familiar coding style.
+
+If the syntax in this article is unfamiliar, consider reading the syntax
+definition in the article that covers the [transpiler](./transpiler.md)
 
 ## LuaX in Vanilla Lua
 
@@ -52,7 +56,7 @@ end
 
 ### LuaX without LuaX syntax
 
-Using LuaX's rendering features without HTML-like syntax is possible too.
+Using LuaX's rendering features without its HTML-like syntax is possible too.
 
 `src/components/MyComponent.lua`
 ```lua

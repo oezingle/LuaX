@@ -28,18 +28,6 @@ function MyNativeElement.get_root(native: any): MyNativeElement
 On top of these mandatory methods, it's recommended that NativeElement 
 subclasses implement the following:
 
-<!-- 
---- Optional Methods (recommended)
----@field get_type  nil | fun(self: self): string
----@field create_literal nil | fun(value: string, parent: LuaX.NativeElement): LuaX.NativeElement TODO special rules here?
----
----@field get_prop nil|fun(self: self, prop: string): any
----
----@field cleanup nil|fun(self: self)
----
----@field components string[]? class static property - components implemented by this class.
--->
-
 ```lua
 --- Get the element's type name. This is extremely useful for debugging your interface programs.
 function MyNativeElement:get_type(): string
