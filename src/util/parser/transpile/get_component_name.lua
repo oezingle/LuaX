@@ -6,6 +6,11 @@
 ---@param components_mode "local" | "global"
 ---@param name string
 local function get_component_name(components, components_mode, name)
+    -- LuaX.<name> is always treated as a global
+    if name:sub(1, 5) == "LuaX." then
+        return string.format("%q", name:sub(6))
+    end
+
     local search_name =
         -- Turn MyContext.Provider or MyContext["Provider"] into just MyContext
         name:match("^(.-)[%.%[]") or
@@ -13,7 +18,7 @@ local function get_component_name(components, components_mode, name)
         name
 
     -- try both shortened name and full-length name
-    local has_component = not not (components[search_name] or components[name])
+    local has_component = components[search_name] or components[name]
 
     local mode_global = components_mode == "global"
 

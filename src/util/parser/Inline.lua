@@ -7,6 +7,7 @@ local LuaXParser = require("src.util.parser.LuaXParser")
 local traceback = require("src.util.debug.traceback")
 local get_locals = require("src.util.debug.get_locals")
 local get_function_location = require("src.util.debug.get_function_location")
+local get_global_components = require("src.util.parser.transpile.get_global_components")
 
 local get_component_name = require("src.util.debug.get_component_name")
 
@@ -80,13 +81,13 @@ function Inline.easy_load(chunk, env, src)
         local file, err = ret:match("%[string \"inline LuaX%s*([^\"]*)\"%]:1:%s*(.*)$")
 
         local new_err = string.format("LuaX: %s: %s", file, err)
-        
+
         error(new_err)
     end
 end
 
 ---@param fn function
-function Inline:lazy_assert(fn)
+function Inline:cached_assert(fn)
     if type(self.assertions[fn]) == "string" then
         error(self.assertions[fn])
     end
@@ -117,8 +118,16 @@ function Inline:cache_get(tag, locals)
     end
 
     local parser = LuaXParser.from_inline_string("return " .. tag, nil)
+    
+    -- mute on_set_variable warnings
+    parser:set_handle_variables(function () end)
 
-    parser:set_components(locals, "local")
+    local globals = get_global_components()
+    if globals then
+        parser:set_components(globals, "global")
+    else
+        parser:set_components(locals, "local")
+    end
 
     local transpiled = parser:transpile()
 
@@ -157,8 +166,8 @@ end
 ---@param stackoffset number?
 ---@return LuaX.FunctionComponent
 function Inline:transpile_decorator(chunk, stackoffset)
-    self:lazy_assert(Inline.assert.can_use_decorator)
-    self:lazy_assert(Inline.assert.can_get_local)
+    self:cached_assert(Inline.assert.can_use_decorator)
+    self:cached_assert(Inline.assert.can_get_local)
 
     local stackoffset = stackoffset or 0
 
@@ -200,7 +209,7 @@ function Inline:transpile_decorator(chunk, stackoffset)
 
         local t = type(tag)
 
-        if t == "table" or t == "nil" then 
+        if t == "table" or t == "nil" then
             return tag
         end
 
@@ -221,7 +230,6 @@ function Inline:transpile_decorator(chunk, stackoffset)
     return inline_luax
 end
 
-
 --- Get the original chunk from a function component that has been inline transpiled
 ---@param fn function
 function Inline:get_original_chunk(fn)
@@ -232,7 +240,7 @@ end
 ---@param stackoffset number?
 ---@return LuaX.ElementNode
 function Inline:transpile_string(tag, stackoffset)
-    self:lazy_assert(self.assert.can_get_local)
+    self:cached_assert(self.assert.can_get_local)
 
     local stackoffset = stackoffset or 0
 
