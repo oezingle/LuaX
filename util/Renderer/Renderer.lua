@@ -48,6 +48,7 @@ if  not can_modify then container:insert_child_by_key(key,node) end end
 function Renderer:render_function_component(element,container,key,caller) do local existing=container:get_children_by_key(key)
 if existing and (existing.class or  # existing > 2) then container:delete_children_by_key(key) end end
 local virtual_key=key_add(key,1)
+local render_key=key_add(key,2)
 local can_modify,existing_child=can_modify_child(element,container,virtual_key)
 local node=nil
 if can_modify then node=existing_child else if existing_child then container:delete_children_by_key(virtual_key) end
@@ -55,7 +56,6 @@ node=VirtualElement.create_element(element.type)
 container:insert_child_by_key(virtual_key,node) end
 node:set_props(element.props)
 element.props.__luax_internal={["renderer"] = self,["container"] = container,["context"] = Context.inherit(caller)}
-local render_key=key_add(key,2)
 node:set_on_change(function () self.workloop:add(function () local did_render,render_result=node:render(true)
 if did_render then self:render_keyed_child(render_result,container,render_key,element) end end)
 self.workloop:start() end)

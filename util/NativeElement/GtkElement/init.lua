@@ -9,12 +9,9 @@ for _ in folder_of_this_file:gmatch"%.%." do pwd=pwd:gsub("[/\\][^/\\]+[/\\]?$",
 pwd=pwd .. sep
 package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep) end
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
-local library_root=folder_of_this_file:sub(1, - 1 -  # "util.Renderer.helper.")
+local library_root=folder_of_this_file:sub(1, - 1 -  # "util.NativeElement.GtkElement.")
 require(library_root .. "_shim") end
-local ElementNode=require"lib_LuaX.util.ElementNode"
-local function create_native_element(element,container) local NativeElementImplementation=container:get_class()
-local component_type=element.type
-if type(component_type) ~= "string" then error"NativeElement cannot render non-pure component" end
-if ElementNode.is_literal(element) and NativeElementImplementation.create_literal then local value=element.props.value
-return NativeElementImplementation.create_literal(value,container) else return NativeElementImplementation.create_element(component_type) end end
-return create_native_element
+local vanilla_require=require
+local require=function (path) local ok,ret=pcall(vanilla_require,path)
+if ok then return ret else print("WARN",ret) end end
+return require"lib_LuaX.util.NativeElement.GtkElement.lgi.Gtk3Element" or error"No GtkElement implementation loaded successfully."

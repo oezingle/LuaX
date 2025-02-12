@@ -17,7 +17,7 @@ local function transpile_node_to_element(node,components,components_mode,create_
 if node.type == "element" then local props=node.props or {}
 local children=node.children
 if children and  # children >= 1 then local str_children={}
-for i,kid in ipairs(children) do if type(kid) == "string" then str_children[i]="{" .. kid .. "}" else str_children[i]="{" .. transpile_node_to_element(kid,components,components_mode,create_element) .. "}" end end
+for i,child in ipairs(children) do if type(child) == "string" then str_children[i]="{" .. child .. "}" else str_children[i]="{" .. transpile_node_to_element(child,components,components_mode,create_element) .. "}" end end
 props.children=str_children end
 local name=node.name
 local component=get_component_name(components,components_mode,name)

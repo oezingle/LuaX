@@ -14,7 +14,7 @@ require(library_root .. "_shim") end
 local class=require"lib_LuaX._dep.lib.30log"
 local tokens=require"lib_LuaX.util.parser.tokens"
 local node_to_element=require"lib_LuaX.util.parser.transpile.node_to_element"
-local collect_global_components=require"lib_LuaX.util.parser.transpile.collect_global_components"
+local get_global_components=require"lib_LuaX.util.parser.transpile.get_global_components"
 local TokenStack=require"lib_LuaX.util.parser.parse.TokenStack"
 local escape=require"lib_LuaX.util.polyfill.string.escape"
 local require_path
@@ -42,7 +42,7 @@ if mode == "local" then components[self.vars.FRAGMENT.name]=true end
 self.components={["names"] = components,["mode"] = mode}
 return self end
 function LuaXParser:auto_set_components() assert(self.text,"Parser input text must be set before components names are queried")
-local globals=collect_global_components()
+local globals=get_global_components()
 if globals then return self:set_components(globals,"global") end
 local locals=collect_locals(self.text)
 locals[self.vars.FRAGMENT.name]=true

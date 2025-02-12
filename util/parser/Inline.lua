@@ -15,6 +15,7 @@ local LuaXParser=require"lib_LuaX.util.parser.LuaXParser"
 local traceback=require"lib_LuaX.util.debug.traceback"
 local get_locals=require"lib_LuaX.util.debug.get_locals"
 local get_function_location=require"lib_LuaX.util.debug.get_function_location"
+local get_global_components=require"lib_LuaX.util.parser.transpile.get_global_components"
 local get_component_name=require"lib_LuaX.util.debug.get_component_name"
 local Fragment=require"lib_LuaX.components.Fragment"
 local create_element=require"lib_LuaX.create_element"
@@ -41,7 +42,7 @@ local ok,ret=pcall(get_output)
 if ok then return ret else local file,err=ret:match"%[string \"inline LuaX%s*([^\"]*)\"%]:1:%s*(.*)$"
 local new_err=string.format("LuaX: %s: %s",file,err)
 error(new_err) end end
-function Inline:lazy_assert(fn) if type(self.assertions[fn]) == "string" then error(self.assertions[fn]) end
+function Inline:cached_assert(fn) if type(self.assertions[fn]) == "string" then error(self.assertions[fn]) end
 local ok,err=xpcall(fn,traceback)
 if ok then self.assertions[fn]=false else self.assertions[fn]=err
 error(err) end end
@@ -49,7 +50,9 @@ function Inline:cache_get(tag,locals) if  not tag then return "return nil" end
 local cached=self:cache_find(tag)
 if cached then return cached end
 local parser=LuaXParser.from_inline_string("return " .. tag,nil)
-parser:set_components(locals,"local")
+parser:set_handle_variables(function ()  end)
+local globals=get_global_components()
+if globals then parser:set_components(globals,"global") else parser:set_components(locals,"local") end
 local transpiled=parser:transpile()
 self:cache_set(tag,transpiled)
 return transpiled end
@@ -57,8 +60,8 @@ function Inline:cache_set(tag,transpiled) self.transpile_cache[tag]=transpiled e
 function Inline:cache_find(tag) return self.transpile_cache[tag] end
 function Inline:cache_clear(tag) if tag then self.transpile_cache[tag]=nil else self.transpile_cache={} end end
 function Inline.print_locals(locals) for k,v in pairs(locals) do print(k,v) end end
-function Inline:transpile_decorator(chunk,stackoffset) self:lazy_assert(Inline.assert.can_use_decorator)
-self:lazy_assert(Inline.assert.can_get_local)
+function Inline:transpile_decorator(chunk,stackoffset) self:cached_assert(Inline.assert.can_use_decorator)
+self:cached_assert(Inline.assert.can_get_local)
 local stackoffset=stackoffset or 0
 local chunk_locals,chunk_names=get_locals(3 + stackoffset)
 if chunk_locals[LuaXParser.vars.IS_COMPILED.name] then return chunk end
@@ -83,7 +86,7 @@ return node end
 self.original_chunks[inline_luax]=chunk
 return inline_luax end
 function Inline:get_original_chunk(fn) return self.original_chunks[fn] end
-function Inline:transpile_string(tag,stackoffset) self:lazy_assert(self.assert.can_get_local)
+function Inline:transpile_string(tag,stackoffset) self:cached_assert(self.assert.can_get_local)
 local stackoffset=stackoffset or 0
 local locals,names=get_locals(3 + stackoffset)
 local vars=LuaXParser.vars
