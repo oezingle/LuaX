@@ -1,6 +1,6 @@
 
 local LuaX = require("src")
-local GtkElement = require("gtk.GtkElement")
+local GtkElement = require("src.util.NativeElement.GtkElement")
 
 local lgi = require("lgi")
 local Gtk = lgi.require("Gtk", "3.0")
