@@ -24,8 +24,10 @@ local function use_state(default)
 
         local setter = function(new_value)
             local state = hookstate:get_value(index)
-
-            local new_value = type(new_value) == "function" and new_value(state[1]) or new_value
+            
+            if type(new_value) == "function" then
+                new_value = new_value(state[1])
+            end
 
             if not deep_equals(state[1], new_value, 2) then
                 state[1] = new_value
