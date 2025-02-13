@@ -475,7 +475,7 @@ do
                 if current == "<" then
                     -- found tag start
                     break
-                elseif current == "-" and self.text:sub(pos):match("%-%-+>") then
+                elseif current == "-" and self.text:sub(pos):match("^%-%-+>") then
                     -- This pattern is somewhat slow but that's ok, slowness at compile time is ok.
                     -- found comment end
                     break
