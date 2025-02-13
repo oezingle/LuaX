@@ -13,7 +13,8 @@ local key_to_string         = require("src.util.key.key_to_string")
 local Context               = require("src.Context")
 
 
-local max      = math.max
+local max = math.max
+
 
 ---@class LuaX.Renderer : Log.BaseFunctions
 ---@field workloop LuaX.WorkLoop instance of a workloop
@@ -56,7 +57,7 @@ end
 ---@param key LuaX.Key
 ---@param caller LuaX.ElementNode?
 function Renderer:render_native_component(component, container, key, caller)
-    -- print(get_element_name(container), "render_native_component", get_element_name(component))
+    -- log.trace(get_element_name(container), "render_native_component", get_element_name(component), key_to_string(key))
 
     if component == nil then
         -- container:set_child(index, nil)
@@ -143,6 +144,19 @@ function Renderer:render_function_component(element, container, key, caller)
         node = VirtualElement.create_element(element.type)
 
         container:insert_child_by_key(virtual_key, node)
+
+        node:set_on_change(function()
+            self.workloop:add(function()
+                local did_render, render_result = node:render(true)
+
+                if did_render then
+                    self:render_keyed_child(render_result, container, render_key, element)
+                end
+            end)
+
+            -- start workloop if it isn't running
+            self.workloop:start()
+        end)
     end
 
     node:set_props(element.props)
@@ -153,22 +167,8 @@ function Renderer:render_function_component(element, container, key, caller)
         context = Context.inherit(caller)
     }
 
-    node:set_on_change(function()
-        self.workloop:add(function()
-            local did_render, render_result = node:render(true)
-
-            if did_render then
-                self:render_keyed_child(render_result, container, render_key, element)
-            end
-        end)
-
-        -- start workloop if it isn't running
-        self.workloop:start()
-    end)
-
     -- This feels evil
     local did_render, render_result = node:render()
-
     if did_render then
         self:render_keyed_child(render_result, container, render_key, element)
     end
@@ -179,7 +179,7 @@ end
 ---@param key LuaX.Key
 ---@param caller LuaX.ElementNode? For context passing. TODO better way to do this exists for SURE
 function Renderer:render_keyed_child(element, container, key, caller)
-    log.trace(get_element_name(container), "rendering", get_element_name(element), key_to_string(key))
+    -- log.trace(get_element_name(container), "rendering", get_element_name(element), key_to_string(key))
 
     if not element or type(element.type) == "string" then
         self:render_native_component(element, container, key, caller)
@@ -224,7 +224,11 @@ end
 ---@param component LuaX.ElementNode
 ---@param container LuaX.NativeElement
 function Renderer:render(component, container)
-    self:render_keyed_child(component, container, { 1 })
+    self.workloop:add(function()
+        self:render_keyed_child(component, container, { 1 })
+    end)
+
+    self.workloop:start()
 end
 
 return Renderer
