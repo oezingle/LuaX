@@ -45,16 +45,7 @@ end
 function Gtk3Element:set_prop(prop, value)
     local widget = self.widget
 
-    -- support LuaX::onload
-    if prop:match("^LuaX::") then
-        local prop_name = prop:sub(7)
-
-        if prop_name == "onload" and not self.has_had_onload then
-            value(self, widget)
-
-            self.has_had_onload = true
-        end
-    elseif prop == "show" then
+    if prop == "show" then
         if value == false then
             widget:hide()
         else
@@ -76,10 +67,6 @@ end
 
 function Gtk3Element:get_prop(prop)
     local widget = self.widget
-
-    if prop:match("^LuaX::") then
-        return
-    end
 
     if prop == "show" then
         return widget:get_visible()
@@ -148,8 +135,8 @@ function Gtk3Element:delete_child(index, is_text)
     end
 end
 
-function Gtk3Element:get_type()
-    return self.widget_name
+function Gtk3Element:get_native()
+    return self.widget
 end
 
 ---@param name string

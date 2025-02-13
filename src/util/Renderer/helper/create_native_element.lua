@@ -6,9 +6,9 @@ local ElementNode = require("src.util.ElementNode")
 local function create_native_element(element, container)
     local NativeElementImplementation = container:get_class()
 
-    local component_type = element.type
+    local element_type = element.type
 
-    if type(component_type) ~= "string" then
+    if type(element_type) ~= "string" then
         error("NativeElement cannot render non-pure component")
     end
 
@@ -17,7 +17,17 @@ local function create_native_element(element, container)
 
         return NativeElementImplementation.create_literal(value, container)
     else
-        return NativeElementImplementation.create_element(component_type)
+        local elem = NativeElementImplementation.create_element(element_type)
+        elem:set_render_name(element_type)
+
+        local onload = element.props["LuaX::onload"]
+        if onload then
+            assert(type(onload) == "function", "LuaX::onload value must be a function")
+
+            onload(elem:get_native(), elem)
+        end
+
+        return elem
     end
 end
 

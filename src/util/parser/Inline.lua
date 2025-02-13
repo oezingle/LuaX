@@ -80,7 +80,7 @@ function Inline.easy_load(chunk, env, src)
     else
         local file, err = ret:match("%[string \"inline LuaX%s*([^\"]*)\"%]:1:%s*(.*)$")
 
-        local new_err = string.format("LuaX: %s: %s", file, err)
+        local new_err = string.format("LuaX error in %s: %s", file, err)
 
         error(new_err)
     end
@@ -117,7 +117,7 @@ function Inline:cache_get(tag, locals)
         return cached
     end
 
-    local parser = LuaXParser.from_inline_string("return " .. tag, nil)
+    local parser = LuaXParser.from_inline_string("return " .. tag)
     
     -- mute on_set_variable warnings
     parser:set_handle_variables(function () end)

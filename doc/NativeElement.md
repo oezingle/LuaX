@@ -13,6 +13,9 @@ local MyNativeElement = NativeElement:extend("MyNativeElement")
 --- Set a property by name. get_prop is optional (see below)
 function MyNativeElement:set_prop(prop_name: string, value: any)
 
+--- Get this element's native (UI library) representation.
+function MyNativeElement:get_native (): any
+
 --- Insert a child element by index. is_text may be useful if your UI library handles text differently to other elements
 function MyNativeElement:insert_child(index: number, element: MyNativeElement, is_text: boolean)
 --- Delete a child element by index. see above for information on is_text
@@ -29,8 +32,8 @@ On top of these mandatory methods, it's recommended that NativeElement
 subclasses implement the following:
 
 ```lua
---- Get the element's type name. This is extremely useful for debugging your interface programs.
-function MyNativeElement:get_type(): string
+--- Get a friendly name for the element. Otherwise, the string passed to create_element will be used for debug logs.
+function MyNativeElement:get_name(): string
 
 --- Get an element's property by its name. NativeElement will fall back to a virtual list of properties otherwise, which uses excessive memory.
 function MyNativeElement:get_prop(prop: string): any
@@ -49,6 +52,8 @@ same way as other elements.
 ```lua
 function MyNativeElement.create_literal (value: string, parent: MyNativeElement): LuaX.NativeElement
 ```
+
+## Special properties
 
 ## Recommendations
 

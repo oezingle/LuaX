@@ -83,7 +83,14 @@ function Renderer:render_native_component(component, container, key, caller)
 
     -- set props
     for prop, value in pairs(component.props) do
-        if prop ~= "children" and not deep_equals(value, node:get_prop(prop), 2) then
+        if
+            -- children are handled differently than other props
+            prop ~= "children" and
+            -- LuaX:: signifies a property that LuaX handles innately.
+            prop:sub(1, 6) ~= "LuaX::" and
+            -- values haven't changed.
+            not deep_equals(value, node:get_prop(prop), 2)
+        then
             node:set_prop_safe(prop, value)
         end
     end

@@ -51,7 +51,7 @@ function NativeTextElement:delete_child()
     error("NativeTextElement may not have children")
 end
 
-function NativeTextElement:get_type()
+function NativeTextElement:get_render_name()
     ---@diagnostic disable-next-line:invisible
     return ElementNode.LITERAL_NODE
 end

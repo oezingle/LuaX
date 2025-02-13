@@ -17,7 +17,7 @@ WiboxElement.widgets = {
     }
 }
 
-function WiboxElement:init(native, type)
+function WiboxElement:init(native)
     -- print(type, "create")
 
     self.widget = native
@@ -25,10 +25,6 @@ function WiboxElement:init(native, type)
     self.texts = {}
 
     self.signal_handlers = {}
-
-    self.has_had_onload = false
-
-    self.type = type
 end
 
 ---@param prop string
@@ -36,16 +32,7 @@ end
 function WiboxElement:set_prop(prop, value)
     local widget = self.widget
 
-    -- support LuaX::onload
-    if prop:match("^LuaX::") then
-        local prop_name = prop:sub(7)
-
-        if prop_name == "onload" and not self.has_had_onload then
-            value(self, widget)
-
-            self.has_had_onload = true
-        end
-    elseif prop:match("^signal::") then
+    if prop:match("^signal::") then
         local signal_name = prop:sub(9)
 
         if value then
@@ -106,8 +93,8 @@ function WiboxElement:delete_child(index, is_text)
     end
 end
 
-function WiboxElement:get_type()
-    return self.type
+function WiboxElement:get_native()
+    return self.widget
 end
 
 ---@param element_name string

@@ -20,12 +20,7 @@ local function can_modify_child (child, container, key)
     ---@type LuaX.NativeElement
     local existing_child = existing_children
 
-    -- get_type isn't implemented, assume incompatible :(
-    if not existing_child.get_type then
-        return false, existing_children
-    end 
-
-    if existing_child:get_type() ~= child.type then              
+    if existing_child:get_render_name() ~= child.type then              
         return false, existing_children
     end
 

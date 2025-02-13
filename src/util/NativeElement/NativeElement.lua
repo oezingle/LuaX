@@ -11,17 +11,20 @@ local key_to_string         = require("src.util.key.key_to_string")
 
 ---@class LuaX.NativeElement : Log.BaseFunctions
 ---
----@field protected _children_by_key LuaX.NativeElement.ChildrenByKey
+---@field private _children_by_key LuaX.NativeElement.ChildrenByKey
 ---@field get_children_by_key fun(self: self, key: LuaX.Key): LuaX.NativeElement.ChildrenByKey
 ---@field insert_child_by_key fun(self: self, key: LuaX.Key, child: LuaX.NativeElement)
 ---@field delete_children_by_key fun(self: self, key: LuaX.Key)
----@field protected count_children_by_key fun(self: self, key: LuaX.Key, ignore_virtual?: boolean): number
----@field protected set_child_by_key fun(self: self, key: LuaX.Key, child: LuaX.NativeElement | nil)
----@field protected flatten_children fun(self: self, key: LuaX.Key): { element: LuaX.NativeElement, key: LuaX.Key }[]
+---@field private count_children_by_key fun(self: self, key: LuaX.Key, ignore_virtual?: boolean): number
+---@field private set_child_by_key fun(self: self, key: LuaX.Key, child: LuaX.NativeElement | nil)
+---@field private flatten_children fun(self: self, key: LuaX.Key): { element: LuaX.NativeElement, key: LuaX.Key }[]
 ---
 ---@field set_prop_safe fun (self: self ,prop: string, value: any)
----@field set_prop_virtual fun (self: self, prop: string, value: any)
----@field protected _virtual_props table<string, any>
+---@field private set_prop_virtual fun (self: self, prop: string, value: any)
+---@field private _virtual_props table<string, any>
+---
+---@field set_render_name fun(self: self, name: string)
+---@field get_render_name fun(self: self): string name
 ---
 --- Abstract Methods
 ---@field set_prop fun(self: self, prop: string, value: any)
@@ -30,9 +33,10 @@ local key_to_string         = require("src.util.key.key_to_string")
 ---
 ---@field create_element fun(type: string): LuaX.NativeElement
 ---@field get_root fun(native: any): LuaX.NativeElement Convert a passed object to a root node
+---@field get_native fun(self: self): any Get this element's native (UI library) representation.
 ---
 --- Optional Methods (recommended)
----@field get_type  nil | fun(self: self): string
+---@field get_name  nil | fun(self: self): string Return a friendly name for this element
 ---@field create_literal nil | fun(value: string, parent: LuaX.NativeElement): LuaX.NativeElement
 ---
 ---@field get_prop nil|fun(self: self, prop: string): any
@@ -52,8 +56,17 @@ function NativeElement:init()
     error("NativeElement must be extended to use for components")
 end
 
-function NativeElement:get_type_safe()
-    return self.get_type and self:get_type() or "UNKNOWN"
+function NativeElement:get_render_name()
+    return self.__render_name
+end
+
+function NativeElement:set_render_name(name)
+    self.__render_name = name
+end
+
+-- Child classes are recommended to overload.
+function NativeElement:get_name ()
+    return self:get_render_name() or "unknown NativeElement"
 end
 
 function NativeElement:get_children_by_key(key)
@@ -118,7 +131,7 @@ function NativeElement:flatten_children(key)
 end
 
 function NativeElement:insert_child_by_key(key, child)
-    log.trace(self:get_type_safe(), "insert_child_by_key", key_to_string(key))
+    log.trace(self:get_name(), "insert_child_by_key", key_to_string(key))
 
     if not self._children_by_key then
         self._children_by_key = {}
@@ -131,7 +144,7 @@ function NativeElement:insert_child_by_key(key, child)
 
         local is_text = NativeTextElement and NativeTextElement:classOf(child.class) or false
 
-        log.trace(" ↳ insert native child", child:get_type_safe(), tostring(insert_index))
+        log.trace(" ↳ insert native child", child:get_name(), tostring(insert_index))
 
         self:insert_child(insert_index, child, is_text)
     end
@@ -141,7 +154,7 @@ function NativeElement:insert_child_by_key(key, child)
 end
 
 function NativeElement:delete_children_by_key(key)
-    log.trace(self:get_type_safe(), "delete_children_by_key", key_to_string(key))
+    log.trace(self:get_name(), "delete_children_by_key", key_to_string(key))
 
     -- No need to delete anything
     if not self._children_by_key then
@@ -169,7 +182,7 @@ function NativeElement:delete_children_by_key(key)
                 NativeTextElement:classOf(child.class) or
                 false
 
-            log.trace(" ↳ delete native child", child:get_type_safe(), tostring(delete_index))
+            log.trace(" ↳ delete native child", child:get_name(), tostring(delete_index))
 
             self:delete_child(delete_index, is_text)
 

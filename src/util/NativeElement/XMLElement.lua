@@ -46,10 +46,6 @@ function XMLElement.get_root(xml)
     })
 end
 
-function XMLElement:get_type()
-    return self.type
-end
-
 -- This is NOT a good xml serializer
 function XMLElement:__tostring()
     if ElementNode.is_literal(self.type) then
