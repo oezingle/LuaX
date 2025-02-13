@@ -37,7 +37,7 @@ local can_modify,existing_child=can_modify_child(component,container,key)
 local node=nil
 if can_modify then node=existing_child else if existing_child then container:delete_children_by_key(key) end
 node=create_native_element(component,container) end
-for prop,value in pairs(component.props) do if prop ~= "children" and  not deep_equals(value,node:get_prop(prop),2) then node:set_prop_safe(prop,value) end end
+for prop,value in pairs(component.props) do if prop ~= "children" and prop:sub(1,6) ~= "LuaX::" and  not deep_equals(value,node:get_prop(prop),2) then node:set_prop_safe(prop,value) end end
 local children=component.props.children
 local current_children=node:get_children_by_key{} or {}
 if children then local workloop=self.workloop

@@ -68,7 +68,7 @@ if match then return match.token,match.captured,match.range_start,match.range_en
 return nil end
 function LuaXParser:get_indent() local default_slice=self.text:sub(1,self:get_cursor())
 local default_indent=default_slice:match"[\n\13](%s*).-$" or ""
-local indent=self:text_match">[\n\13](%s*)%S" or ""
+local indent=self:text_match">[\n\13](%s-)[%S\n\13]" or ""
 return indent:gsub("^" .. default_indent,"") end
 do function LuaXParser:move_to_next_token() local _,_,token_pos=self:get_next_token()
 if  not token_pos then error(self:error"Unable to determine next token") end
@@ -193,6 +193,11 @@ function LuaXParser:transpile() if  not self.components then warn"Automatically 
 self:auto_set_components() end
 while self:transpile_once() do  end
 return self.text end end
+function LuaXParser:write_to_file(path) local f=io.open(path,"w")
+assert(f,string.format("Unable to open %q",path))
+f:write(self.text)
+f:flush()
+f:close() end
 do function LuaXParser.from_inline_string(str,src,variables) local parser=LuaXParser():set_text(str):set_sourceinfo(src or "Unknown inline string")
 if variables then parser:handle_variables_as_table(variables):auto_set_components() end
 return parser end

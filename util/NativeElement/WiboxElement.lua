@@ -18,15 +18,11 @@ local list_reduce=require"lib_LuaX.util.polyfill.list.reduce"
 local wibox=require"wibox"
 local WiboxElement=NativeElement:extend"WiboxElement"
 WiboxElement.widgets={["wibox"] = {["container"] = wibox.container,["layout"] = wibox.layout,["widget"] = wibox.widget,["mod"] = {}}}
-function WiboxElement:init(native,type) self.widget=native
+function WiboxElement:init(native) self.widget=native
 self.texts={}
-self.signal_handlers={}
-self.has_had_onload=false
-self.type=type end
+self.signal_handlers={} end
 function WiboxElement:set_prop(prop,value) local widget=self.widget
-if prop:match"^LuaX::" then local prop_name=prop:sub(7)
-if prop_name == "onload" and  not self.has_had_onload then value(self,widget)
-self.has_had_onload=true end elseif prop:match"^signal::" then local signal_name=prop:sub(9)
+if prop:match"^signal::" then local signal_name=prop:sub(9)
 if value then widget:weak_connect_signal(signal_name,value) end
 self.signal_handlers[prop]=value else widget[prop]=value end end
 function WiboxElement:get_prop(prop) if self.signal_handlers[prop] then return self.signal_handlers[prop] end
@@ -38,7 +34,7 @@ self.widget:set_children(children) else error(string.format("Unable to insert ch
 function WiboxElement:delete_child(index,is_text) if is_text then table.remove(self.texts,index) else if self.widget.remove then self.widget:remove(index) elseif self.widget.get_children and self.widget.set_children then local children=self.widget:get_children()
 table.remove(children,index)
 self.widget:set_children(children) else error(string.format("Unable to insert child with wibox %s",self.widget)) end end end
-function WiboxElement:get_type() return self.type end
+function WiboxElement:get_native() return self.widget end
 function WiboxElement.create_element(element_name) local fields=string_split(element_name,"%.")
 local widget_type=list_reduce(fields,function (object,key) return object[key] end,WiboxElement.widgets)
 assert(widget_type,string.format("No widget known by name %q",element_name))

@@ -27,14 +27,11 @@ self.texts={}
 self.signal_functions={}
 self.signal_ids={} end
 function Gtk3Element:set_prop(prop,value) local widget=self.widget
-if prop:match"^LuaX::" then local prop_name=prop:sub(7)
-if prop_name == "onload" and  not self.has_had_onload then value(self,widget)
-self.has_had_onload=true end elseif prop == "show" then if value == false then widget:hide() else widget:show() end elseif prop:match"^on_" then local existing_handler=self.signal_ids[prop]
+if prop == "show" then if value == false then widget:hide() else widget:show() end elseif prop:match"^on_" then local existing_handler=self.signal_ids[prop]
 if existing_handler then GObject.signal_handler_disconnect(widget,existing_handler) end
 self.signal_functions[prop]=value
 self.signal_ids[prop]=widget[prop]:connect(value) else widget["set_" .. prop](widget,value) end end
 function Gtk3Element:get_prop(prop) local widget=self.widget
-if prop:match"^LuaX::" then return  end
 if prop == "show" then return widget:get_visible() end
 if prop:match"^on_" then return self.signal_functions[prop] end
 return widget["get_" .. prop](widget) end
@@ -57,7 +54,7 @@ local remove_child=children[index]
 self.widget:remove(remove_child)
 remove_child:destroy()
 self:reinsert_trailing_children(after) end end
-function Gtk3Element:get_type() return self.widget_name end
+function Gtk3Element:get_native() return self.widget end
 function Gtk3Element.create_element(name) local elem=name:match"Gtk%.(%S+)"
 assert(elem,"GtkElement must be specified by Gtk.<Name>")
 local native=Gtk[elem]()

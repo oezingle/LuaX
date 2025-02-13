@@ -23,7 +23,9 @@ local NativeElement=class"NativeElement"
 NativeElement._dependencies={}
 NativeElement._dependencies.NativeTextElement=nil
 function NativeElement:init() error"NativeElement must be extended to use for components" end
-function NativeElement:get_type_safe() return self.get_type and self:get_type() or "UNKNOWN" end
+function NativeElement:get_render_name() return self.__render_name end
+function NativeElement:set_render_name(name) self.__render_name=name end
+function NativeElement:get_name() return self:get_render_name() or "unknown NativeElement" end
 function NativeElement:get_children_by_key(key) local children=self._children_by_key
 return list_reduce(key,function (children,key_slice) if  not children then return nil end
 return children[key_slice] end,children or {}) end
@@ -38,15 +40,15 @@ function NativeElement:count_children_by_key(key,include_virtual) return count_c
 function NativeElement:set_child_by_key(key,child) return set_child_by_key(self._children_by_key,key,child) end
 function NativeElement:flatten_children(key) local children=self:get_children_by_key(key)
 return flatten_children(children,key) end
-function NativeElement:insert_child_by_key(key,child) log.trace(self:get_type_safe(),"insert_child_by_key",key_to_string(key))
+function NativeElement:insert_child_by_key(key,child) log.trace(self:get_name(),"insert_child_by_key",key_to_string(key))
 if  not self._children_by_key then self._children_by_key={} end
 if child.class ~= VirtualElement then local insert_index=self:count_children_by_key(key) + 1
 local NativeTextElement=self._dependencies.NativeTextElement
 local is_text=NativeTextElement and NativeTextElement:classOf(child.class) or false
-log.trace(" ↳ insert native child",child:get_type_safe(),tostring(insert_index))
+log.trace(" ↳ insert native child",child:get_name(),tostring(insert_index))
 self:insert_child(insert_index,child,is_text) end
 self:set_child_by_key(key,child) end
-function NativeElement:delete_children_by_key(key) log.trace(self:get_type_safe(),"delete_children_by_key",key_to_string(key))
+function NativeElement:delete_children_by_key(key) log.trace(self:get_name(),"delete_children_by_key",key_to_string(key))
 if  not self._children_by_key then self._children_by_key={}
 return  end
 local flattened=self:flatten_children(key)
@@ -55,7 +57,7 @@ local NativeTextElement=self._dependencies.NativeTextElement
 for i =  # flattened,1, - 1 do local child=flattened[i].element
 child:cleanup()
 if child.class ~= VirtualElement then local is_text=NativeTextElement and NativeTextElement:classOf(child.class) or false
-log.trace(" ↳ delete native child",child:get_type_safe(),tostring(delete_index))
+log.trace(" ↳ delete native child",child:get_name(),tostring(delete_index))
 self:delete_child(delete_index,is_text)
 delete_index=delete_index - 1 end end
 self:set_child_by_key(key,nil) end

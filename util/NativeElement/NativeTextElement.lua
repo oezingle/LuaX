@@ -24,5 +24,5 @@ function NativeTextElement:get_prop(prop) if prop ~= "value" then return nil end
 return self:get_value() end
 function NativeTextElement:insert_child() error"NativeTextElement may not have children" end
 function NativeTextElement:delete_child() error"NativeTextElement may not have children" end
-function NativeTextElement:get_type() return ElementNode.LITERAL_NODE end
+function NativeTextElement:get_render_name() return ElementNode.LITERAL_NODE end
 return NativeTextElement

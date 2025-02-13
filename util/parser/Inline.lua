@@ -40,7 +40,7 @@ print(chunk)
 error(err) end
 local ok,ret=pcall(get_output)
 if ok then return ret else local file,err=ret:match"%[string \"inline LuaX%s*([^\"]*)\"%]:1:%s*(.*)$"
-local new_err=string.format("LuaX: %s: %s",file,err)
+local new_err=string.format("LuaX error in %s: %s",file,err)
 error(new_err) end end
 function Inline:cached_assert(fn) if type(self.assertions[fn]) == "string" then error(self.assertions[fn]) end
 local ok,err=xpcall(fn,traceback)
@@ -49,7 +49,7 @@ error(err) end end
 function Inline:cache_get(tag,locals) if  not tag then return "return nil" end
 local cached=self:cache_find(tag)
 if cached then return cached end
-local parser=LuaXParser.from_inline_string("return " .. tag,nil)
+local parser=LuaXParser.from_inline_string("return " .. tag)
 parser:set_handle_variables(function ()  end)
 local globals=get_global_components()
 if globals then parser:set_components(globals,"global") else parser:set_components(locals,"local") end

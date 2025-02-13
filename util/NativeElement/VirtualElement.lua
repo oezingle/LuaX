@@ -17,7 +17,7 @@ local deep_equals=require"lib_LuaX.util.deep_equals"
 local VirtualElement=class"LuaX.VirtualElement"
 function VirtualElement:init(component) if type(component) == "function" then self.instance=FunctionComponentInstance(component)
 self.type=component else self.instance=component end end
-function VirtualElement:get_type() return self.type end
+function VirtualElement:get_render_name() return self.type end
 function VirtualElement:set_on_change(callback) self.instance:set_on_change(callback) end
 function VirtualElement:insert_child() error"A VirtualElement should never interact with children" end
 VirtualElement.delete_child=VirtualElement.insert_child
