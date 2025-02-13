@@ -222,7 +222,7 @@ function LuaXParser:get_indent()
     local default_slice = self.text:sub(1, self:get_cursor())
     local default_indent = default_slice:match("[\n\r](%s*).-$") or ""
 
-    local indent = self:text_match(">[\n\r](%s*)%S") or ""
+    local indent = self:text_match(">[\n\r](%s-)[%S\n\r]") or ""
 
     return indent:gsub("^" .. default_indent, "")
 end
@@ -768,6 +768,18 @@ do
 end
 --#endregion
 
+--- Assuming a file has been transpiled, write its result to a file path
+---@param path string
+function LuaXParser:write_to_file (path)
+    local f = io.open(path, "w")
+
+    assert(f, string.format("Unable to open %q", path))
+
+    f:write(self.text)
+    f:flush()
+
+    f:close()
+end
 
 --#region constructors
 do
