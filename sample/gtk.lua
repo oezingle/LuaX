@@ -47,8 +47,9 @@ local EasyNotebook = LuaX(function(props)
 
     return [[
         <LuaX.Gtk.Notebook
-            -- Element providers should allow LuaX::onload
-            LuaX::onload={function (_, w) set_notebook(w) end}
+            -- The LuaX library handles this special property
+            LuaX::onload={function (w) set_notebook(w) end}
+            
             on_page_added={function (w)
                 set_page_count(w:get_n_pages())
             end}
