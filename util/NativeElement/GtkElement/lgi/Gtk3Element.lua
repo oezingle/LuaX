@@ -11,24 +11,33 @@ package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep)
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "util.NativeElement.GtkElement.lgi.")
 require(library_root .. "_shim") end
-local lgi=require"lgi"
-local Gtk=lgi.require("Gtk","3.0")
-local GObject=lgi.GObject
+local has_lgi,lgi=pcall(require,"lgi")
+if  not has_lgi then error"Cannot load lgi, therefore cannot load Gtk 3.0 using lgi" end
+local has_Gtk,Gtk=pcall(lgi.require,"Gtk","3.0")
+if  not has_Gtk then error"Loaded lgi, but cannot load Gtk 3.0 using lgi" end
+local has_GObject,GObject=pcall(lgi.require,"GObject")
+if  not has_GObject then error"Loaded lgi and Gtk, but cannot load GObject using lgi. Are you sure Gtk is installed properly?" end
 local NativeElement=require"lib_LuaX.util.NativeElement"
 local NativeTextElement=require"lib_LuaX.util.NativeElement.NativeTextElement"
 local Gtk3Element=NativeElement:extend"LuaX.GtkElement (lgi,3.0)"
-function Gtk3Element:init(native,widget_name) self.widget=native
-self.widget:show()
+function Gtk3Element:init(native,widget_name) native:show()
+self.widget=native
 self.widget_name=widget_name
 self.texts={}
 self.signal_functions={}
 self.signal_ids={} end
-function Gtk3Element:set_prop(prop,value) if prop:match"^on_" then local existing_handler=self.signal_ids[prop]
-if existing_handler then GObject.signal_handler_disconnect(self.widget,existing_handler) end
+function Gtk3Element:set_prop(prop,value) local widget=self.widget
+if prop:match"^LuaX::" then local prop_name=prop:sub(7)
+if prop_name == "onload" and  not self.has_had_onload then value(self,widget)
+self.has_had_onload=true end elseif prop == "show" then if value == false then widget:hide() else widget:show() end elseif prop:match"^on_" then local existing_handler=self.signal_ids[prop]
+if existing_handler then GObject.signal_handler_disconnect(widget,existing_handler) end
 self.signal_functions[prop]=value
-self.signal_ids[prop]=self.widget[prop]:connect(value) else self.widget["set_" .. prop](self.widget,value) end end
-function Gtk3Element:get_prop(prop) if prop:match"^on_" then return self.signal_functions[prop] end
-return self.widget["get_" .. prop](self.widget) end
+self.signal_ids[prop]=widget[prop]:connect(value) else widget["set_" .. prop](widget,value) end end
+function Gtk3Element:get_prop(prop) local widget=self.widget
+if prop:match"^LuaX::" then return  end
+if prop == "show" then return widget:get_visible() end
+if prop:match"^on_" then return self.signal_functions[prop] end
+return widget["get_" .. prop](widget) end
 function Gtk3Element:get_trailing_children(index) local children=self.widget:get_children()
 local after={}
 for i = index, # children do local child=children[i]
@@ -39,8 +48,7 @@ return after end
 function Gtk3Element:reinsert_trailing_children(list) for _,child in ipairs(list) do self.widget:add(child)
 child:unref() end end
 function Gtk3Element:insert_child(index,element,is_text) if is_text then table.insert(self.texts,index,element)
-self:_reload_text() else print(self:get_type(),"insert",index,is_text)
-local after=self:get_trailing_children(index)
+self:_reload_text() else local after=self:get_trailing_children(index)
 self.widget:add(element.widget)
 self:reinsert_trailing_children(after) end end
 function Gtk3Element:delete_child(index,is_text) if is_text then table.remove(self.texts,index) else local after=self:get_trailing_children(index + 1)

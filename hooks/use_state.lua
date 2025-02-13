@@ -19,7 +19,7 @@ local state=hookstate:get_value(index)
 hookstate:increment()
 if state == nil then if type(default) == "function" then default=default() end
 local setter=function (new_value) local state=hookstate:get_value(index)
-local new_value=type(new_value) == "function" and new_value(state[1]) or new_value
+if type(new_value) == "function" then new_value=new_value(state[1]) end
 if  not deep_equals(state[1],new_value,2) then state[1]=new_value
 hookstate:modified(index,state) end end
 state={default,setter}

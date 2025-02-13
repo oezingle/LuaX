@@ -21,7 +21,7 @@ local this_file=(...)
 local FunctionComponentInstance=class"FunctionComponentInstance"
 local ABORT_CURRENT_RENDER={}
 function FunctionComponentInstance:init(component) self.friendly_name=get_component_name(component)
-log.debug("new FunctionComponentInstance " .. self.friendly_name)
+log.debug("new " .. self.friendly_name)
 self.hookstate=HookState()
 self.hookstate:set_listener(function () self.rerender=true
 self.change_handler()
@@ -29,21 +29,21 @@ if HookState.global.get() == self.hookstate then error(ABORT_CURRENT_RENDER) end
 self.component=component end
 function FunctionComponentInstance:set_on_change(cb) self.change_handler=cb end
 function FunctionComponentInstance:render(props) local component=self.component
-log.debug(string.format("FunctionComponentInstance render %s",self.friendly_name))
+log.debug(string.format("render %s start",self.friendly_name))
 self.rerender=false
 self.hookstate:reset()
 local last_context=_G.LuaX._context
 _G.LuaX._context=props.__luax_internal.context
 local last_hookstate=HookState.global.set(self.hookstate)
-local ok,res=xpcall(component,traceback,props)
+local ok,res=pcall(component,props)
 _G.LuaX._context=last_context
 HookState.global.set(last_hookstate)
 if  not ok then local err=res
-if err ~= ABORT_CURRENT_RENDER then err=err:match("(.*)[\n\13].-[\n\13].-[\n\13].-in function '" .. this_file .. ".-'")
-err=err:gsub("in upvalue 'chunk'",string.format("in function '%s'",self.friendly_name:match"^%S+"))
-err="While rendering " .. self.friendly_name .. ":\n" .. err
-error(err) end
-return false,nil else log.trace(string.format("render %s end. rerender=%s",self.friendly_name,self.rerender and "true" or "false"))
+if err ~= ABORT_CURRENT_RENDER then local err_trunc=err:match("(.*)[\n\13].-[\n\13].-[\n\13].-in function '" .. this_file .. ".-'")
+if err_trunc then err_trunc=err_trunc:gsub("in upvalue 'chunk'",string.format("in function '%s'",self.friendly_name:match"^%S+"))
+err_trunc="While rendering " .. self.friendly_name .. ":\n" .. err_trunc end
+error(err_trunc or err) end
+return false,nil else log.trace(string.format("render %s end",self.friendly_name))
 local element=res
 return  not self.rerender,element end end
 function FunctionComponentInstance:cleanup() log.debug"FunctionComponentInstance cleanup"

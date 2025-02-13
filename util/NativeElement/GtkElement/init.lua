@@ -13,5 +13,5 @@ local library_root=folder_of_this_file:sub(1, - 1 -  # "util.NativeElement.GtkEl
 require(library_root .. "_shim") end
 local vanilla_require=require
 local require=function (path) local ok,ret=pcall(vanilla_require,path)
-if ok then return ret else print("WARN",ret) end end
-return require"lib_LuaX.util.NativeElement.GtkElement.lgi.Gtk3Element" or error"No GtkElement implementation loaded successfully."
+if ok then return ret else warn(ret) end end
+return require"lib_LuaX.util.NativeElement.GtkElement.lgi.Gtk3Element" or error"No GtkElement implementation loaded successfully. To see the errors created by these implementations, use warn(\"@on\") before loading this file."

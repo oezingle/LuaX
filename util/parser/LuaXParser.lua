@@ -121,7 +121,7 @@ while true do local pos=tokenstack:get_pos()
 tokenstack:run_once()
 tokenstack:run_until_empty()
 if tokenstack:get_pos() > pos + 1 then table.insert(slices,{["is_luablock"] = true,["chars"] = {self.text:sub(pos + 1,tokenstack:get_pos() - 2)},["start"] = pos + 1}) else local current=self.text:sub(pos,pos)
-if current == "<" then break elseif current == "-" and self.text:sub(pos):match"%-%-+>" then break elseif current == "{" then  else local last_slice=slices[ # slices]
+if current == "<" then break elseif current == "-" and self.text:sub(pos):match"^%-%-+>" then break elseif current == "{" then  else local last_slice=slices[ # slices]
 if  not last_slice or last_slice.is_luablock == true then table.insert(slices,{["is_luablock"] = false,["chars"] = {},["start"] = pos})
 last_slice=slices[ # slices] end
 table.insert(last_slice.chars,current) end end end

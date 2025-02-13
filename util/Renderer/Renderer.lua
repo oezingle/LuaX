@@ -53,16 +53,15 @@ local can_modify,existing_child=can_modify_child(element,container,virtual_key)
 local node=nil
 if can_modify then node=existing_child else if existing_child then container:delete_children_by_key(virtual_key) end
 node=VirtualElement.create_element(element.type)
-container:insert_child_by_key(virtual_key,node) end
-node:set_props(element.props)
-element.props.__luax_internal={["renderer"] = self,["container"] = container,["context"] = Context.inherit(caller)}
+container:insert_child_by_key(virtual_key,node)
 node:set_on_change(function () self.workloop:add(function () local did_render,render_result=node:render(true)
 if did_render then self:render_keyed_child(render_result,container,render_key,element) end end)
-self.workloop:start() end)
+self.workloop:start() end) end
+node:set_props(element.props)
+element.props.__luax_internal={["renderer"] = self,["container"] = container,["context"] = Context.inherit(caller)}
 local did_render,render_result=node:render()
 if did_render then self:render_keyed_child(render_result,container,render_key,element) end end
-function Renderer:render_keyed_child(element,container,key,caller) log.trace(get_element_name(container),"rendering",get_element_name(element),key_to_string(key))
-if  not element or type(element.type) == "string" then self:render_native_component(element,container,key,caller) elseif type(element) == "table" and element.element_node ~= ElementNode then local current_children=container:get_children_by_key(key) or {}
+function Renderer:render_keyed_child(element,container,key,caller) if  not element or type(element.type) == "string" then self:render_native_component(element,container,key,caller) elseif type(element) == "table" and element.element_node ~= ElementNode then local current_children=container:get_children_by_key(key) or {}
 if current_children.class and class.isClass(current_children.class) then container:delete_children_by_key(key)
 current_children={} end
 local size=max( # current_children, # element)
@@ -70,5 +69,6 @@ for i,child in ipairs_with_nil(element,size) do local newkey=key_add(key,i)
 self:render_keyed_child(child,container,newkey,caller) end elseif type(element.type) == "function" then self:render_function_component(element,container,key,caller) else local component_type=type(element.type)
 error(string.format("Cannot render component of type '%s' (rendered by %s)",component_type,caller and get_element_name(caller) or get_element_name(container))) end
 self.workloop:start() end
-function Renderer:render(component,container) self:render_keyed_child(component,container,{1}) end
+function Renderer:render(component,container) self.workloop:add(function () self:render_keyed_child(component,container,{1}) end)
+self.workloop:start() end
 return Renderer
