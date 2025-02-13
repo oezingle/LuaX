@@ -35,7 +35,7 @@ local ABORT_CURRENT_RENDER = {}
 function FunctionComponentInstance:init(component)
     self.friendly_name = get_component_name(component)
 
-    log.debug("new FunctionComponentInstance " .. self.friendly_name)
+    log.debug("new " .. self.friendly_name)
 
     self.hookstate = HookState()
 
@@ -61,7 +61,7 @@ end
 function FunctionComponentInstance:render(props)
     local component = self.component
 
-    log.debug(string.format("FunctionComponentInstance render %s", self.friendly_name))
+    log.debug(string.format("render %s start", self.friendly_name))
 
     self.rerender = false
     self.hookstate:reset()
@@ -91,7 +91,7 @@ function FunctionComponentInstance:render(props)
 
         return false, nil
     else
-        log.trace(string.format("render %s end. rerender=%s", self.friendly_name, self.rerender and "true" or "false"))
+        log.trace(string.format("render %s end", self.friendly_name))
         
         local element = res
         

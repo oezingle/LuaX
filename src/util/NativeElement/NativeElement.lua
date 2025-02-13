@@ -7,12 +7,6 @@ local VirtualElement        = require("src.util.NativeElement.VirtualElement")
 local flatten_children      = require("src.util.NativeElement.helper.flatten_children")
 local key_to_string         = require("src.util.key.key_to_string")
 
---[[
-    - count_children_by_key seems like it could have performance issues.
-        - pretty much any key function is probably disaterously slow
-]]
-
--- Helper type
 ---@alias LuaX.NativeElement.ChildrenByKey LuaX.NativeElement | LuaX.NativeElement.ChildrenByKey[] | LuaX.NativeElement.ChildrenByKey[][]
 
 ---@class LuaX.NativeElement : Log.BaseFunctions
@@ -129,7 +123,7 @@ function NativeElement:insert_child_by_key(key, child)
     if not self._children_by_key then
         self._children_by_key = {}
     end
-
+        
     if child.class ~= VirtualElement then
         local insert_index = self:count_children_by_key(key) + 1
 
