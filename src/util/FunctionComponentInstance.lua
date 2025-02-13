@@ -1,4 +1,3 @@
-
 local class = require("lib.30log")
 local HookState = require("src.util.HookState")
 local ipairs_with_nil = require("src.util.ipairs_with_nil")
@@ -71,7 +70,8 @@ function FunctionComponentInstance:render(props)
     _G.LuaX._context = props.__luax_internal.context
     local last_hookstate = HookState.global.set(self.hookstate)
 
-    local ok, res = xpcall(component, traceback, props)
+    -- local ok, res = xpcall(component, traceback, props)
+    local ok, res = pcall(component, props)
 
     _G.LuaX._context = last_context
     HookState.global.set(last_hookstate)
@@ -81,20 +81,23 @@ function FunctionComponentInstance:render(props)
         -- even though err is types as a string, we can ignore that ABORT_CURRENT_RENDER isn't.
         if err ~= ABORT_CURRENT_RENDER then
             -- match everything up to 2 lines before the function. Inline, xpcall, then component.
-            err = err:match("(.*)[\n\r].-[\n\r].-[\n\r].-in function '" .. this_file .. ".-'" )
-            err = err:gsub("in upvalue 'chunk'", string.format("in function '%s'", self.friendly_name:match("^%S+")))
+            local err_trunc = err:match("(.*)[\n\r].-[\n\r].-[\n\r].-in function '" .. this_file .. ".-'")
+            if err_trunc then
+                err_trunc = err_trunc:gsub("in upvalue 'chunk'",
+                    string.format("in function '%s'", self.friendly_name:match("^%S+")))
 
-            err = "While rendering " .. self.friendly_name ..  ":\n" .. err
+                err_trunc = "While rendering " .. self.friendly_name .. ":\n" .. err_trunc
+            end
 
-            error(err)
+            error(err_trunc or err)
         end
 
         return false, nil
     else
         log.trace(string.format("render %s end", self.friendly_name))
-        
+
         local element = res
-        
+
         return not self.rerender, element
     end
 end
