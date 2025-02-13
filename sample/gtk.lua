@@ -5,37 +5,124 @@ local GtkElement = require("src.util.NativeElement.GtkElement")
 local lgi = require("lgi")
 local Gtk = lgi.require("Gtk", "3.0")
 local Gio = lgi.Gio
+local Gdk = lgi.Gdk -- looks unused, but our "Semi-legal events" page makes use of Gdk.EventMask
 
 -- require("lib.log").level = "trace"
 
 warn("@on")
 
-local App = LuaX(function ()
-    local clicks, set_clicks = LuaX.use_state(0)
+local use_state = LuaX.use_state
+local use_effect = LuaX.use_effect
 
-    -- see docs/Parser.md in regard to the "LuaX." on every element name
+local min = math.min
+
+-- see docs/Parser.md in regard to the "LuaX." on every Gtk element name
+
+-- Gtk.Notebook has a complicated API, which we'll abstract away using a component
+local EasyNotebook = LuaX(function (props)
+    local labels = props.labels or {}
+
+    local notebook, set_notebook = use_state(nil)
+    local page_count, set_page_count = use_state(0)
+
+    use_effect(function ()
+        if not notebook then
+            return
+        end
+
+        if page_count == 0 then
+            return
+        end
+
+        if page_count ~= #labels then
+            warn(string.format("EasyNotebook expected %d labels, found %d", page_count, #labels))
+        end
+
+        local iterations = min(page_count, #labels)
+        for i=1,iterations do
+            local child = notebook:get_nth_page(i - 1)
+
+            notebook:set_tab_label_text(child, labels[i])
+        end
+    end, { notebook, labels, page_count })
+
     return [[
-        <LuaX.Gtk.VBox>
-            <LuaX.Gtk.Label>
-                You clicked {clicks} times!
-            </LuaX.Gtk.Label>
+        <LuaX.Gtk.Notebook
+            -- Element providers should allow LuaX::onload
+            LuaX::onload={function (_, w) set_notebook(w) end}
+            on_page_added={function (w)
+                set_page_count(w:get_n_pages())
+            end}
+            on_page_removed={function (w)
+                set_page_count(w:get_n_pages())
+            end}
+        >
+            {props.children}
+        </LuaX.Gtk.Notebook>
+    ]]
+end)
 
-            {clicks > 10 and
+local App = LuaX(function ()
+    local clicks, set_clicks = use_state(0)
+
+    -- Demos will maintain their states because they're all being rendered
+    -- simultaneously into the EasyNotebook.
+    return [[
+        <EasyNotebook
+            labels={{
+                "Click counter",
+                "Semi-legal events"
+            }}
+        >
+            -- page 1: use_state clicking example
+            <LuaX.Gtk.VBox>
                 <LuaX.Gtk.Label>
-                    More than 10!
+                    You clicked {clicks} times!
                 </LuaX.Gtk.Label>
-            }
 
-            <LuaX.Gtk.Button
-                on_clicked={function ()
-                    set_clicks(function (clicks)
-                        return clicks + 1
-                    end)
-                end}
-            >
-                Click me!
-            </LuaX.Gtk.Button>
-        </LuaX.Gtk.VBox>
+                {clicks > 10 and
+                    <LuaX.Gtk.Label>
+                        More than 10!
+                    </LuaX.Gtk.Label>
+                }
+
+                <LuaX.Gtk.Button
+                    on_clicked={function ()
+                        set_clicks(function (clicks)
+                            return clicks + 1
+                        end)
+                    end}
+                >
+                    Click me!
+                </LuaX.Gtk.Button>
+            </LuaX.Gtk.VBox>
+
+            -- page 2: hacking mouse events!
+            <LuaX.Gtk.VBox>
+                <LuaX.Gtk.Label>
+                    I am normal.
+                </LuaX.Gtk.Label>
+
+                <LuaX.Gtk.Label 
+                    has_window 
+                    events={Gdk.EventMask.ALL_EVENTS_MASK}
+                    on_button_press_event={function ()
+                        print("press")
+                    end}
+                    on_button_release_event={function ()
+                        print("release")
+                    end}
+                    on_enter_notify_event={function ()
+                        print("mouse enter")
+                    end}
+                    on_leave_notify_event={function ()
+                        print("mouse leave")
+                    end}
+                >
+                    I consume click events & hover events (though I shouldn't!)
+                </LuaX.Gtk.Label>
+            </LuaX.Gtk.VBox>
+        </EasyNotebook>
     ]]
 end)
 
@@ -54,7 +141,7 @@ function app:on_startup()
 end
 
 function app:on_activate()
-    self.active_window:show_all()
+    self.active_window:show()
     self.active_window:present()
 end
 

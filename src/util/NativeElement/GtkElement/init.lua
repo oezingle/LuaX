@@ -8,10 +8,10 @@ local require = function(path)
     if ok then
         return ret
     else
-        print("WARN", ret)
+        warn(ret)
     end
 end
 
 return
     require("src.util.NativeElement.GtkElement.lgi.Gtk3Element") or
-    error("No GtkElement implementation loaded successfully.")
+    error("No GtkElement implementation loaded successfully. To see the errors created by these implementations, use warn(\"@on\") before loading this file.")

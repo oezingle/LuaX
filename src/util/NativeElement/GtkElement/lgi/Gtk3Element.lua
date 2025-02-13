@@ -1,16 +1,23 @@
-local lgi = require("lgi")
-local Gtk = lgi.require("Gtk", "3.0")
-local GObject = lgi.GObject
+local has_lgi, lgi = pcall(require, "lgi")
+if not has_lgi then
+    error("Cannot load lgi, therefore cannot load Gtk 3.0 using lgi")
+end
+
+local has_Gtk, Gtk = pcall(lgi.require, "Gtk", "3.0")
+if not has_Gtk then
+    error("Loaded lgi, but cannot load Gtk 3.0 using lgi")
+end
+
+local has_GObject, GObject = pcall(lgi.require, "GObject")
+if not has_GObject then
+    error("Loaded lgi and Gtk, but cannot load GObject using lgi. Are you sure Gtk is installed properly?")
+end
 
 local NativeElement = require("src.util.NativeElement")
 local NativeTextElement = require("src.util.NativeElement.NativeTextElement")
 
 ---@class LuaX.GtkElement.LGI_V3 : LuaX.GtkElement
 local Gtk3Element = NativeElement:extend("LuaX.GtkElement (lgi,3.0)")
-
--- TODO generate events and connect to signals on the fly 
--- https://stackoverflow.com/questions/5822191/attaching-double-click-event-to-a-label
--- https://github.com/lgi-devs/lgi/blob/master/docs/guide.md#34-signals
 
 --[[
 Gtk3Element.components = {
@@ -22,9 +29,10 @@ Gtk3Element.components = {
 ]]
 
 function Gtk3Element:init(native, widget_name)
-    self.widget = native
     -- show elements by default
-    self.widget:show()
+    native:show()
+        
+    self.widget = native
 
     self.widget_name = widget_name
 
@@ -35,26 +43,53 @@ function Gtk3Element:init(native, widget_name)
 end
 
 function Gtk3Element:set_prop(prop, value)
-    if prop:match("^on_") then
+    local widget = self.widget
+
+    -- support LuaX::onload
+    if prop:match("^LuaX::") then
+        local prop_name = prop:sub(7)
+
+        if prop_name == "onload" and not self.has_had_onload then
+            value(self, widget)
+
+            self.has_had_onload = true
+        end
+    elseif prop == "show" then
+        if value == false then
+            widget:hide()
+        else
+            widget:show()
+        end
+    elseif prop:match("^on_") then
         local existing_handler = self.signal_ids[prop]
         if existing_handler then
             -- LGI doesn't implement signal disconnection.
-            GObject.signal_handler_disconnect(self.widget, existing_handler)
+            GObject.signal_handler_disconnect(widget, existing_handler)
         end
 
         self.signal_functions[prop] = value
-        self.signal_ids[prop] = self.widget[prop]:connect(value)
+        self.signal_ids[prop] = widget[prop]:connect(value)
     else
-        self.widget["set_" .. prop](self.widget, value)
+        widget["set_" .. prop](widget, value)
     end
 end
 
 function Gtk3Element:get_prop(prop)
+    local widget = self.widget
+
+    if prop:match("^LuaX::") then
+        return
+    end
+
+    if prop == "show" then
+        return widget:get_visible()
+    end
+
     if prop:match("^on_") then
         return self.signal_functions[prop]
     end
 
-    return self.widget["get_" .. prop](self.widget)
+    return widget["get_" .. prop](widget)
 end
 
 ---@protected
@@ -82,16 +117,12 @@ function Gtk3Element:reinsert_trailing_children(list)
 end
 
 -- TODO some widgets have set_child - if :add doesn't exist (must check using pcall) then use set_child and throw error if multiple children set
--- TODO test
 function Gtk3Element:insert_child(index, element, is_text)
     if is_text then
         table.insert(self.texts, index, element)
 
-        -- TODO can I remove this?
         self:_reload_text()
     else
-        print(self:get_type(), "insert", index, is_text)
-
         local after = self:get_trailing_children(index)
 
         self.widget:add(element.widget)
