@@ -1,4 +1,4 @@
-#!/usr/bin/lua
+#!/usr/bin/env lua
 
 local Inline = require("src.util.parser.Inline")
 local LuaXParser = require("src.util.parser.LuaXParser")
@@ -33,7 +33,7 @@ if table.pack(...)[1] ~= (arg or {})[1] then
     --- Parsing
     ---@field register fun() Register the LuaX loader
     ---@field Parser LuaX.Parser.V3
-    ---@field transpile { from_path: (fun(path: string): string), from_string: (fun(content: string, source?: string): string)}
+    ---@field transpile { from_path: (fun(path: string): string), from_string: (fun(content: string, source?: string): string), inline: (fun(tag: string): string)|(fun(fn: function): function) }
     ---
     ---@operator call:function 
 
@@ -86,6 +86,7 @@ if table.pack(...)[1] ~= (arg or {})[1] then
         end
     })
 
+    -- Check if LuaX global doesn't exist or LuaX global is an empty table.
     if not LuaX or not next(LuaX) then
         ---@class LuaX : LuaX.Exported
         ---@field _hookstate LuaX.HookState
