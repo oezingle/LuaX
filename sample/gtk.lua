@@ -1,4 +1,3 @@
-
 local LuaX = require("src")
 local GtkElement = require("src.util.NativeElement.GtkElement")
 
@@ -19,13 +18,13 @@ local min = math.min
 -- see docs/Parser.md in regard to the "LuaX." on every Gtk element name
 
 -- Gtk.Notebook has a complicated API, which we'll abstract away using a component
-local EasyNotebook = LuaX(function (props)
+local EasyNotebook = LuaX(function(props)
     local labels = props.labels or {}
 
     local notebook, set_notebook = use_state(nil)
     local page_count, set_page_count = use_state(0)
 
-    use_effect(function ()
+    use_effect(function()
         if not notebook then
             return
         end
@@ -39,7 +38,7 @@ local EasyNotebook = LuaX(function (props)
         end
 
         local iterations = min(page_count, #labels)
-        for i=1,iterations do
+        for i = 1, iterations do
             local child = notebook:get_nth_page(i - 1)
 
             notebook:set_tab_label_text(child, labels[i])
@@ -62,7 +61,29 @@ local EasyNotebook = LuaX(function (props)
     ]]
 end)
 
-local App = LuaX(function ()
+local ToggleVisibility = LuaX(function()
+    local show, set_show = use_state(true)
+
+    return [[
+        <LuaX.Gtk.VBox>
+            <LuaX.Gtk.Label show={show}>
+                Toggle my visibility!
+            </LuaX.Gtk.Label>
+
+            <LuaX.Gtk.Button
+                on_clicked={function ()
+                    set_show(function (show)
+                        return not show
+                    end)
+                end}
+            >
+                Click here
+            </LuaX.Gtk.Button>
+        </LuaX.Gtk.VBox>
+    ]]
+end)
+
+local App = LuaX(function()
     local clicks, set_clicks = use_state(0)
 
     -- Demos will maintain their states because they're all being rendered
@@ -71,7 +92,8 @@ local App = LuaX(function ()
         <EasyNotebook
             labels={{
                 "Click counter",
-                "Semi-legal events"
+                "Semi-legal events",
+                "Toggle element visibility"
             }}
         >
             -- page 1: use_state clicking example
@@ -103,8 +125,8 @@ local App = LuaX(function ()
                     I am normal.
                 </LuaX.Gtk.Label>
 
-                <LuaX.Gtk.Label 
-                    has_window 
+                <LuaX.Gtk.Label
+                    has_window
                     events={Gdk.EventMask.ALL_EVENTS_MASK}
                     on_button_press_event={function ()
                         print("press")
@@ -122,6 +144,8 @@ local App = LuaX(function ()
                     I consume click events & hover events (though I shouldn't!)
                 </LuaX.Gtk.Label>
             </LuaX.Gtk.VBox>
+
+            <ToggleVisibility />
         </EasyNotebook>
     ]]
 end)
