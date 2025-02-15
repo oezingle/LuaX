@@ -5,7 +5,7 @@ local list_reduce           = require("src.util.polyfill.list.reduce")
 local log                   = require("lib.log")
 local VirtualElement        = require("src.util.NativeElement.VirtualElement")
 local flatten_children      = require("src.util.NativeElement.helper.flatten_children")
-local key_to_string         = require("src.util.key.key_to_string")
+local key_to_string         = require("src.util.debug.key_to_string")
 
 ---@alias LuaX.NativeElement.ChildrenByKey LuaX.NativeElement | LuaX.NativeElement.ChildrenByKey[] | LuaX.NativeElement.ChildrenByKey[][]
 

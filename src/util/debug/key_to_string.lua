@@ -1,3 +1,4 @@
+---@nospec
 
 local concat = table.concat
 
