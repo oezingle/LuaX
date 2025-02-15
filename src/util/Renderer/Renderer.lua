@@ -6,10 +6,8 @@ local create_native_element = require("src.util.Renderer.helper.create_native_el
 local deep_equals           = require("src.util.deep_equals")
 local can_modify_child      = require("src.util.Renderer.helper.can_modify_child")
 local ElementNode           = require("src.util.ElementNode")
-local log                   = require("lib.log")
 local VirtualElement        = require("src.util.NativeElement.VirtualElement")
 local DefaultWorkLoop       = require("src.util.WorkLoop.Default")
-local key_to_string         = require("src.util.key.key_to_string")
 local Context               = require("src.Context")
 
 
@@ -84,7 +82,7 @@ function Renderer:render_native_component(component, container, key, caller)
     -- set props
     for prop, value in pairs(component.props) do
         if
-            -- children are handled differently than other props
+        -- children are handled differently than other props
             prop ~= "children" and
             -- LuaX:: signifies a property that LuaX handles innately.
             prop:sub(1, 6) ~= "LuaX::" and
@@ -109,7 +107,7 @@ function Renderer:render_native_component(component, container, key, caller)
             end)
         end
 
-        workloop:start()
+        workloop:safely_start()
     end
 
     -- Append to parent node
@@ -162,7 +160,7 @@ function Renderer:render_function_component(element, container, key, caller)
             end)
 
             -- start workloop if it isn't running
-            self.workloop:start()
+            self.workloop:safely_start()
         end)
     end
 
@@ -225,7 +223,7 @@ function Renderer:render_keyed_child(element, container, key, caller)
     -- TODO return promise that is resolved when all children have rendered
 
     -- start workloop in case there's shit to do and it's stopped
-    self.workloop:start()
+    self.workloop:safely_start()
 end
 
 ---@param component LuaX.ElementNode
@@ -235,7 +233,7 @@ function Renderer:render(component, container)
         self:render_keyed_child(component, container, { 1 })
     end)
 
-    self.workloop:start()
+    self.workloop:safely_start()
 end
 
 return Renderer
