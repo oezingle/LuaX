@@ -18,7 +18,7 @@ local function get_component_name(components, components_mode, name)
         name
 
     -- try both shortened name and full-length name
-    local has_component = components[search_name] or components[name]
+    local has_component = not not (components[search_name] or components[name])
 
     local mode_global = components_mode == "global"
 
