@@ -70,29 +70,29 @@ function FunctionComponentInstance:render(props)
     _G.LuaX._context = props.__luax_internal.context
     local last_hookstate = HookState.global.set(self.hookstate)
 
-    -- local ok, res = xpcall(component, traceback, props)
-    local ok, res = pcall(component, props)
+    local ok, res = xpcall(component, traceback, props)
 
     _G.LuaX._context = last_context
     HookState.global.set(last_hookstate)
 
     if not ok then
         local err = res --[[ @as string ]]
-        -- even though err is types as a string, we can ignore that ABORT_CURRENT_RENDER isn't.
-        if err ~= ABORT_CURRENT_RENDER then
-            -- match everything up to 2 lines before the function. Inline, xpcall, then component.
-            local err_trunc = err:match("(.*)[\n\r].-[\n\r].-[\n\r].-in function '" .. this_file .. ".-'")
-            if err_trunc then
-                err_trunc = err_trunc:gsub("in upvalue 'chunk'",
-                    string.format("in function '%s'", self.friendly_name:match("^%S+")))
-
-                err_trunc = "While rendering " .. self.friendly_name .. ":\n" .. err_trunc
-            end
-
-            error(err_trunc or err)
+        -- even though err is typed as a string, we can ignore that ABORT_CURRENT_RENDER isn't.
+        if err == ABORT_CURRENT_RENDER then
+            -- errors bubble up nicely.
+            return false, nil
         end
 
-        return false, nil
+        -- match everything up to 2 lines before the function. Inline, xpcall, then component.
+        local err_trunc = err:match("(.*)[\n\r].-[\n\r].-[\n\r].-in function '" .. this_file .. ".-'")
+        if err_trunc then
+            err_trunc = err_trunc:gsub("in upvalue 'chunk'",
+                string.format("in function '%s'", self.friendly_name:match("^%S+")))
+
+            err_trunc = "While rendering " .. self.friendly_name .. ":\n" .. err_trunc
+        end
+
+        error(err_trunc or err)
     else
         log.trace(string.format("render %s end", self.friendly_name))
 
