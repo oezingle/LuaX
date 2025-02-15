@@ -1,5 +1,7 @@
 ---@nospec
 
+local table_pack   = require("src.util.polyfill.table.pack")
+
 -- Some flavours of lua don't provide warn()
 
 local warn_enabled = false
@@ -36,7 +38,7 @@ local function color_warn(...)
     if test_control_flag(...) then
         io.stdout:write(colors.YELLOW)
 
-        io.stdout:write(table.concat(table.pack(...), "\t"))
+        io.stdout:write(table.concat(table_pack(...), "\t"))
 
         io.stdout:write(colors.RESET, "\n")
     end

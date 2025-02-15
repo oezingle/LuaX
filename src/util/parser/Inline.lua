@@ -28,7 +28,11 @@ function Inline.assert.can_use_decorator()
     assert(debug.getinfo, "Cannot use inline parser decorator: debug.getinfo does not exist")
 
     local function test_function()
-        return debug.getinfo(1, "f")
+        -- assigning then returning allows this assertion to pass under LuaJIT,
+        -- otherwise it would JIT optimize the tail call.
+        local info = debug.getinfo(1, "f")
+
+        return info
     end
 
     local info = test_function()
@@ -67,7 +71,7 @@ function Inline.easy_load(chunk, env, src)
     local get_output, err = load(chunk, chunkname, nil, env)
 
     if not get_output then
-        warn("Transpiled code run:")
+        print("Transpiled code run:")
         print(chunk)
 
         error(err)

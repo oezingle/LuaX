@@ -1,15 +1,16 @@
 #!/usr/bin/env lua
 
-local Inline = require("src.util.parser.Inline")
-local LuaXParser = require("src.util.parser.LuaXParser")
+local Inline      = require("src.util.parser.Inline")
+local LuaXParser  = require("src.util.parser.LuaXParser")
 local ensure_warn = require("src.util.ensure_warn")
+local table_pack  = require("src.util.polyfill.table.pack")
 
-local _VERSION = "0.4.1"
+local _VERSION    = "0.5.0-dev"
 
 ensure_warn()
 
 -- check if ... (provided by import) matches arg (provided by lua command line)
-if table.pack(...)[1] ~= (arg or {})[1] then
+if table_pack(...)[1] ~= (arg or {})[1] then
     -- this file has been imported
 
     ---@class LuaX.Exported
@@ -22,7 +23,6 @@ if table.pack(...)[1] ~= (arg or {})[1] then
     --- Components
     ---@field Fragment LuaX.Component
     ---@field Portal LuaX.Portal
-    --- TODO FIXME types for hooks!
     --- Hooks
     ---@field use_context LuaX.Hooks.UseContext
     ---@field use_effect LuaX.Hooks.UseEffect
@@ -35,7 +35,7 @@ if table.pack(...)[1] ~= (arg or {})[1] then
     ---@field Parser LuaX.Parser.V3
     ---@field transpile { from_path: (fun(path: string): string), from_string: (fun(content: string, source?: string): string), inline: (fun(tag: string): string)|(fun(fn: function): function) }
     ---
-    ---@operator call:function 
+    ---@operator call:function
 
     local export = {
         Renderer       = require("src.util.Renderer"),

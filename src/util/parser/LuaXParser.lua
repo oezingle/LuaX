@@ -1,15 +1,17 @@
-local class                     = require("lib.30log")
-local tokens                    = require("src.util.parser.tokens")
-local node_to_element           = require("src.util.parser.transpile.node_to_element")
+local class                 = require("lib.30log")
+local tokens                = require("src.util.parser.tokens")
+local node_to_element       = require("src.util.parser.transpile.node_to_element")
 local get_global_components = require("src.util.parser.transpile.get_global_components")
 -- collect_locals required below, as collect_locals cyclically requires LuaXParser
-local TokenStack                = require("src.util.parser.parse.TokenStack")
-local escape                    = require("src.util.polyfill.string.escape")
+local TokenStack            = require("src.util.parser.parse.TokenStack")
+local escape                = require("src.util.polyfill.string.escape")
+local table_pack            = require("src.util.polyfill.table.pack")
+local table_unpack          = require("src.util.polyfill.table.unpack")
 
 -- Get the require path of this module
 local require_path
 do
-    if table.pack(...)[1] == (arg or {})[1] then
+    if table_pack(...)[1] == (arg or {})[1] then
         print("LuaXParser must be imported")
 
         os.exit(1)
@@ -244,7 +246,7 @@ do
     ---@return string|boolean
     function LuaXParser:move_to_pattern_end(pattern)
         --local _, pattern_end = self:text_find(pattern)
-        local find = table.pack(self:text_find(pattern))
+        local find = table_pack(self:text_find(pattern))
         table.remove(find, 1) -- ignore start
         local pattern_end = table.remove(find, 1)
 
@@ -256,7 +258,7 @@ do
 
         local first_capture = table.remove(find, 1)
         -- return all capture groups or true
-        return first_capture or true, table.unpack(find)
+        return first_capture or true, table_unpack(find)
     end
 
     ---@param char number
@@ -283,12 +285,12 @@ do
     end
 
     -- Get the text, regardless of if it is transpiled yet or not.
-    function LuaXParser:get_text ()
+    function LuaXParser:get_text()
         return self.text
     end
 
     -- Check if this parser has performed transpilation to any text
-    function LuaXParser:has_transpiled ()
+    function LuaXParser:has_transpiled()
         return self.vars.IS_COMPILED.required
     end
 end
@@ -770,7 +772,7 @@ end
 
 --- Assuming a file has been transpiled, write its result to a file path
 ---@param path string
-function LuaXParser:write_to_file (path)
+function LuaXParser:write_to_file(path)
     local f = io.open(path, "w")
 
     assert(f, string.format("Unable to open %q", path))
