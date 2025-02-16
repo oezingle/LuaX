@@ -141,7 +141,7 @@ describe("function equality using string.dump", function()
         assert.falsy(function_a == function_b)
     end)
 
-    -- 33 chars same - header type shit
+    -- 33 chars same - header
     --
 
     it("passes same content", function()

@@ -188,7 +188,7 @@ describe("Renderer", function()
         local Child = LuaX(function(props)
             local hook, set_hook = use_state(false)
 
-            --- Doing some fucked shit
+            -- This is evil
             set_child_hook = set_hook
 
             table.insert(parent_state_values, props.state)

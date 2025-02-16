@@ -220,9 +220,7 @@ function Renderer:render_keyed_child(element, container, key, caller)
         ))
     end
 
-    -- TODO return promise that is resolved when all children have rendered
-
-    -- start workloop in case there's shit to do and it's stopped
+    -- start workloop in case there's rendering to do and it's stopped
     self.workloop:safely_start()
 end
 
