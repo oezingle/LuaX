@@ -9,7 +9,7 @@ local ElementNode           = require("src.util.ElementNode")
 local VirtualElement        = require("src.util.NativeElement.VirtualElement")
 local DefaultWorkLoop       = require("src.util.WorkLoop.Default")
 local Context               = require("src.Context")
-
+local RenderInfo            = require("src.util.Renderer.RenderInfo")
 
 local max = math.max
 
@@ -102,9 +102,8 @@ function Renderer:render_native_component(component, container, key, caller)
 
         local size = max(#current_children, #children)
         for index, child in ipairs_with_nil(children, size) do
-            workloop:add(function()
-                self:render_keyed_child(child, node, { index }, caller)
-            end)
+            workloop:add(self.render_keyed_child, self, child, node, { index },
+                caller)
         end
 
         workloop:safely_start()
@@ -134,7 +133,8 @@ function Renderer:render_function_component(element, container, key, caller)
 
     local virtual_key = key_add(key, 1)
     local render_key = key_add(key, 2)
-    local can_modify, existing_child = can_modify_child(element, container, virtual_key)
+    local can_modify, existing_child = can_modify_child(element, container,
+        virtual_key)
 
     ---@type LuaX.NativeElement.Virtual
     local node = nil
@@ -155,7 +155,8 @@ function Renderer:render_function_component(element, container, key, caller)
                 local did_render, render_result = node:render(true)
 
                 if did_render then
-                    self:render_keyed_child(render_result, container, render_key, element)
+                    self:render_keyed_child(render_result, container,
+                        render_key, element)
                 end
             end)
 
@@ -164,13 +165,11 @@ function Renderer:render_function_component(element, container, key, caller)
         end)
     end
 
+    local info = RenderInfo.inherit({
+        context = {}
+    }, RenderInfo.get())
+    RenderInfo.bind(element.props, info)
     node:set_props(element.props)
-    -- link hidden props after to save time
-    element.props.__luax_internal = {
-        renderer = self,
-        container = container,
-        context = Context.inherit(caller)
-    }
 
     -- This feels evil
     local did_render, render_result = node:render()
@@ -227,9 +226,7 @@ end
 ---@param component LuaX.ElementNode
 ---@param container LuaX.NativeElement
 function Renderer:render(component, container)
-    self.workloop:add(function()
-        self:render_keyed_child(component, container, { 1 })
-    end)
+    self.workloop:add(self.render_keyed_child, self, component, container, { 1 })
 
     self.workloop:safely_start()
 end

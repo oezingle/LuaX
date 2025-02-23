@@ -3,6 +3,7 @@ local HookState = require("src.util.HookState")
 local ipairs_with_nil = require("src.util.ipairs_with_nil")
 local log = require("lib.log")
 local traceback = require("src.util.debug.traceback")
+local RenderInfo= require("src.util.Renderer.RenderInfo")
 
 local get_component_name = require("src.util.debug.get_component_name")
 
@@ -65,15 +66,16 @@ function FunctionComponentInstance:render(props)
     self.rerender = false
     self.hookstate:reset()
 
-    -- TODO optionally use setfenv hack here to set _G.LuaX._context and _G.LuaX._hookstate for only self.component
-    local last_context = _G.LuaX._context
-    _G.LuaX._context = props.__luax_internal.context
+    -- TODO should I roll hookstate in?
+    local info = RenderInfo.retrieve(props)
+    RenderInfo.set(info)
+
     local last_hookstate = HookState.global.set(self.hookstate)
 
     local ok, res = xpcall(component, traceback, props)
 
-    _G.LuaX._context = last_context
     HookState.global.set(last_hookstate)
+    -- RenderInfo.set(last_info)
 
     if not ok then
         local err = res --[[ @as string ]]
