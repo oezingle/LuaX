@@ -1,5 +1,17 @@
+
+-- LuaX does not handle LuaJIT's lack of a searcher for <module>/init.lua, so we must add it to the path
+do
+    local sep = package.path:match("[/\\]")
+    local local_init = ("./?/init.lua"):gsub("/", sep)
+    
+    if not package.path:match("%.[/\\]?[/\\]init%.lua") then
+        package.path = package.path .. ";" .. local_init
+    end
+end
+
 local LuaX = require("src")
 local GtkElement = require("src.util.NativeElement.GtkElement")
+local GLibIdleWorkloop = require("src.util.WorkLoop.GLibIdle")
 
 local lgi = require("lgi")
 local Gtk = lgi.require("Gtk", "3.0")
@@ -49,7 +61,7 @@ local EasyNotebook = LuaX(function(props)
         <LuaX.Gtk.Notebook
             -- The LuaX library handles this special property
             LuaX::onload={function (w) set_notebook(w) end}
-            
+
             on_page_added={function (w)
                 set_page_count(w:get_n_pages())
             end}
@@ -159,7 +171,10 @@ function app:on_startup()
 
     local root = GtkElement.get_root(window)
     local elem = LuaX.create_element(App, {})
-    local renderer = LuaX.Renderer()
+
+    -- GLibIdleWorkloop provides slightly smoother animations compared to the
+    -- default blocking WorkLoop, but only functions under a GLib MainLoop
+    local renderer = LuaX.Renderer(GLibIdleWorkloop)
     renderer:render(elem, root)
 
     self:add_window(window)
