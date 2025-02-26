@@ -28,3 +28,7 @@ end
 
 main()
 ```
+
+LuaX will now render components using that library! You can use elements from
+the UI library, but you can also write reusable functions that implement logic
+tied to these elements. See [Components](./components.md)
