@@ -1,10 +1,14 @@
 
 # LuaX
 
-LuaX is a user interface component system and language designed to support any
-and all user interface libraries. It features a React-like hooks system and a
-JSX-like markup-programming combination language that can be evaluated at
-runtime.
+LuaX is a Pure-Lua user interface component system and language designed to
+support any and all user interface libraries. It features a React-like hooks
+system and a JSX-like markup-programming combination language that can be
+evaluated at runtime.
+
+LuaX aims to be API-compatible with Lua 5.1-5.4 and LuaJIT. However, LuaX
+assumes a searcher for `./?/init.lua` exists. If it does not, you must provide
+it. See the [`sample/`](./sample/) directory for examples on how to accomplis this.
 
 # Installing 
 

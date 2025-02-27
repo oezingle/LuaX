@@ -24,7 +24,8 @@ function MyNativeElement:delete_child(index: number, is_text: boolean)
 --- class function to create a new element given an element type name
 function MyNativeElement.create_element(type: string): MyNativeElement
 
---- class function to create a new element given its native representation
+--- class function to create a new element given its native representation. 
+--- Note that nil is a valid argument to this function due to Suspenses
 function MyNativeElement.get_root(native: any): MyNativeElement
 ```
 
