@@ -16,12 +16,5 @@ local DefaultWorkLoop=WorkLoop:extend"DefaultWorkLoop"
 function DefaultWorkLoop:init(opts) opts=opts or {}
 if  not opts.supress_warning then warn("LuaX Renderer is using a default (synchronous) work loop! " .. "This is not recommended as it will freeze " .. "the main thread until rendering is done.") end
 self.super:init() end
-function DefaultWorkLoop:add(cb) self:list_enqueue(cb) end
-function DefaultWorkLoop:start() if self.is_running then return  end
-self.is_running=true
-while self.is_running do self:run_once() end end
-function DefaultWorkLoop:run_once() if self:list_is_empty() then self.is_running=false
-return  end
-local cb=self:list_dequue()
-cb() end
+function DefaultWorkLoop:start() while self.is_running do self:run_once() end end
 return DefaultWorkLoop

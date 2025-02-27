@@ -11,4 +11,12 @@ package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep)
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "util.WorkLoop.")
 require(library_root .. "_shim") end
-return require"lib_LuaX.util.WorkLoop.WorkLoop"
+local lgi=require"lgi"
+local GLib=lgi.GLib
+local priority=GLib.PRIORITY_DEFAULT_IDLE
+local WorkLoop=require"lib_LuaX.util.WorkLoop"
+local GLibIdleWorkloop=WorkLoop:extend"GLibIdleWorkloop"
+function GLibIdleWorkloop:init() self.super:init() end
+function GLibIdleWorkloop:start() GLib.idle_add(priority,function () self:run_once()
+return self.is_running end) end
+return GLibIdleWorkloop

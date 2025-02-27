@@ -40,7 +40,7 @@ local widget_type=list_reduce(fields,function (object,key) return object[key] en
 assert(widget_type,string.format("No widget known by name %q",element_name))
 local widget=wibox.widget{["widget"] = widget_type}
 return WiboxElement(widget,element_name) end
-function WiboxElement.get_root(native) return WiboxElement(native,"UNKNOWN (root element)") end
+function WiboxElement.get_root(native) return WiboxElement(native) end
 function WiboxElement:_reload_text() local texts={}
 for _,text_element in ipairs(self.texts) do table.insert(texts,text_element.value) end
 local text=table.concat(texts,"")

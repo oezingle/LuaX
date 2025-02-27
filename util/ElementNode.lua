@@ -22,8 +22,6 @@ if  not child then child=nil elseif child_type ~= "table" then if child_type == 
 child=ElementNode.create(ElementNode.LITERAL_NODE,{["value"] = tostring(child)}) end
 children[i]=child end
 return children end
-function ElementNode.inherit_props(node,inherit_props) setmetatable(node.props,{["__index"] = inherit_props})
-return node end
 function ElementNode.create(component,props) props.children=ElementNode.clean_children(props.children)
 local node={["type"] = component,["props"] = props,["element_node"] = ElementNode}
 return node end

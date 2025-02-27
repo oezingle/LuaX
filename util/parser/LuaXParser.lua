@@ -17,8 +17,10 @@ local node_to_element=require"lib_LuaX.util.parser.transpile.node_to_element"
 local get_global_components=require"lib_LuaX.util.parser.transpile.get_global_components"
 local TokenStack=require"lib_LuaX.util.parser.parse.TokenStack"
 local escape=require"lib_LuaX.util.polyfill.string.escape"
+local table_pack=require"lib_LuaX.util.polyfill.table.pack"
+local table_unpack=require"lib_LuaX.util.polyfill.table.unpack"
 local require_path
-do if table.pack(...)[1] == (arg or {})[1] then print"LuaXParser must be imported"
+do if table_pack(...)[1] == (arg or {})[1] then print"LuaXParser must be imported"
 os.exit(1) end
 require_path=(...) end
 local LuaXParser=class"LuaXParser (V3)"
@@ -73,13 +75,13 @@ return indent:gsub("^" .. default_indent,"") end
 do function LuaXParser:move_to_next_token() local _,_,token_pos=self:get_next_token()
 if  not token_pos then error(self:error"Unable to determine next token") end
 self:set_cursor(token_pos) end
-function LuaXParser:move_to_pattern_end(pattern) local find=table.pack(self:text_find(pattern))
+function LuaXParser:move_to_pattern_end(pattern) local find=table_pack(self:text_find(pattern))
 table.remove(find,1)
 local pattern_end=table.remove(find,1)
 if  not pattern_end then return false end
 self:set_cursor(pattern_end + 1)
 local first_capture=table.remove(find,1)
-return first_capture or true,table.unpack(find) end
+return first_capture or true,table_unpack(find) end
 function LuaXParser:set_cursor(char) self.char=char
 return self end
 function LuaXParser:get_cursor() return self.char end

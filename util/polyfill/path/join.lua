@@ -12,7 +12,8 @@ folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "util.polyfill.path.")
 require(library_root .. "_shim") end
 local sep=require"lib_LuaX.util.polyfill.path.sep"
-local function join(...) local elements=table.pack(...)
+local table_pack=require"lib_LuaX.util.polyfill.table.pack"
+local function join(...) local elements=table_pack(...)
 local ret={}
 for i,item in ipairs(elements) do local is_first=i == 1
 if item:sub(1,1) == sep and  not is_first then item=item:sub(2) end

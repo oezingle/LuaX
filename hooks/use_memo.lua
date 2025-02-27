@@ -13,6 +13,8 @@ local library_root=folder_of_this_file:sub(1, - 1 -  # "hooks.")
 require(library_root .. "_shim") end
 local HookState=require"lib_LuaX.util.HookState"
 local deep_equals=require"lib_LuaX.util.deep_equals"
+local table_pack=require"lib_LuaX.util.polyfill.table.pack"
+local table_unpack=require"lib_LuaX.util.polyfill.table.unpack"
 local function use_memo(callback,deps) local hookstate=HookState.global.get(true)
 local index=hookstate:get_index()
 local last_value=hookstate:get_value(index) or {}
@@ -20,9 +22,9 @@ local last_deps=last_value.deps
 local memo_value=last_value.cached
 if  not deep_equals(deps,last_deps,2) then local new_value={["deps"] = deps}
 hookstate:set_value_silent(index,new_value)
-memo_value=callback()
+memo_value=table_pack(callback())
 new_value.cached=memo_value
 hookstate:set_value(index,new_value) end
 hookstate:increment()
-return memo_value end
+return table_unpack(memo_value) end
 return use_memo

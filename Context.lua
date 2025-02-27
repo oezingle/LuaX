@@ -12,15 +12,11 @@ folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "")
 require(library_root .. "_shim") end
 local class=require"lib_LuaX._dep.lib.30log"
+local RenderInfo=require"lib_LuaX.util.Renderer.RenderInfo"
 local Context=class"Context"
 function Context:init(default) self.default=default
 self.Provider=function (props) return self:GenericProvider(props) end end
-function Context:GenericProvider(props) props.__luax_internal.context[self]=props.value
+function Context:GenericProvider(props) RenderInfo.get().context[self]=props.value
 return props.children end
 function Context.create(default) return Context(default) end
-function Context.inherit(caller) if  not caller then return {} end
-local inherit=caller.props.__luax_internal.context
-local new={}
-for k,v in pairs(inherit) do new[k]=v end
-return new end
 return Context

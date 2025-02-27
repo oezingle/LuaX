@@ -9,6 +9,12 @@ for _ in folder_of_this_file:gmatch"%.%." do pwd=pwd:gsub("[/\\][^/\\]+[/\\]?$",
 pwd=pwd .. sep
 package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep) end
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
-local library_root=folder_of_this_file:sub(1, - 1 -  # "util.WorkLoop.")
+local library_root=folder_of_this_file:sub(1, - 1 -  # "util.debug.")
 require(library_root .. "_shim") end
-return require"lib_LuaX.util.WorkLoop.WorkLoop"
+local get_function_name=require"lib_LuaX.util.debug.get_function_name"
+local function get_nth_caller(n) local info=debug.getinfo(2 + n,"Sl")
+if info.source == "[C]" then return "[C]" end
+local src=info.source:sub(2) .. ":" .. tostring(info.linedefined)
+local name=get_function_name(src)
+return (name or src) .. " (line " .. tostring(info.currentline) .. ")" end
+return get_nth_caller

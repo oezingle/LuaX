@@ -9,6 +9,10 @@ for _ in folder_of_this_file:gmatch"%.%." do pwd=pwd:gsub("[/\\][^/\\]+[/\\]?$",
 pwd=pwd .. sep
 package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep) end
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
-local library_root=folder_of_this_file:sub(1, - 1 -  # "util.WorkLoop.")
+local library_root=folder_of_this_file:sub(1, - 1 -  # "hooks.")
 require(library_root .. "_shim") end
-return require"lib_LuaX.util.WorkLoop.WorkLoop"
+local DrawGroup=require"lib_LuaX.util.Renderer.DrawGroup"
+local use_memo=require"lib_LuaX.hooks.use_memo"
+local function use_suspense() local group=use_memo(function () return DrawGroup.current() end,{})
+return function () DrawGroup.ref(group) end,function () DrawGroup.unref(group) end end
+return use_suspense
