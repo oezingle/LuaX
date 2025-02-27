@@ -1,6 +1,8 @@
-local class = require("lib.30log")
-local table_pack = require("src.util.polyfill.table.pack")
+local class        = require("lib.30log")
+local table_pack   = require("src.util.polyfill.table.pack")
 local table_unpack = require("src.util.polyfill.table.unpack")
+local DrawGroup    = require("src.util.Renderer.DrawGroup")
+local traceback    = require("src.util.debug.traceback")
 
 ---@alias LuaX.WorkLoop.Item { [1]: function, number: any }
 
@@ -21,12 +23,12 @@ local table_unpack = require("src.util.polyfill.table.unpack")
 ---
 --- Abstract optional
 ---@field add fun(self: self, cb: function, ...: any)
-local WorkLoop = class("WorkLoop")
+local WorkLoop     = class("WorkLoop")
 
 function WorkLoop:init()
     self.list = {}
     self.head = 0
-    self.tail = 0 
+    self.tail = 0
 end
 
 function WorkLoop:list_dequue()
@@ -54,7 +56,7 @@ function WorkLoop:add(cb, ...)
     self:list_enqueue(cb, ...)
 end
 
-function WorkLoop:stop ()
+function WorkLoop:stop()
     self.is_running = false
 end
 
@@ -66,11 +68,20 @@ function WorkLoop:run_once()
 
     local item = self:list_dequue()
 
+    -- TODO tie in calling function somehow? for traceback
     local cb = item[1]
-    cb(table_unpack(item, 2))
+    local ok, err = xpcall(cb, traceback, table_unpack(item, 2))
+
+    if not ok then
+        local ok = pcall(DrawGroup.error, nil, err)
+
+        if not ok then
+            error("DrawGroup error handler failed.\n" .. err)
+        end
+    end
 end
 
-function WorkLoop:safely_start ()
+function WorkLoop:safely_start()
     if self.is_running then
         return
     end

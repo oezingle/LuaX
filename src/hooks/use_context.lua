@@ -5,7 +5,6 @@ local RenderInfo = require "src.util.Renderer.RenderInfo"
 
 ---@type LuaX.Hooks.UseContext
 local function use_context (context)
-    -- local contexts = _G.LuaX._context
     local contexts = RenderInfo.get().context
 
     return contexts[context] or context.default
