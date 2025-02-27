@@ -17,12 +17,16 @@ if table_pack(...)[1] ~= (arg or {})[1] then
     --- APIs
     ---@field Renderer LuaX.Renderer
     ---@field Children LuaX.Children
+    ---
     ---@field NativeElement LuaX.NativeElement
+    ---
     ---@field create_element fun(type: LuaX.Component, props: LuaX.Props): LuaX.ElementNode
     ---@field clone_element (fun(element: LuaX.ElementNode, props: LuaX.Props): LuaX.ElementNode) | (fun(element: LuaX.ElementNode[], props: LuaX.Props): LuaX.ElementNode[])
     --- Components
-    ---@field Fragment LuaX.Component
+    ---@field Fragment LuaX.Component.Fragment
+    ---@field Suspense LuaX.Component.Suspense
     ---@field Portal LuaX.Portal
+    ---@field Context LuaX.Context
     --- Hooks
     ---@field use_context LuaX.Hooks.UseContext
     ---@field use_effect LuaX.Hooks.UseEffect
@@ -30,6 +34,7 @@ if table_pack(...)[1] ~= (arg or {})[1] then
     ---@field use_portal LuaX.Hooks.UsePortal
     ---@field use_ref LuaX.Hooks.UseRef
     ---@field use_state LuaX.Hooks.UseState
+    ---@field use_supsense LuaX.Hooks.UseSuspense
     --- Parsing
     ---@field register fun() Register the LuaX loader
     ---@field Parser LuaX.Parser.V3
@@ -39,14 +44,21 @@ if table_pack(...)[1] ~= (arg or {})[1] then
 
     local export = {
         Renderer       = require("src.util.Renderer"),
-        NativeElement  = require("src.util.NativeElement"),
         Children       = require("src.Children"),
-        Context        = require("src.Context"),
-        Portal         = require("src.Portal"),
+
+        NativeElement  = require("src.util.NativeElement"),
+        -- TODO find a nice way to have these load, even though they throw errors
+        -- TODO treeshake these based on target?
+        -- WiboxElement   = require("src.util.NativeElement.WiboxElement"),
+        -- GtkElement     = require("src.util.NativeElement.GtkElement"),
+
         create_element = require("src.create_element"),
         clone_element  = require("src.clone_element"),
 
         Fragment       = require("src.components.Fragment"),
+        Suspense       = require("src.components.Suspense"),
+        Context        = require("src.Context"),
+        Portal         = require("src.Portal"),
 
         use_context    = require("src.hooks.use_context"),
         use_effect     = require("src.hooks.use_effect"),
@@ -54,6 +66,7 @@ if table_pack(...)[1] ~= (arg or {})[1] then
         use_portal     = require("src.hooks.use_portal"),
         use_ref        = require("src.hooks.use_ref"),
         use_state      = require("src.hooks.use_state"),
+        use_suspense   = require("src.hooks.use_suspense"),
 
         register       = require("src.util.parser.loader.register"),
         Parser         = LuaXParser,
@@ -87,11 +100,11 @@ if table_pack(...)[1] ~= (arg or {})[1] then
     })
 
     -- Check if LuaX global doesn't exist or LuaX global is an empty table.
-    if not LuaX or not next(LuaX) then
+    if not _G.LuaX or not next(_G.LuaX) then
         ---@class LuaX : LuaX.Exported
         ---@field _hookstate LuaX.HookState
         -- field _render_info LuaX.RenderInfo
-        LuaX = export
+        _G.LuaX = export
     end
 
     return export

@@ -18,8 +18,6 @@ WiboxElement.widgets = {
 }
 
 function WiboxElement:init(native)
-    -- print(type, "create")
-
     self.widget = native
 
     self.texts = {}
@@ -113,7 +111,7 @@ function WiboxElement.create_element(element_name)
 end
 
 function WiboxElement.get_root(native)
-    return WiboxElement(native, "UNKNOWN (root element)")
+    return WiboxElement(native)
 end
 
 function WiboxElement:_reload_text()

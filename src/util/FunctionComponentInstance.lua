@@ -1,9 +1,8 @@
 local class = require("lib.30log")
 local HookState = require("src.util.HookState")
 local ipairs_with_nil = require("src.util.ipairs_with_nil")
-local log = require("lib.log")
 local traceback = require("src.util.debug.traceback")
-local RenderInfo= require("src.util.Renderer.RenderInfo")
+local DrawGroup = require("src.util.Renderer.DrawGroup")
 
 local get_component_name = require("src.util.debug.get_component_name")
 
@@ -35,7 +34,7 @@ local ABORT_CURRENT_RENDER = {}
 function FunctionComponentInstance:init(component)
     self.friendly_name = get_component_name(component)
 
-    log.debug("new " .. self.friendly_name)
+    -- log.debug("new " .. self.friendly_name)
 
     self.hookstate = HookState()
 
@@ -61,21 +60,17 @@ end
 function FunctionComponentInstance:render(props)
     local component = self.component
 
-    log.debug(string.format("render %s start", self.friendly_name))
+    -- log.debug(string.format("render %s start", self.friendly_name))
 
     self.rerender = false
     self.hookstate:reset()
 
-    -- TODO should I roll hookstate in?
-    local info = RenderInfo.retrieve(props)
-    RenderInfo.set(info)
-
+    -- TODO should I roll hookstate in to RenderInfo?
     local last_hookstate = HookState.global.set(self.hookstate)
 
     local ok, res = xpcall(component, traceback, props)
 
     HookState.global.set(last_hookstate)
-    -- RenderInfo.set(last_info)
 
     if not ok then
         local err = res --[[ @as string ]]
@@ -94,9 +89,9 @@ function FunctionComponentInstance:render(props)
             err_trunc = "While rendering " .. self.friendly_name .. ":\n" .. err_trunc
         end
 
-        error(err_trunc or err)
+        DrawGroup.error(nil, err_trunc or err)
     else
-        log.trace(string.format("render %s end", self.friendly_name))
+        -- log.trace(string.format("render %s end", self.friendly_name))
 
         local element = res
 
@@ -105,7 +100,7 @@ function FunctionComponentInstance:render(props)
 end
 
 function FunctionComponentInstance:cleanup()
-    log.debug("FunctionComponentInstance cleanup")
+    -- log.debug("FunctionComponentInstance cleanup")
 
     local hooks = self.hookstate.values
     local length = math.max(#self.hookstate.values, self.hookstate.index)

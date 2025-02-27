@@ -28,10 +28,13 @@ Gtk3Element.components = {
 }
 ]]
 
+-- TODO spinners should :start on init()?
 function Gtk3Element:init(native, widget_name)
     -- show elements by default
-    native:show()
-        
+    if native then
+        native:show()
+    end
+
     self.widget = native
 
     self.widget_name = widget_name
@@ -59,7 +62,11 @@ function Gtk3Element:set_prop(prop, value)
         end
 
         self.signal_functions[prop] = value
-        self.signal_ids[prop] = widget[prop]:connect(value)
+        if value then
+            self.signal_ids[prop] = widget[prop]:connect(value)
+        else
+            self.signal_ids[prop] = nil
+        end
     else
         widget["set_" .. prop](widget, value)
     end
@@ -118,7 +125,6 @@ function Gtk3Element:insert_child(index, element, is_text)
     end
 end
 
--- TODO test
 function Gtk3Element:delete_child(index, is_text)
     if is_text then
         table.remove(self.texts, index)
@@ -129,10 +135,13 @@ function Gtk3Element:delete_child(index, is_text)
         local remove_child = children[index]
 
         self.widget:remove(remove_child)
-        remove_child:destroy()
 
         self:reinsert_trailing_children(after)
     end
+end
+
+function Gtk3Element:cleanup ()
+    self.widget:destroy()
 end
 
 function Gtk3Element:get_native()

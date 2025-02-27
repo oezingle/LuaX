@@ -2,10 +2,8 @@ local class                 = require("lib.30log")
 local count_children_by_key = require("src.util.NativeElement.helper.count_children_by_key")
 local set_child_by_key      = require("src.util.NativeElement.helper.set_child_by_key")
 local list_reduce           = require("src.util.polyfill.list.reduce")
-local log                   = require("lib.log")
 local VirtualElement        = require("src.util.NativeElement.VirtualElement")
 local flatten_children      = require("src.util.NativeElement.helper.flatten_children")
-local key_to_string         = require("src.util.debug.key_to_string")
 
 ---@alias LuaX.NativeElement.ChildrenByKey LuaX.NativeElement | LuaX.NativeElement.ChildrenByKey[] | LuaX.NativeElement.ChildrenByKey[][]
 
@@ -131,7 +129,7 @@ function NativeElement:flatten_children(key)
 end
 
 function NativeElement:insert_child_by_key(key, child)
-    log.trace(self:get_name(), "insert_child_by_key", key_to_string(key))
+    -- log.trace(self:get_name(), "insert_child_by_key", key_to_string(key))
 
     if not self._children_by_key then
         self._children_by_key = {}
@@ -144,7 +142,7 @@ function NativeElement:insert_child_by_key(key, child)
 
         local is_text = NativeTextElement and NativeTextElement:classOf(child.class) or false
 
-        log.trace(" ↳ insert native child", child:get_name(), tostring(insert_index))
+        -- log.trace(" ↳ insert native child", child:get_name(), tostring(insert_index))
 
         self:insert_child(insert_index, child, is_text)
     end
@@ -154,7 +152,7 @@ function NativeElement:insert_child_by_key(key, child)
 end
 
 function NativeElement:delete_children_by_key(key)
-    log.trace(self:get_name(), "delete_children_by_key", key_to_string(key))
+    -- log.trace(self:get_name(), "delete_children_by_key", key_to_string(key))
 
     -- No need to delete anything
     if not self._children_by_key then
@@ -182,7 +180,7 @@ function NativeElement:delete_children_by_key(key)
                 NativeTextElement:classOf(child.class) or
                 false
 
-            log.trace(" ↳ delete native child", child:get_name(), tostring(delete_index))
+            -- log.trace(" ↳ delete native child", child:get_name(), tostring(delete_index))
 
             self:delete_child(delete_index, is_text)
 
@@ -217,31 +215,6 @@ function NativeElement:set_props(props)
         if prop ~= "children" then
             self:set_prop(prop, value)
         end
-    end
-end
-
----@param children LuaX.NativeElement.ChildrenByKey
-function NativeElement.recursive_children_string(children)
-    if type(children) ~= "table" then
-        return tostring(children)
-    end
-
-    if #children ~= 0 then
-        local children_strs = {}
-
-        for index, child in ipairs(children) do
-            table.insert(children_strs, NativeElement.recursive_children_string(child))
-        end
-
-        return string.format("{ %s }", table.concat(children_strs, ", "))
-    else
-        --[[
-        for k, v in pairs(children) do
-            print("", k, v)
-        end
-        ]]
-
-        return "Child " .. tostring(children)
     end
 end
 
