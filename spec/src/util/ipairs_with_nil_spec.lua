@@ -19,7 +19,7 @@ describe("ipairs_with_nil", function ()
 
         local sum = 0
 
-        for _ ,item in ipairs_with_nil(list) do
+        for _ ,item in ipairs_with_nil(list, 5) do
             if item ~= nil then
                 sum = sum + item
             end
