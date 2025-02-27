@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+
+set -e
+
+echo "Testing under Lua 5.4"
+busted --lua=lua5.4
+
+# As of 26/02/2025 Lua 5.3 passes all tests, but I don't want to provide support for it.
+#echo "Testing under Lua 5.3"
+#busted --lua=lua5.3
+
+echo "Testing under LuaJIT"
+busted --lua=luajit
+
+echo "Updating types"
+lua sh/get_all_types.lua

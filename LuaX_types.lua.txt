@@ -4,14 +4,17 @@
 ---@field NativeElement LuaX.NativeElement
 ---@field create_element fun(type: LuaX.Component, props: LuaX.Props): LuaX.ElementNode
 ---@field clone_element (fun(element: LuaX.ElementNode, props: LuaX.Props): LuaX.ElementNode) | (fun(element: LuaX.ElementNode[], props: LuaX.Props): LuaX.ElementNode[])
----@field Fragment LuaX.Component
+---@field Fragment LuaX.Component.Fragment
+---@field Suspense LuaX.Component.Suspense
 ---@field Portal LuaX.Portal
+---@field Context LuaX.Context
 ---@field use_context LuaX.Hooks.UseContext
 ---@field use_effect LuaX.Hooks.UseEffect
 ---@field use_memo LuaX.Hooks.UseMemo
 ---@field use_portal LuaX.Hooks.UsePortal
 ---@field use_ref LuaX.Hooks.UseRef
 ---@field use_state LuaX.Hooks.UseState
+---@field use_supsense LuaX.Hooks.UseSuspense
 ---@field register fun() Register the LuaX loader
 ---@field Parser LuaX.Parser.V3
 ---@field transpile { from_path: (fun(path: string): string), from_string: (fun(content: string, source?: string): string), inline: (fun(tag: string): string)|(fun(fn: function): function) }
@@ -36,6 +39,7 @@
 ---@alias LuaX.Hooks.UsePortal fun (name?: string): LuaX.Portal
 ---@generic T
 ---@alias LuaX.Hooks.UseContext fun(context: LuaX.Context<T>): T
+---@alias LuaX.Hooks.UseSuspense fun(): (suspend: fun(), resolve: fun())
 ---@alias LuaX.Hooks.UseMemo.State { deps: any[], cached: any }
 ---@generic T
 ---@alias LuaX.Hooks.UseMemo fun (callback: (fun(): T), deps: any[]): T
@@ -53,6 +57,8 @@
 ---@field protected default table
 ---@field Provider LuaX.Component
 ---@operator call:LuaX.Context
+---@alias LuaX.Component.Fragment LuaX.Generic.FunctionComponent<LuaX.PropsWithChildren<{}>>
+---@alias LuaX.Component.Suspense LuaX.Generic.Component<LuaX.PropsWithChildren<{ fallback?: LuaX.ElementNode|string|function }>>
 ---@alias LuaX.HookState.Listener fun(index: number, value: any)
 ---@class LuaX.HookState : Log.BaseFunctions
 ---@field index number
@@ -187,14 +193,23 @@
 ---@field native_element LuaX.NativeElement class here, not instance
 ---@field set_workloop fun (self: self, workloop: LuaX.WorkLoop): self set workloop using either a class or an instance
 ---@field render fun(self: self, component: LuaX.ElementNode, container: LuaX.NativeElement)
----@field protected render_function_component fun(self: self, element: LuaX.ElementNode, container: LuaX.NativeElement, key: LuaX.Key, caller?: LuaX.ElementNode)
----@field protected render_native_component fun(self: self, component: LuaX.ElementNode | nil, container: LuaX.NativeElement, key: LuaX.Key, caller?: LuaX.ElementNode)
 ---@operator call: LuaX.Renderer
+---@alias LuaX.DrawGroup.OnComplete fun()
+---@alias LuaX.DrawGroup.OnRestart fun()
+---@alias LuaX.DrawGroup.OnError fun(err: any)
 ---@class LuaX.DrawGroup.Group
 ---@field refs integer
+---@field on_error LuaX.DrawGroup.OnError
+---@field on_complete LuaX.DrawGroup.OnComplete
+---@field on_restart LuaX.DrawGroup.OnRestart
 ---@class LuaX.DrawGroup
----@class LuaX.RenderInfo.Info
+---@class LuaX.RenderInfo.Info.Minimal
+---@field key LuaX.Key
+---@field container LuaX.NativeElement
+---@field renderer LuaX.Renderer
+---@class LuaX.RenderInfo.Info : LuaX.RenderInfo.Info.Minimal
 ---@field context table<LuaX.Context<any>, any>
+---@field draw_group LuaX.DrawGroup.Group
 ---@class LuaX.RenderInfo 
 ---@field current LuaX.RenderInfo.Info
 ---@alias LuaX.CLI.Mkdir fun (path: string): nil

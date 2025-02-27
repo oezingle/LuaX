@@ -1,0 +1,6 @@
+return {
+    default = {
+        verbose = true,
+        helper = "sh/ensure_init_searcher.lua"
+    }    
+}
