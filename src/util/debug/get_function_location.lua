@@ -14,7 +14,11 @@ local function get_function_location (fn)
     local ok, ret = pcall(function ()
         local info = debug.getinfo(fn, "S")
 
-        local location = info.short_src .. ":" .. info.linedefined
+        if info.source == "[C]" then
+            return "[C]"
+        end
+
+        local location = info.source:sub(2) .. ":" .. info.linedefined
 
         return location
     end)
