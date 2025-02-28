@@ -1,5 +1,66 @@
+-- Lua 5.1/LuaJIT provide getfenv & setfenv instead of _ENV, so we can just simulate _ENV
+local _ENV = _ENV or _G
+
+local searchpath = package.searchpath
+local vanilla_require = require
+--- env_aware_require acts the same as require(), except it reads/writes
+--- _ENV.package.loaded instead of _G.package.loaded, and loads modules with
+--- _ENV instead of _G (where _G is the original globals table, which Lua's
+--- standard library uses instead of _ENV)
+---@param modpath string
+---@return any, string?
+local function env_aware_require(modpath)
+    local loaded = _ENV.package.loaded[modpath]
+    if loaded then
+        return loaded
+    end
+
+    local c_path = searchpath(modpath, package.cpath)
+    -- for C modules, just allow vanilla require behaviour
+    if c_path then
+        return vanilla_require(modpath)
+    end
+
+    local path, err = searchpath(modpath, package.path)
+
+    if not path then
+        error(err)
+    end
+
+    local chunk, err = loadfile(path, nil, _ENV)
+    if not chunk then
+        error(err)
+    end
+
+    if _VERSION:match("%d.%d") == "5.1" then        
+        ---@diagnostic disable-next-line:deprecated
+        setfenv(chunk, _ENV)
+    end
+
+    local mod = chunk(modpath, path)
+
+    package.loaded[modpath] = mod
+
+    return mod, path
+end
 
 local function parser_shim()
+    -- push new env so the real package.loaded isn't polluted.
+    _ENV          = setmetatable({
+        package = setmetatable({
+            loaded = {
+                -- This list is minimal for my use case.
+                table = table,
+                string = string
+            }
+        }, { __index = package }),
+        require = env_aware_require
+    }, { __index = _G })
+
+    local package = _ENV.package
+    local require = _ENV.require
+
+
     package.loaded["ext.op"]                 = require("lib.lua-ext.op")
     package.loaded["ext.table"]              = require("lib.lua-ext.table")
     package.loaded["ext.class"]              = require("lib.lua-ext.class")
