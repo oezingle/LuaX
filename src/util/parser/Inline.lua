@@ -14,6 +14,8 @@ local get_component_name = require("src.util.debug.get_component_name")
 local Fragment = require("src.components.Fragment")
 local create_element = require("src.create_element")
 
+-- TODO FIXME break debug lib out into locals for performance!!
+
 ---@class LuaX.Parser.Inline
 local Inline = {
     debuginfo = {},
@@ -64,27 +66,28 @@ end
 ---@param src string?
 function Inline.easy_load(chunk, env, src)
     local chunkname = "inline LuaX"
-    if src then
-        chunkname = chunkname .. " " .. src
-    end
 
     local get_output, err = load(chunk, chunkname, nil, env)
 
     if not get_output then
-        print("Transpiled code run:")
-        print(chunk)
+        err = tostring(err)
+        if src then
+            err = err:gsub("%[string \"inline LuaX\"%]:1", src)
+        end
 
-        error(err)
+        error(string.format("Error loading transpiled LuaX.\ntranspilation:\n%s\n\n%s", chunk, err))
     end
 
-    local ok, ret = pcall(get_output)
+    local ok, ret = xpcall(get_output, traceback)
 
     if ok then
         return ret
     else
-        local file, err = ret:match("%[string \"inline LuaX%s*([^\"]*)\"%]:1:%s*(.*)$")
+        -- TODO try much harder to get current actual line number
 
-        local new_err = string.format("LuaX error in %s: %s", file, err)
+        local file, err = ret:match("%[string \"inline LuaX\"%]:1:%s*(.*)$")
+
+        local new_err = string.format("error in inline LuaX in %s: %s", file, tostring(err))
 
         error(new_err)
     end
@@ -111,7 +114,8 @@ end
 
 ---@param tag string?
 ---@param locals table
-function Inline:cache_get(tag, locals)
+---@param src string?
+function Inline:cache_get(tag, locals, src)
     if not tag then
         return "return nil"
     end
@@ -121,10 +125,10 @@ function Inline:cache_get(tag, locals)
         return cached
     end
 
-    local parser = LuaXParser.from_inline_string("return " .. tag)
-    
+    local parser = LuaXParser.from_inline_string("return " .. tag, src)
+
     -- mute on_set_variable warnings
-    parser:set_handle_variables(function () end)
+    parser:set_handle_variables(function() end)
 
     local globals = get_global_components()
     if globals then
@@ -263,13 +267,28 @@ function Inline:transpile_string(tag, stackoffset)
     locals[vars.IS_COMPILED.name] = true
     names[vars.IS_COMPILED.name] = true
 
-    local element_str = self:cache_get(tag, names)
+    -- Get debug info, finding the first non-C caller. This is for cases wrapped
+    -- in pcall. 1 is the Inline parser itself, so 2 is the first possible real
+    -- caller.
+    local stack_height = 2 
+    local src
+    repeat 
+        local info = debug.getinfo(stack_height + stackoffset, "lS")
+
+        if info.source ~= "=[C]" then
+            src = info.source:sub(2) .. ":" .. info.currentline
+        end
+
+        stack_height = stack_height + 1
+    until src
+    
+    local element_str = self:cache_get(tag, names, src)
 
     local env = setmetatable(locals, {
         __index = _G
     })
 
-    return self.easy_load(element_str, env)
+    return self.easy_load(element_str, env, src)
 end
 
 --- Inline transpiler, taking either a LuaX string or a Component.
