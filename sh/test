@@ -10,7 +10,7 @@ LUA_ENV=production busted --lua=lua5.4
 #busted --lua=lua5.3
 
 echo "Testing under LuaJIT"
-busted --lua=luajit
+LUA_ENV=production busted --lua=luajit
 
 echo "Updating types"
 lua sh/get_all_types.lua
