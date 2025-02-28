@@ -19,11 +19,16 @@ local lgi = require("lgi")
 local Gtk = lgi.require("Gtk", "3.0")
 local GLib = lgi.GLib
 
-local ErrorComponent = LuaX(function()
+local SuspenseComponent = LuaX(function()
+    -- Because Lua doesn't have a default Promises implementation, use_suspense
+    -- returns two functions - suspend() defers rendering, and resolve() does
+    -- the opposite.
     local suspend, resolve = use_suspense()
 
     local clicks, set_clicks = use_state(0)
 
+    -- We use GLib.timeout_add to create a 1 second delay every time the click
+    -- count changes.
     use_effect(function()
         suspend()
 
@@ -49,13 +54,14 @@ local ErrorComponent = LuaX(function()
 end)
 
 local App = LuaX(function()
-    -- The LuaX parser currently
+    -- The LuaX parser currently doesn't support LuaX syntax in literal blocks,
+    -- but this will be fixed
     local spinner = LuaX([[ <LuaX.Gtk.Spinner LuaX::onload={function (w) w:start() end} /> ]])
 
     return [[
         <LuaX.Gtk.VBox>
             <Suspense fallback={spinner}>
-                <ErrorComponent />
+                <SuspenseComponent />
             </Suspense>
         </LuaX.Gtk.VBox>
     ]]
