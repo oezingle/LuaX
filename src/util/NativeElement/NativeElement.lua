@@ -134,7 +134,7 @@ function NativeElement:insert_child_by_key(key, child)
     if not self._children_by_key then
         self._children_by_key = {}
     end
-        
+
     if child.class ~= VirtualElement then
         local insert_index = self:count_children_by_key(key) + 1
 
@@ -163,6 +163,14 @@ function NativeElement:delete_children_by_key(key)
 
     local flattened = self:flatten_children(key)
 
+    -- child already deleted. This seems like bad practice but is valid in cases
+    -- like ErrorBoundary handling, where a fallback is rendered (therefore
+    -- deleting the child by this key) before the child can be deleted by the
+    -- render_function_component result handler
+    if #flattened == 0 then
+        return
+    end
+
     -- count_children_by_key gets the last index of this key
     local delete_index = self:count_children_by_key(key)
 
@@ -172,8 +180,6 @@ function NativeElement:delete_children_by_key(key)
     -- iterate backwards so delete_child works nicely.
     for i = #flattened, 1, -1 do
         local child = flattened[i].element
-
-        child:cleanup()
 
         if child.class ~= VirtualElement then
             local is_text = NativeTextElement and
@@ -186,6 +192,10 @@ function NativeElement:delete_children_by_key(key)
 
             delete_index = delete_index - 1
         end
+
+        -- calling cleanup after delete_child means that any memory management
+        -- functionality won't result in unexpected behaviour.
+        child:cleanup()
     end
 
     self:set_child_by_key(key, nil)

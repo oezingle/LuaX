@@ -90,6 +90,9 @@ function FunctionComponentInstance:render(props)
         end
 
         DrawGroup.error(nil, err_trunc or err)
+        -- if DrawGroup.error fails without terminating the program, we have to
+        -- leave the render loop
+        return true, nil
     else
         -- log.trace(string.format("render %s end", self.friendly_name))
 
