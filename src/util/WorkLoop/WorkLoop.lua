@@ -76,11 +76,11 @@ function WorkLoop:run_once()
     local ok, err = xpcall(cb, traceback, table_unpack(item, 2, upper))
 
     if not ok then
-        local ok = pcall(DrawGroup.error, nil, err)
+        ok = pcall(DrawGroup.error, nil, err)
+    end
 
-        if not ok then
-            error("DrawGroup error handler failed.\n" .. err)
-        end
+    if not ok then
+        error("DrawGroup error handler failed.\n" .. err)
     end
 end
 

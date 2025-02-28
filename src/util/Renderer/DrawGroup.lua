@@ -30,8 +30,6 @@ end
 function DrawGroup.ref(group)
     group.refs = group.refs + 1
 
-    -- print(RenderInfo.get(), group, "ref", group.refs)
-
     if group.refs <= 1 then
         group.on_restart()
     end
@@ -40,8 +38,6 @@ end
 ---@param group LuaX.DrawGroup.Group
 function DrawGroup.unref(group)
     group.refs = group.refs - 1
-
-    -- print(RenderInfo.get(), group, "unref", group.refs)
 
     if group.refs <= 0 then
         group.on_complete()

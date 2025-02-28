@@ -56,7 +56,6 @@ function Renderer:render_native_component(component, container, key, info)
     -- log.trace(get_element_name(container), "render_native_component", get_element_name(component), key_to_string(key))
 
     if component == nil then
-        -- container:set_child(index, nil)
         container:delete_children_by_key(key)
 
         return
@@ -114,7 +113,6 @@ function Renderer:render_native_component(component, container, key, info)
     end
 end
 
--- TODO FIXME sometimes we set a RenderInfo that only provides draw_group?
 ---@protected
 ---@param element LuaX.ElementNode
 ---@param container LuaX.NativeElement

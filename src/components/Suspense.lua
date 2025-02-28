@@ -20,7 +20,7 @@ local function Suspense(props)
     --- Clone RenderInfo so that we don't modify current RenderInfo
     ---@type LuaX.RenderInfo.Info
     local info = use_memo(function()
-        local info = RenderInfo.clone(RenderInfo.current)
+        local info = RenderInfo.clone(RenderInfo.get())
 
         -- Create new DrawGroup
         local group = DrawGroup.create(info.draw_group.on_error, function()
