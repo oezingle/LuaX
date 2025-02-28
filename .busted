@@ -1,6 +1,6 @@
 return {
     default = {
         verbose = true,
-        helper = "sh/ensure_init_searcher.lua"
+        helper = "sh/busted_entry.lua"
     }    
 }

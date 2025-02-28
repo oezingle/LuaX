@@ -57,6 +57,7 @@
 ---@field protected default table
 ---@field Provider LuaX.Component
 ---@operator call:LuaX.Context
+---@alias LuaX.Component.ErrorBoundary LuaX.Generic.Component<LuaX.PropsWithChildren<{ fallback?: string|function|LuaX.ElementNode }>>
 ---@alias LuaX.Component.Fragment LuaX.Generic.FunctionComponent<LuaX.PropsWithChildren<{}>>
 ---@alias LuaX.Component.Suspense LuaX.Generic.Component<LuaX.PropsWithChildren<{ fallback?: LuaX.ElementNode|string|function }>>
 ---@alias LuaX.HookState.Listener fun(index: number, value: any)
