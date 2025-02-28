@@ -38,7 +38,8 @@ if err == ABORT_CURRENT_RENDER then return false,nil end
 local err_trunc=err:match("(.*)[\n\13].-[\n\13].-[\n\13].-in function '" .. this_file .. ".-'")
 if err_trunc then err_trunc=err_trunc:gsub("in upvalue 'chunk'",string.format("in function '%s'",self.friendly_name:match"^%S+"))
 err_trunc="While rendering " .. self.friendly_name .. ":\n" .. err_trunc end
-DrawGroup.error(nil,err_trunc or err) else local element=res
+DrawGroup.error(nil,err_trunc or err)
+return true,nil else local element=res
 return  not self.rerender,element end end
 function FunctionComponentInstance:cleanup() local hooks=self.hookstate.values
 local length=math.max( # self.hookstate.values,self.hookstate.index)

@@ -22,7 +22,7 @@ local use_memo=require"lib_LuaX.hooks.use_memo"
 local create_element=require"lib_LuaX.create_element"
 local no_op=function ()  end
 local function Suspense(props) local complete,set_complete=use_state(false)
-local info=use_memo(function () local info=RenderInfo.clone(RenderInfo.current)
+local info=use_memo(function () local info=RenderInfo.clone(RenderInfo.get())
 local group=DrawGroup.create(info.draw_group.on_error,function () set_complete(true) end,function () set_complete(false) end)
 info.draw_group=group
 return info end,{})

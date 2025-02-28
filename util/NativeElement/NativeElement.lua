@@ -47,13 +47,14 @@ self:set_child_by_key(key,child) end
 function NativeElement:delete_children_by_key(key) if  not self._children_by_key then self._children_by_key={}
 return  end
 local flattened=self:flatten_children(key)
+if  # flattened == 0 then return  end
 local delete_index=self:count_children_by_key(key)
 local NativeTextElement=self._dependencies.NativeTextElement
 for i =  # flattened,1, - 1 do local child=flattened[i].element
-child:cleanup()
 if child.class ~= VirtualElement then local is_text=NativeTextElement and NativeTextElement:classOf(child.class) or false
 self:delete_child(delete_index,is_text)
-delete_index=delete_index - 1 end end
+delete_index=delete_index - 1 end
+child:cleanup() end
 self:set_child_by_key(key,nil) end
 function NativeElement:cleanup()  end
 function NativeElement.create_element(element_type) if type(element_type) ~= "string" then error"NativeElement cannot render non-pure component" end
