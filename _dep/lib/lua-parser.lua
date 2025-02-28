@@ -1,4 +1,22 @@
-local function parser_shim() package.loaded["ext.op"]=require"lib_LuaX._dep.lib.lua-ext.op"
+local _ENV=_ENV or _G
+local searchpath=package.searchpath
+local vanilla_require=require
+local function env_aware_require(modpath) local loaded=_ENV.package.loaded[modpath]
+if loaded then return loaded end
+local c_path=searchpath(modpath,package.cpath)
+if c_path then return vanilla_require(modpath) end
+local path,err=searchpath(modpath,package.path)
+if  not path then error(err) end
+local chunk,err=loadfile(path,nil,_ENV)
+if  not chunk then error(err) end
+if _VERSION:match"%d.%d" == "5.1" then setfenv(chunk,_ENV) end
+local mod=chunk(modpath,path)
+package.loaded[modpath]=mod
+return mod,path end
+local function parser_shim() _ENV=setmetatable({["package"] = setmetatable({["loaded"] = {["table"] = table,["string"] = string}},{["__index"] = package}),["require"] = env_aware_require},{["__index"] = _G})
+local package=_ENV.package
+local require=_ENV.require
+package.loaded["ext.op"]=require"lib_LuaX._dep.lib.lua-ext.op"
 package.loaded["ext.table"]=require"lib_LuaX._dep.lib.lua-ext.table"
 package.loaded["ext.class"]=require"lib_LuaX._dep.lib.lua-ext.class"
 package.loaded["ext.string"]=require"lib_LuaX._dep.lib.lua-ext.string"
