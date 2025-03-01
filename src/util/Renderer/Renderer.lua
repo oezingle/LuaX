@@ -25,11 +25,6 @@ local max = math.max
 local Renderer = class("Renderer")
 
 function Renderer:init(workloop)
-    if not _G.LuaX then
-        ---@diagnostic disable-next-line:missing-fields
-        _G.LuaX = {}
-    end
-
     self:set_workloop(workloop)
 end
 

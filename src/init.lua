@@ -9,6 +9,8 @@ local _VERSION    = "0.5.0-dev"
 
 ensure_warn()
 
+-- TODO init 'test' is out-of-date
+
 -- check if ... (provided by import) matches arg (provided by lua command line)
 if table_pack(...)[1] ~= (arg or {})[1] then
     -- this file has been imported
@@ -25,6 +27,7 @@ if table_pack(...)[1] ~= (arg or {})[1] then
     --- Components
     ---@field Fragment LuaX.Component.Fragment
     ---@field Suspense LuaX.Component.Suspense
+    ---@field ErrorBoundary LuaX.Component.ErrorBoundary
     ---@field Portal LuaX.Portal
     ---@field Context LuaX.Context
     --- Hooks
@@ -57,6 +60,7 @@ if table_pack(...)[1] ~= (arg or {})[1] then
 
         Fragment       = require("src.components.Fragment"),
         Suspense       = require("src.components.Suspense"),
+        ErrorBoundary  = require("src.components.ErrorBoundary"),
         Context        = require("src.Context"),
         Portal         = require("src.Portal"),
 
@@ -94,18 +98,10 @@ if table_pack(...)[1] ~= (arg or {})[1] then
     export.create_portal = export.Portal.create
 
     setmetatable(export, {
-        __call = function(table, tag)
-            return table.transpile.inline(tag)
+        __call = function(t, tag)
+            return t.transpile.inline(tag)
         end
     })
-
-    -- Check if LuaX global doesn't exist or LuaX global is an empty table.
-    if not _G.LuaX or not next(_G.LuaX) then
-        ---@class LuaX : LuaX.Exported
-        ---@field _hookstate LuaX.HookState
-        -- field _render_info LuaX.RenderInfo
-        _G.LuaX = export
-    end
 
     return export
 else

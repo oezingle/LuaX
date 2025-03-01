@@ -1,6 +1,4 @@
 local class = require("lib.30log")
-local ipairs_with_nil = require("src.util.ipairs_with_nil")
-local stringify_table = require("src.util.parser.transpile.stringify_table")
 
 ---@alias LuaX.HookState.Listener fun(index: number, value: any)
 
@@ -8,6 +6,7 @@ local stringify_table = require("src.util.parser.transpile.stringify_table")
 ---@field index number
 ---@field values any[]
 ---@field listeners LuaX.HookState.Listener
+---@field current LuaX.HookState
 ---@operator call:LuaX.HookState
 local HookState = class("HookState")
 
@@ -68,33 +67,17 @@ function HookState:set_listener(listener)
     self.listener = listener
 end
 
-function HookState:__tostring()
-    local hooks = {}
-
-    local size = math.max(self.index, #self.values)
-
-    for _, hook in ipairs_with_nil(self.values, size) do
-        local hook_str = nil
-
-        if type(hook) == "table" then
-            hook_str = stringify_table(hook)
-        else
-            hook_str = tostring(hook)
-        end
-
-        table.insert(hooks, "\t" .. tostring(hook_str))
-    end
-
-    return string.format("HookState {\n%s\n}", table.concat(hooks, "\n"))
-end
-
+local hs_global = {
+    ---@type LuaX.HookState?
+    current = nil
+}
 HookState.global = {}
 
 ---@overload fun(): LuaX.HookState | nil
 ---@param required boolean
 ---@return LuaX.HookState
 function HookState.global.get(required)
-    local hookstate = _G.LuaX._hookstate
+    local hookstate = hs_global.current
 
     if required then
         assert(hookstate, "No global hookstate!")
@@ -105,10 +88,10 @@ end
 
 ---@param hookstate LuaX.HookState?
 ---@return LuaX.HookState? last_hookstate
-function HookState.global.set (hookstate)
-    local last_hookstate = _G.LuaX._hookstate
+function HookState.global.set(hookstate)
+    local last_hookstate = hs_global.current
 
-    _G.LuaX._hookstate = hookstate
+    hs_global.current = hookstate
 
     return last_hookstate
 end
