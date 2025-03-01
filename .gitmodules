@@ -19,3 +19,6 @@
 [submodule "lib/profiler"]
 	path = lib/profiler
 	url = https://github.com/oezingle/LuaProfiler
+[submodule "lib/inspect"]
+	path = lib/inspect
+	url = https://github.com/kikito/inspect.lua
