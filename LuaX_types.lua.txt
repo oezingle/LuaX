@@ -1,4 +1,4 @@
----@class LuaX.Exported
+---@class LuaX
 ---@field Renderer LuaX.Renderer
 ---@field Children LuaX.Children
 ---@field NativeElement LuaX.NativeElement
@@ -6,6 +6,7 @@
 ---@field clone_element (fun(element: LuaX.ElementNode, props: LuaX.Props): LuaX.ElementNode) | (fun(element: LuaX.ElementNode[], props: LuaX.Props): LuaX.ElementNode[])
 ---@field Fragment LuaX.Component.Fragment
 ---@field Suspense LuaX.Component.Suspense
+---@field ErrorBoundary LuaX.Component.ErrorBoundary
 ---@field Portal LuaX.Portal
 ---@field Context LuaX.Context
 ---@field use_context LuaX.Hooks.UseContext
@@ -14,13 +15,11 @@
 ---@field use_portal LuaX.Hooks.UsePortal
 ---@field use_ref LuaX.Hooks.UseRef
 ---@field use_state LuaX.Hooks.UseState
----@field use_supsense LuaX.Hooks.UseSuspense
+---@field use_suspense LuaX.Hooks.UseSuspense
 ---@field register fun() Register the LuaX loader
 ---@field Parser LuaX.Parser.V3
 ---@field transpile { from_path: (fun(path: string): string), from_string: (fun(content: string, source?: string): string), inline: (fun(tag: string): string)|(fun(fn: function): function) }
 ---@operator call:function
----@class LuaX : LuaX.Exported
----@field _hookstate LuaX.HookState
 ---@class LuaX.Portal : Log.BaseFunctions
 ---@field Inlet LuaX.Component<LuaX.PropsWithChildren>
 ---@field Outlet LuaX.Component
@@ -65,6 +64,7 @@
 ---@field index number
 ---@field values any[]
 ---@field listeners LuaX.HookState.Listener
+---@field current LuaX.HookState
 ---@operator call:LuaX.HookState
 ---@alias LuaX.ComponentInstance.ChangeHandler fun(element: LuaX.ElementNode | nil)
 ---@class LuaX.ComponentInstance : Log.BaseFunctions
