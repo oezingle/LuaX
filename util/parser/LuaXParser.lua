@@ -34,6 +34,7 @@ self:set_cursor(1)
 self:set_components({},"local") end
 function LuaXParser:set_text(text) if self == LuaXParser then error"LuaXParser must be instanciated" end
 self.text=text
+self:get_comment_regions()
 return self end
 function LuaXParser:set_sourceinfo(source) self.src=source or "Unknown"
 return self end
@@ -61,9 +62,26 @@ if sub < 0 then n_col=chars_away
 break end
 n_line=n_line + 1 end
 return string.format(fmt,self.src,n_line,n_col,tostring(msg),context_line) end
+function LuaXParser:get_comment_regions() self.comment_regions={}
+local old_pos=self:get_cursor()
+self:set_cursor(1)
+while true do local s_start,s_end=self:text_find".-%-%-"
+if  not (s_start and s_end) then break end
+self:set_cursor(s_end)
+local multiline_match=self:text_match"%[(=*)%["
+if multiline_match then local _,multi_end=self:text_find("]%1]",multiline_match)
+s_end=multi_end else local line_match=self:text_match"([^\n\13]-)[\n\13]"
+s_end=s_end +  # line_match end
+table.insert(self.comment_regions,{s_start,s_end}) end
+self:set_cursor(old_pos) end
+function LuaXParser:is_in_comment(pos) for _,region in pairs(self.comment_regions) do if region[1] <= pos and region[2] >= pos then return true end end
+return false end
 function LuaXParser:get_next_token() local matches={}
-for _,token in ipairs(tokens) do local range_start,range_end,captured=self:text_find(token.pattern)
-if range_start and range_end then table.insert(matches,{["token"] = token,["captured"] = captured,["range_start"] = range_start,["range_end"] = range_end}) end end
+for _,token in ipairs(tokens) do local ret=table_pack(self:text_find(token.pattern))
+local range_start=ret[1]
+local range_end=ret[2]
+local captured=table_pack(table_unpack(ret,3))
+if range_start and range_end and  not self:is_in_comment(range_start) then table.insert(matches,{["token"] = token,["captured"] = captured,["range_start"] = range_start,["range_end"] = range_end}) end end
 table.sort(matches,function (match_a,match_b) return match_a.range_end < match_b.range_end end)
 local match=matches[1]
 if match then return match.token,match.captured,match.range_start,match.range_end end
@@ -89,13 +107,19 @@ function LuaXParser:move_cursor(chars) self:set_cursor(self:get_cursor() + chars
 function LuaXParser:is_at_end() return self:get_cursor() ==  # self.text end
 function LuaXParser:get_text() return self.text end
 function LuaXParser:has_transpiled() return self.vars.IS_COMPILED.required end end
-do function LuaXParser:text_find(pattern) return self.text:find(pattern,self:get_cursor()) end
-function LuaXParser:text_match(pattern) return self.text:match(pattern,self:get_cursor()) end
-function LuaXParser:text_replace_range(range_start,range_end,replacer) self.text=self.text:sub(1,range_start - 1) .. replacer .. self.text:sub(range_end + 1) end
-function LuaXParser:text_replace_range_c(range_end,replacer) self:text_replace_range(self:get_cursor(),range_end,replacer) end
-function LuaXParser:text_replace_range_move(range_start,range_end,replacer) self:text_replace_range(range_start,range_end,replacer)
+do function LuaXParser:text_find(pattern,...) local args=table_pack(...)
+for i,arg in ipairs(args) do pattern=pattern:gsub("%%" .. tostring(i),arg) end
+return self.text:find(pattern,self:get_cursor()) end
+function LuaXParser:text_match(pattern,...) local args=table_pack(...)
+for i,arg in ipairs(args) do pattern=pattern:gsub("%%" .. tostring(i),arg) end
+return self.text:match(pattern,self:get_cursor()) end
+function LuaXParser:text_replace_range(range_start,range_end,replacer,...) local args=table_pack(...)
+for i,arg in ipairs(args) do replacer=replacer:gsub("%%" .. tostring(i),arg) end
+self.text=self.text:sub(1,range_start - 1) .. replacer .. self.text:sub(range_end + 1) end
+function LuaXParser:text_replace_range_c(range_end,replacer,...) self:text_replace_range(self:get_cursor(),range_end,replacer,...) end
+function LuaXParser:text_replace_range_move(range_start,range_end,replacer,...) self:text_replace_range(range_start,range_end,replacer,...)
 self:set_cursor(range_start +  # replacer) end
-function LuaXParser:text_replace_range_move_c(range_end,replacer) self:text_replace_range_move(self:get_cursor(),range_end,replacer) end end
+function LuaXParser:text_replace_range_move_c(range_end,replacer,...) self:text_replace_range_move(self:get_cursor(),range_end,replacer,...) end end
 do function LuaXParser:set_handle_variables(on_set_variable) self.on_set_variable=on_set_variable
 self:set_required_variables()
 return self end
@@ -117,7 +141,11 @@ parser:move_cursor( # insert) end) end
 function LuaXParser:handle_variables_as_table(variables) return self:set_handle_variables(function (name,value) local parse_value,err=load("return " .. value,"LuaX variable value")
 if  not parse_value then error(err) end
 variables[name]=parse_value() end) end end
-do function LuaXParser:parse_literal() local tokenstack=TokenStack(self.text):set_pos(self:get_cursor()):set_requires_literal(true)
+do function LuaXParser:evaluate_literal(value) local on_set_variable=self.on_set_variable and function (name,value) return self.on_set_variable(name,value,self) end
+local parser=LuaXParser():set_text(value):set_sourceinfo(self.src .. " subparser"):set_handle_variables(on_set_variable):set_components(self.components.names,self.components.mode)
+if value:sub(1,1) == "<" and value:sub( - 1) == ">" then value=parser:transpile_tag() else value=parser:transpile() end
+return value end
+function LuaXParser:parse_literal() local tokenstack=TokenStack(self.text):set_pos(self:get_cursor()):set_requires_literal(true)
 local slices={}
 while true do local pos=tokenstack:get_pos()
 tokenstack:run_once()
@@ -132,8 +160,7 @@ local nodes={}
 for i,slice in ipairs(slices) do local value=table.concat(slice.chars,""):gsub("\n" .. self.indent,"\n"):gsub("^" .. self.indent,"")
 if i == 1 then value=value:gsub("^%s-[\n\13]","") end
 if i ==  # slices then value=value:gsub("[\n\13]%s-$","") end
-if  not value:match"^%s*$" then if slice.is_luablock then local on_set_variable=self.on_set_variable and function (name,value) return self.on_set_variable(name,value,self) end
-value=LuaXParser():set_text(value):set_sourceinfo(self.src .. " subparser"):set_handle_variables(on_set_variable):set_components(self.components.names,self.components.mode):transpile() elseif value:match"^%s*%-%-" then value={["type"] = "comment",["value"] = value} else value=value.format("%q",value) end
+if  not value:match"^%s*$" then if slice.is_luablock then value=self:evaluate_literal(value) elseif value:match"^%s*%-%-" then value={["type"] = "comment",["value"] = value} else value=value.format("%q",value) end
 table.insert(nodes,value) end end
 return nodes end
 function LuaXParser:parse_text() local nodes={}
@@ -150,6 +177,7 @@ if prop then if prop:match"^.-=" then local prop_name=self:move_to_pattern_end"^
 assert(prop_name,self:error"Prop pattern unable to match")
 local tokenstack=TokenStack(self.text):set_pos(self:get_cursor()):run_once():run_until_empty()
 local prop_value=self.text:sub(self:get_cursor(),tokenstack:get_pos() - 1):gsub("^[\"'](.*)[\"']$","%1")
+if prop_value:sub(1,1) == "{" and prop_value:sub( - 1) == "}" and prop_value:match"<.*>" then prop_value="{" .. self:evaluate_literal(prop_value:sub(2, - 2)) .. "}" end
 self:set_cursor(tokenstack:get_pos())
 props[prop_name]=prop_value else props[prop]=true
 self:move_cursor( # prop) end end end
@@ -183,13 +211,12 @@ self:set_required_variables()
 return self.text end
 function LuaXParser:transpile_once() local token,captured,_,luax_start=self:get_next_token()
 if  not token or  not luax_start then return false end
-captured=captured or ""
 self:move_to_next_token()
-self:text_replace_range_move_c(luax_start - 1,token.replacer .. captured)
+self:text_replace_range_move_c(luax_start - 1,token.replacer)
 self:transpile_tag()
-local _,luax_end=self:text_find(token.end_pattern)
+local _,luax_end=self:text_find(token.end_pattern,table_unpack(captured))
 if  not luax_end then error(self:error"Unable to locate end of block") end
-self:text_replace_range_move_c(luax_end,token.end_replacer)
+self:text_replace_range_move_c(luax_end,token.end_replacer,table_unpack(captured))
 return true end
 function LuaXParser:transpile() if  not self.components then warn"Automatically setting parser components"
 self:auto_set_components() end

@@ -12,8 +12,6 @@ folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "util.")
 require(library_root .. "_shim") end
 local class=require"lib_LuaX._dep.lib.30log"
-local ipairs_with_nil=require"lib_LuaX.util.ipairs_with_nil"
-local stringify_table=require"lib_LuaX.util.parser.transpile.stringify_table"
 local HookState=class"HookState"
 local no_op=function ()  end
 function HookState:init() self.values={}
@@ -29,17 +27,12 @@ self:modified(index,value) end
 function HookState:set_value_silent(index,value) self.values[index]=value end
 function HookState:modified(index,value) self.listener(index,value) end
 function HookState:set_listener(listener) self.listener=listener end
-function HookState:__tostring() local hooks={}
-local size=math.max(self.index, # self.values)
-for _,hook in ipairs_with_nil(self.values,size) do local hook_str=nil
-if type(hook) == "table" then hook_str=stringify_table(hook) else hook_str=tostring(hook) end
-table.insert(hooks,"\9" .. tostring(hook_str)) end
-return string.format("HookState {\n%s\n}",table.concat(hooks,"\n")) end
+local hs_global={["current"] = nil}
 HookState.global={}
-function HookState.global.get(required) local hookstate=_G.LuaX._hookstate
+function HookState.global.get(required) local hookstate=hs_global.current
 if required then assert(hookstate,"No global hookstate!") end
 return hookstate end
-function HookState.global.set(hookstate) local last_hookstate=_G.LuaX._hookstate
-_G.LuaX._hookstate=hookstate
+function HookState.global.set(hookstate) local last_hookstate=hs_global.current
+hs_global.current=hookstate
 return last_hookstate end
 return HookState

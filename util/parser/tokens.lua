@@ -17,7 +17,7 @@ local function ensure_token(token) token.replacer=token.replacer or ""
 token.end_pattern=token.end_pattern or ""
 token.end_replacer=token.end_replacer or ""
 return token end
-local function bake_tokens() local tokens={{["pattern"] = "return%s*%[%[(%s*)<",["replacer"] = "return ",["end_pattern"] = "%s*%]%]",["end_replacer"] = ""},{["pattern"] = "LuaX%s*%(%[%[(%s*)<",["replacer"] = "",["end_pattern"] = "%s*%]%]%s*%)",["end_replacer"] = ""}}
+local function bake_tokens() local tokens={{["pattern"] = "return%s*%[(=*)%[%s*<",["replacer"] = "return ",["end_pattern"] = "%s*%]%1%]",["end_replacer"] = ""},{["pattern"] = "LuaX%s*%(%[(=*)%[%s*<",["replacer"] = "",["end_pattern"] = "%s*%]%1%]%s*%)",["end_replacer"] = ""}}
 for _,keyword in ipairs(keywords) do table.insert(tokens,{["pattern"] = keyword .. "%s*<",["replacer"] = keyword .. " "}) end
 for token,match in pairs{["{"] = "}",["["] = "]",["("] = ")",[","] = "",["="] = ""} do table.insert(tokens,{["pattern"] = escape(token) .. "%s*<",["replacer"] = token,["end_pattern"] = match and ("%s*" .. escape(match)),["end_replacer"] = match}) end
 local ret={}

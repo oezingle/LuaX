@@ -26,12 +26,12 @@ local DrawGroup=require"lib_LuaX.util.Renderer.DrawGroup"
 local NativeElement=require"lib_LuaX.util.NativeElement.NativeElement"
 local max=math.max
 local Renderer=class"Renderer"
-function Renderer:init(workloop) if  not _G.LuaX then _G.LuaX={} end
-self:set_workloop(workloop) end
+function Renderer:init(workloop) self:set_workloop(workloop) end
 function Renderer:set_workloop(workloop) if workloop and  not workloop.class then workloop=workloop() end
 self.workloop=workloop or DefaultWorkLoop()
 return self end
-function Renderer:render_native_component(component,container,key,info) if component == nil then container:delete_children_by_key(key)
+function Renderer:render_native_component(component,container,key,info) local info_old=RenderInfo.set(info)
+if component == nil then container:delete_children_by_key(key)
 return  end
 local can_modify,existing_child=can_modify_child(component,container,key)
 local node=nil
@@ -45,7 +45,8 @@ local size=max( # current_children, # children)
 for index,child in ipairs_with_nil(children,size) do DrawGroup.ref(info.draw_group)
 workloop:add(self.render_keyed_child,self,child,node,{index},info) end
 workloop:safely_start() end
-if  not can_modify then container:insert_child_by_key(key,node) end end
+if  not can_modify then container:insert_child_by_key(key,node) end
+RenderInfo.set(info_old) end
 function Renderer:render_function_component(element,container,key,info) do local existing=container:get_children_by_key(key)
 if existing and (existing.class or  # existing > 2) then container:delete_children_by_key(key) end end
 local virtual_key=key_add(key,1)

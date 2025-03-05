@@ -17,6 +17,10 @@ local set_child_by_key=require"lib_LuaX.util.NativeElement.helper.set_child_by_k
 local list_reduce=require"lib_LuaX.util.polyfill.list.reduce"
 local VirtualElement=require"lib_LuaX.util.NativeElement.VirtualElement"
 local flatten_children=require"lib_LuaX.util.NativeElement.helper.flatten_children"
+local DrawGroup=require"lib_LuaX.util.Renderer.DrawGroup"
+local table_pack=require"lib_LuaX.util.polyfill.table.pack"
+local table_unpack=require"lib_LuaX.util.polyfill.table.unpack"
+local traceback=require"lib_LuaX.util.debug.traceback"
 local NativeElement=class"NativeElement"
 NativeElement._dependencies={}
 NativeElement._dependencies.NativeTextElement=nil
@@ -30,8 +34,17 @@ return children[key_slice] end,children or {}) end
 function NativeElement:set_prop_virtual(prop,value) self._virtual_props=self._virtual_props or {}
 self._virtual_props[prop]=value
 self:set_prop(prop,value) end
-function NativeElement:set_prop_safe(prop,value) if self.get_prop ~= NativeElement.get_prop then self.class.set_prop_safe=self.set_prop else self.class.set_prop_safe=self.set_prop_virtual end
-self:set_prop_safe(prop,value) end
+local NativeElement_function_cache=setmetatable({},{["__mode"] = "kv"})
+function NativeElement:set_prop_safe(prop,value) local prop_method=self.get_prop ~= NativeElement.get_prop and self.set_prop or self.set_prop_virtual
+if type(value) == "function" then local cached=NativeElement_function_cache[value]
+if cached then prop_method(self,prop,cached) else local group=DrawGroup.current()
+local fn=function (...) local ret=table_pack(xpcall(value,traceback,...))
+local ok=ret[1]
+if  not ok then DrawGroup.error(group,table_unpack(ret,2))
+return  end
+return table_unpack(ret,2) end
+NativeElement_function_cache[value]=fn
+prop_method(self,prop,fn) end else prop_method(self,prop,value) end end
 function NativeElement:get_prop(prop) self._virtual_props=self._virtual_props or {}
 return self._virtual_props[prop] end
 function NativeElement:count_children_by_key(key,include_virtual) return count_children_by_key(self._children_by_key,key,include_virtual) end
