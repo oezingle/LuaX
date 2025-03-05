@@ -88,8 +88,11 @@ if match then return match.token,match.captured,match.range_start,match.range_en
 return nil end
 function LuaXParser:get_indent() local default_slice=self.text:sub(1,self:get_cursor())
 local default_indent=default_slice:match"[\n\13](%s*).-$" or ""
-local indent=self:text_match">[\n\13](%s-)[%S\n\13]" or ""
-return indent:gsub("^" .. default_indent,"") end
+local indent=""
+local pre_tag_indent=self:text_match"^[%S\n\13]-([^%S\n\13]*)"
+if  # pre_tag_indent ~= 0 and  # default_indent ~= 0 then local one_indent=pre_tag_indent:gsub("^" .. default_indent,"")
+indent=pre_tag_indent .. one_indent else indent=self:text_match">[\n\13](%s-)[%S\n\13]" or "" end
+return indent end
 do function LuaXParser:move_to_next_token() local _,_,token_pos=self:get_next_token()
 if  not token_pos then error(self:error"Unable to determine next token") end
 self:set_cursor(token_pos) end
@@ -212,7 +215,7 @@ return self.text end
 function LuaXParser:transpile_once() local token,captured,_,luax_start=self:get_next_token()
 if  not token or  not luax_start then return false end
 self:move_to_next_token()
-self:text_replace_range_move_c(luax_start - 1,token.replacer)
+self:text_replace_range_move_c(luax_start - 2,token.replacer,table_unpack(captured))
 self:transpile_tag()
 local _,luax_end=self:text_find(token.end_pattern,table_unpack(captured))
 if  not luax_end then error(self:error"Unable to locate end of block") end
