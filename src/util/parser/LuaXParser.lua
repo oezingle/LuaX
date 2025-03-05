@@ -186,14 +186,14 @@ function LuaXParser:error(msg, ...)
     return string.format(fmt, self.src, n_line, n_col, tostring(msg), context_line)
 end
 
-function LuaXParser:get_comment_regions ()
+function LuaXParser:get_comment_regions()
     self.comment_regions = {}
 
     local old_pos = self:get_cursor()
     self:set_cursor(1)
     while true do
         local s_start, s_end = self:text_find(".-%-%-")
-        
+
         if not (s_start and s_end) then
             break
         end
@@ -218,7 +218,7 @@ function LuaXParser:get_comment_regions ()
 end
 
 ---@param pos integer
-function LuaXParser:is_in_comment (pos)
+function LuaXParser:is_in_comment(pos)
     for _, region in pairs(self.comment_regions) do
         if region[1] <= pos and region[2] >= pos then
             return true
@@ -267,13 +267,23 @@ function LuaXParser:get_next_token()
 end
 
 function LuaXParser:get_indent()
-    -- get default indent
+    -- get 'default' indent, which is the indent of the current block
     local default_slice = self.text:sub(1, self:get_cursor())
     local default_indent = default_slice:match("[\n\r](%s*).-$") or ""
 
-    local indent = self:text_match(">[\n\r](%s-)[%S\n\r]") or ""
+    local indent = ""
 
-    return indent:gsub("^" .. default_indent, "")
+    -- match the indent at where the LuaX tag starts
+    local pre_tag_indent = self:text_match("^[%S\n\r]-([^%S\n\r]*)")
+    if #pre_tag_indent ~= 0 and #default_indent ~= 0 then
+        local one_indent = pre_tag_indent:gsub("^" .. default_indent, "")
+
+        indent = pre_tag_indent .. one_indent
+    else
+        indent = self:text_match(">[\n\r](%s-)[%S\n\r]") or ""
+    end
+
+    return indent
 end
 
 --#region cursor
@@ -533,7 +543,7 @@ do
             :set_components(self.components.names, self.components.mode)
 
         -- TODO should transpile() check for immediate tags instead of checking here?
-        if value:sub(1,1) == "<" and value:sub(-1) == ">" then
+        if value:sub(1, 1) == "<" and value:sub(-1) == ">" then
             -- TODO ideally finding a tag results in another node
             -- being added instead of a transpiled literal, just to
             -- keep with the 'ast-ness' of it all.
@@ -562,7 +572,7 @@ do
             local pos = tokenstack:get_pos()
 
             tokenstack:run_once()
-            tokenstack:run_until_empty()                
+            tokenstack:run_until_empty()
 
             -- This is a luablock
             if tokenstack:get_pos() > pos + 1 then
@@ -707,7 +717,7 @@ do
                         :gsub("^[\"'](.*)[\"']$", "%1")
 
                     -- this is a literal, check for internal LuaX statements
-                    if prop_value:sub(1, 1) == "{" and prop_value:sub(-1) == "}" and 
+                    if prop_value:sub(1, 1) == "{" and prop_value:sub(-1) == "}" and
                         -- no match means no tags, so we can skip
                         prop_value:match("<.*>") then
                         prop_value = "{" .. self:evaluate_literal(prop_value:sub(2, -2)) .. "}"
@@ -835,8 +845,9 @@ do
         -- move to token start
         self:move_to_next_token()
 
+        -- TODO why is this -2??? By my logic it should be -1?
         -- replace any start text, move cursor
-        self:text_replace_range_move_c(luax_start - 1, token.replacer)
+        self:text_replace_range_move_c(luax_start - 2, token.replacer, table_unpack(captured))
 
         self:transpile_tag()
 

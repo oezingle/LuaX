@@ -1,4 +1,5 @@
 local LuaXParser = require("src.util.parser.LuaXParser")
+local create_element = require("src.create_element")
 
 ---@diagnostic disable:invisible
 
@@ -76,7 +77,6 @@ describe("LuaXParser (v3)", function()
         assert.equal(#code + 1, parser:get_cursor())
     end)
 
-    -- TODO doesn't track whitespace here goodly.
     it("Parses tags with no children", function()
         local code = "<Box />"
 
@@ -148,7 +148,6 @@ describe("LuaXParser (v3)", function()
 
         local parser = LuaXParser()
             :set_text(code)
-        parser.indent = "    "
 
         local node = parser:parse_tag()
 
@@ -258,20 +257,20 @@ describe("LuaXParser (v3)", function()
     end)
 
     it("transpiles files with inline calls", function()
-        local parser = LuaXParser.from_file_content([[
+        local parser = LuaXParser.from_file_content([=[
             local LuaX = require("src.init")
 
             local Component = function (props)
-                return ]] .. "LuaX([[" .. [[
+                return LuaX([[
 
                     <>
                         {props.message}
                     </>
-                ]] .. "]])" .. [[
+                ]])
             end
 
             return Component
-        ]])
+        ]=])
 
         local transpiled = parser:transpile()
 
@@ -300,6 +299,37 @@ describe("LuaXParser (v3)", function()
                     </>
                 ]] .. "]]" .. [[
             end)
+
+            return Component
+        ]])
+
+        local transpiled = parser:transpile()
+
+        local run_transpiled, err = load(transpiled, "transpiled LuaX")
+
+        if not run_transpiled then
+            error(err)
+        end
+
+        local Component = run_transpiled()
+
+        local element = Component({ message = "a string!" })
+
+        assert.equal("a string!", element.props.children[1].props.value)
+    end)
+
+    it("transpiles files with weird strings", function()
+        local parser = LuaXParser.from_file_content([[
+            local LuaX = require("src.init")
+
+            local Component = function (props)
+                return LuaX([=[
+
+                    <>
+                        {props.message}
+                    </>
+                ]=])
+            end
 
             return Component
         ]])
@@ -437,6 +467,70 @@ describe("LuaXParser (v3)", function()
 
         local node = parser:parse_tag()
         assert.equal("\"I am nested!\"", node.children[1].children[1])
+    end)
+
+    it("doesn't automatically indent in transpiled mode", function()
+        local code = [==[
+            local MyComponent = function (props)
+                return [=[
+                    <>
+                        I'm a component!
+                    </>
+                ]=]
+            end
+
+            return MyComponent
+        ]==]
+
+        local parser = LuaXParser(code)
+
+        local transpiled = parser:transpile()
+
+        local get_output, err = load(transpiled, nil, nil, setmetatable({
+            _LuaX_create_element = create_element
+        }, { __index = _G }))
+
+        if not get_output then
+            error(err)
+        end
+
+        local Component = get_output()
+
+        local node = Component()
+
+        assert.equal("I'm a component!", node.props.children[1].props.value)
+    end)
+
+    it("allows indent in transpiled mode", function()
+        local code = [==[
+            local MyComponent = function (props)
+                return [=[
+                    <>
+                            I'm a component!
+                    </>
+                ]=]
+            end
+
+            return MyComponent
+        ]==]
+
+        local parser = LuaXParser(code)
+
+        local transpiled = parser:transpile()
+
+        local get_output, err = load(transpiled, nil, nil, setmetatable({
+            _LuaX_create_element = create_element
+        }, { __index = _G }))
+
+        if not get_output then
+            error(err)
+        end
+
+        local Component = get_output()
+
+        local node = Component()
+
+        assert.equal("    I'm a component!", node.props.children[1].props.value)
     end)
 
     it("transpiles LuaX tags within prop literals", function()
