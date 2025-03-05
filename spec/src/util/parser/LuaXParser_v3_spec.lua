@@ -349,65 +349,65 @@ describe("LuaXParser (v3)", function()
         assert.Nil(load_err)
     end)
 
-    it("parses HTML-style comments", function ()
+    it("parses HTML-style comments", function()
         local code = [[
             <>
                 <!-- I am just a comment! -->
             </>
         ]]
-        
+
         local parser = LuaXParser(code)
-        
+
         ---@diagnostic disable-next-line:invisible
         local node = parser:parse_tag()
-        
+
         assert.equal(1, #node.children)
-        assert.equal("comment", node.children[1].type)    
+        assert.equal("comment", node.children[1].type)
     end)
 
-    it("parses lua-style single-line comments", function ()
+    it("parses lua-style single-line comments", function()
         local code = [[
             <>
                 -- I am just a comment!
             </>
         ]]
-        
+
         local parser = LuaXParser(code)
-        
+
         local node = parser:parse_tag()
-        
+
         assert.equal(1, #node.children)
-        assert.equal("comment", node.children[1].type)    
+        assert.equal("comment", node.children[1].type)
     end)
 
-    it("parses lua-style multi-line comments", function ()
+    it("parses lua-style multi-line comments", function()
         local code = [[
             <>
                 --[[ I am just a comment! ]] .. "]]" .. [[
             </>
         ]]
-        
+
         local parser = LuaXParser(code)
-        
+
         local node = parser:parse_tag()
-        
+
         assert.equal(1, #node.children)
-        assert.equal("comment", node.children[1].type)    
+        assert.equal("comment", node.children[1].type)
     end)
 
-    
-    it("transpiles HTML-style comments", function ()
+
+    it("transpiles HTML-style comments", function()
         local code = [[
             <!-- I am just a comment! -->
         ]]
-        
+
         local parser = LuaXParser(code)
-        
+
         local transpiled = parser:transpile_tag()
         assert.truthy(transpiled:match("^%s*$"))
     end)
 
-    it("transpiles nested HTML-style comments", function ()
+    it("transpiles nested HTML-style comments", function()
         local code = [[
             <!-- I am just a comment!
                 <!-- But so am I! -->
@@ -417,14 +417,14 @@ describe("LuaXParser (v3)", function()
                 </>
             -->
         ]]
-        
+
         local parser = LuaXParser(code)
-        
+
         local transpiled = parser:transpile_tag()
         assert.truthy(transpiled:match("^%s*$"))
     end)
 
-    it("doesn't have an indent issue", function ()
+    it("doesn't have an inline indent issue", function()
         local code = [[
             <>
                 <>
@@ -437,6 +437,69 @@ describe("LuaXParser (v3)", function()
 
         local node = parser:parse_tag()
         assert.equal("\"I am nested!\"", node.children[1].children[1])
+    end)
+
+    it("transpiles LuaX tags within prop literals", function()
+        local code = [[
+            <ErrorBoundary fallback={<FallbackElement />}>
+                <Child />
+            </ErrorBoundary>
+        ]]
+
+        local parser = LuaXParser(code)
+
+        local node = parser:parse_tag()
+
+        assert.no.match("[<>]", tostring(node.props.fallback))
+    end)
+
+    it("transpiles LuaX tags within literal children", function()
+        local code = [[
+            <Parent>
+                {<Child />}
+            </Parent>
+        ]]
+
+        local parser = LuaXParser(code)
+
+        local node = parser:parse_tag()
+
+        assert.no.match("[<>]", tostring(node.children[1]))
+    end)
+
+    it("does not transpile single-line Comments", function()
+        local code = [[
+            -- local element = <asdf>
+        ]]
+
+        local parser = LuaXParser(code)
+
+        -- this would fail in previous versions of the parser
+        parser:transpile()
+    end)
+
+    it("does not transpile multi-line Comments", function()
+        local code = [==[
+            --[[
+                local element = <asdf>
+            ]]
+        ]==]
+
+        local parser = LuaXParser(code)
+
+        -- this would fail in previous versions of the parser
+        parser:transpile()
+
+        local code = [==[
+            --[=[
+                local element = <asdf>
+            ]=]
+        ]==]
+
+        local parser = LuaXParser(code)
+
+        -- this would fail in previous versions of the parser
+        parser:transpile()
     end)
 
     -- TODO FIXME - spec for parsing comment literals - eg {--[[ Hello World! ]]}

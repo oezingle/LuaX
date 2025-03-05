@@ -15,7 +15,7 @@ ensure_warn()
 if table_pack(...)[1] ~= (arg or {})[1] then
     -- this file has been imported
 
-    ---@class LuaX.Exported
+    ---@class LuaX
     --- APIs
     ---@field Renderer LuaX.Renderer
     ---@field Children LuaX.Children
@@ -37,7 +37,7 @@ if table_pack(...)[1] ~= (arg or {})[1] then
     ---@field use_portal LuaX.Hooks.UsePortal
     ---@field use_ref LuaX.Hooks.UseRef
     ---@field use_state LuaX.Hooks.UseState
-    ---@field use_supsense LuaX.Hooks.UseSuspense
+    ---@field use_suspense LuaX.Hooks.UseSuspense
     --- Parsing
     ---@field register fun() Register the LuaX loader
     ---@field Parser LuaX.Parser.V3
