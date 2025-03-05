@@ -50,6 +50,9 @@ end
 function Renderer:render_native_component(component, container, key, info)
     -- log.trace(get_element_name(container), "render_native_component", get_element_name(component), key_to_string(key))
 
+    -- NativeElement:set_prop_safe now consumes DrawGroup.current, so we must update.
+    local info_old = RenderInfo.set(info)
+
     if component == nil then
         container:delete_children_by_key(key)
 
@@ -106,6 +109,8 @@ function Renderer:render_native_component(component, container, key, info)
     if not can_modify then
         container:insert_child_by_key(key, node)
     end
+
+    RenderInfo.set(info_old)
 end
 
 ---@protected

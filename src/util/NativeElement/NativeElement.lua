@@ -4,6 +4,11 @@ local set_child_by_key      = require("src.util.NativeElement.helper.set_child_b
 local list_reduce           = require("src.util.polyfill.list.reduce")
 local VirtualElement        = require("src.util.NativeElement.VirtualElement")
 local flatten_children      = require("src.util.NativeElement.helper.flatten_children")
+local DrawGroup             = require("src.util.Renderer.DrawGroup")
+
+local table_pack = require("src.util.polyfill.table.pack")
+local table_unpack = require("src.util.polyfill.table.unpack")
+local traceback = require("src.util.debug.traceback")
 
 ---@alias LuaX.NativeElement.ChildrenByKey LuaX.NativeElement | LuaX.NativeElement.ChildrenByKey[] | LuaX.NativeElement.ChildrenByKey[][]
 
@@ -87,18 +92,40 @@ function NativeElement:set_prop_virtual(prop, value)
     self:set_prop(prop, value)
 end
 
+local NativeElement_function_cache = setmetatable({}, { __mode = "kv" })
+
 --- Set props, using virtual props if get_props isn't implemented, or set_prop if it is
 function NativeElement:set_prop_safe(prop, value)
-    if self.get_prop ~= NativeElement.get_prop then
-        ---@diagnostic disable-next-line:inject-field
-        self.class.set_prop_safe = self.set_prop
-    else
-        ---@diagnostic disable-next-line:inject-field
-        self.class.set_prop_safe = self.set_prop_virtual
-    end
+    local prop_method = self.get_prop ~= NativeElement.get_prop and
+        self.set_prop or self.set_prop_virtual
 
-    -- magicially replaced
-    self:set_prop_safe(prop, value)
+    if type(value) == "function" then
+        local cached = NativeElement_function_cache[value]
+        if cached then
+            prop_method(self, prop, cached)
+        else
+            local group = DrawGroup.current()
+
+            local fn = function (...)
+                local ret = table_pack(xpcall(value, traceback, ...))
+
+                local ok = ret[1]
+
+                if not ok then
+                    DrawGroup.error(group, table_unpack(ret, 2))
+                    return
+                end
+
+                return table_unpack(ret, 2)
+            end
+
+            NativeElement_function_cache[value] = fn
+
+            prop_method(self, prop, fn)
+        end
+    else
+        prop_method(self, prop, value)
+    end
 end
 
 function NativeElement:get_prop(prop)
