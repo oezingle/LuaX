@@ -68,20 +68,16 @@ const getLuaX = () => {
         })
     }
 
-    // LuaX_bundle = luamin.minify(LuaX_bundle)
+    LuaX_bundle = luamin.minify(LuaX_bundle)
 
     return LuaX_bundle
 }
-fs.writeFile(path.join(thisDir, "LuaX_bundle.lua"), getLuaX())
+//fs.writeFile(path.join(thisDir, "LuaX_bundle.lua"), getLuaX())
 
 app.use(morgan("tiny"))
 
 app.get("/fengari-web.js", (req, res) => {
     res.sendFile(path.join(thisDir, "/fengari-web.js"))
-})
-
-app.get("/lua/5.3/WebElement.lua", (req, res) => {
-    res.sendFile(path.join(thisDir, "/WebElement.lua"))
 })
 
 app.get("/lua/5.3/LuaX.lua", (req, res) => {
