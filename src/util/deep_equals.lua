@@ -248,7 +248,7 @@ fchk_functions = function(a, b, level, traversed)
     elseif level <= 2 then
         return false
     else
-        error("Unable to determine function equality: missing function ")
+        error("Unable to determine function equality: missing function debug.getupvalue")
     end
 end
 
