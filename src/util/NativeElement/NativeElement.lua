@@ -1,14 +1,14 @@
-local class                 = require("lib.30log")
-local count_children_by_key = require("src.util.NativeElement.helper.count_children_by_key")
-local set_child_by_key      = require("src.util.NativeElement.helper.set_child_by_key")
-local list_reduce           = require("src.util.polyfill.list.reduce")
-local VirtualElement        = require("src.util.NativeElement.VirtualElement")
-local flatten_children      = require("src.util.NativeElement.helper.flatten_children")
-local DrawGroup             = require("src.util.Renderer.DrawGroup")
+local class                                   = require("lib.30log")
+local count_children_by_key                   = require("src.util.NativeElement.helper.count_children_by_key")
+local set_child_by_key                        = require("src.util.NativeElement.helper.set_child_by_key")
+local list_reduce                             = require("src.util.polyfill.list.reduce")
+local VirtualElement                          = require("src.util.NativeElement.VirtualElement")
+local flatten_children                        = require("src.util.NativeElement.helper.flatten_children")
+local DrawGroup                               = require("src.util.Renderer.DrawGroup")
 
-local table_pack = require("src.util.polyfill.table.pack")
-local table_unpack = require("src.util.polyfill.table.unpack")
-local traceback = require("src.util.debug.traceback")
+local table_pack                              = require("src.util.polyfill.table.pack")
+local table_unpack                            = require("src.util.polyfill.table.unpack")
+local traceback                               = require("src.util.debug.traceback")
 
 ---@alias LuaX.NativeElement.ChildrenByKey LuaX.NativeElement | LuaX.NativeElement.ChildrenByKey[] | LuaX.NativeElement.ChildrenByKey[][]
 
@@ -22,9 +22,10 @@ local traceback = require("src.util.debug.traceback")
 ---@field private set_child_by_key fun(self: self, key: LuaX.Key, child: LuaX.NativeElement | nil)
 ---@field private flatten_children fun(self: self, key: LuaX.Key): { element: LuaX.NativeElement, key: LuaX.Key }[]
 ---
----@field set_prop_safe fun (self: self ,prop: string, value: any)
+---@field set_prop_safe fun (self: self, prop: string, value: any)
 ---@field private set_prop_virtual fun (self: self, prop: string, value: any)
 ---@field private _virtual_props table<string, any>
+---@field get_prop_safe fun (self: self, prop: string): any
 ---
 ---@field set_render_name fun(self: self, name: string)
 ---@field get_render_name fun(self: self): string name
@@ -48,9 +49,9 @@ local traceback = require("src.util.debug.traceback")
 ---
 ---@field components string[]? class static property - components implemented by this class.
 ---@operator call : LuaX.NativeElement
-local NativeElement = class("NativeElement")
+local NativeElement                           = class("NativeElement")
 
-NativeElement._dependencies = {}
+NativeElement._dependencies                   = {}
 
 ---@type LuaX.NativeTextElement
 NativeElement._dependencies.NativeTextElement = nil
@@ -68,7 +69,7 @@ function NativeElement:set_render_name(name)
 end
 
 -- Child classes are recommended to overload.
-function NativeElement:get_name ()
+function NativeElement:get_name()
     return self:get_render_name() or "unknown NativeElement"
 end
 
@@ -92,6 +93,7 @@ function NativeElement:set_prop_virtual(prop, value)
     self:set_prop(prop, value)
 end
 
+-- Table of { protected = original } functions for get_prop_safe
 local NativeElement_function_cache = setmetatable({}, { __mode = "kv" })
 
 --- Set props, using virtual props if get_props isn't implemented, or set_prop if it is
@@ -119,13 +121,27 @@ function NativeElement:set_prop_safe(prop, value)
                 return table_unpack(ret, 2)
             end
 
-            NativeElement_function_cache[value] = fn
+            NativeElement_function_cache[fn] = value
 
             prop_method(self, prop, fn)
         end
     else
         prop_method(self, prop, value)
     end
+    prop_method(self, prop, value)
+end
+
+function NativeElement:get_prop_safe(prop)
+    local value = self:get_prop(prop)
+
+    if type(value) == "function" then
+        local cached = NativeElement_function_cache[value]
+        if cached then
+            return cached
+        end
+    end
+
+    return value
 end
 
 function NativeElement:get_prop(prop)
