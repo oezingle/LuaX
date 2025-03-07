@@ -5,7 +5,7 @@ local list_reduce = require("src.util.polyfill.list.reduce")
 local wibox = require("wibox")
 
 ---@class LuaX.WiboxElement : LuaX.NativeElement
----@field texts WiboxText[]
+---@field texts LuaX.WiboxText[]
 local WiboxElement = NativeElement:extend("WiboxElement")
 
 WiboxElement.widgets = {
@@ -126,7 +126,7 @@ function WiboxElement:_reload_text()
     self:set_prop("text", text)
 end
 
----@class WiboxText : LuaX.NativeTextElement
+---@class LuaX.WiboxText : LuaX.NativeTextElement
 ---@field protected parent LuaX.WiboxElement
 ---@field value string
 local WiboxText = NativeTextElement:extend("WiboxText")

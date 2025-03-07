@@ -153,7 +153,7 @@ function Gtk3Element.create_element(name)
     ---@type string|nil
     local elem = name:match("Gtk%.(%S+)")
 
-    assert(elem, "GtkElement must be specified by Gtk.<Name>")
+    assert(elem, string.format("GtkElement must be specified by Gtk.<Name> (Could not resolve %q)", name))
 
     local native = Gtk[elem]()
 

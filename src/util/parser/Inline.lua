@@ -14,7 +14,11 @@ local get_component_name = require("src.util.debug.get_component_name")
 local Fragment = require("src.components.Fragment")
 local create_element = require("src.create_element")
 
--- TODO FIXME break debug lib out into locals for performance!!
+local debug = debug or {}
+local debug_getinfo = debug.getinfo
+local debug_gethook = debug.gethook
+local debug_sethook = debug.sethook
+local debug_getlocal = debug.getlocal
 
 ---@class LuaX.Parser.Inline
 local Inline = {
@@ -27,12 +31,12 @@ local Inline = {
 }
 
 function Inline.assert.can_use_decorator()
-    assert(debug.getinfo, "Cannot use inline parser decorator: debug.getinfo does not exist")
+    assert(debug_getinfo, "Cannot use inline parser decorator: debug.getinfo does not exist")
 
     local function test_function()
         -- assigning then returning allows this assertion to pass under LuaJIT,
         -- otherwise it would JIT optimize the tail call.
-        local info = debug.getinfo(1, "f")
+        local info = debug_getinfo(1, "f")
 
         return info
     end
@@ -42,22 +46,24 @@ function Inline.assert.can_use_decorator()
     assert(info.func == test_function,
         "Cannot use inline parser decorator: debug.getinfo API changed")
 
-    assert(debug.sethook, "Cannot use inline parser decorator: debug.sethook does not exist")
-    assert(debug.gethook, "Cannot use inline parser decorator: debug.gethook does not exist")
+    assert(debug_sethook, "Cannot use inline parser decorator: debug.sethook does not exist")
+    assert(debug_gethook, "Cannot use inline parser decorator: debug.gethook does not exist")
 end
 
 function Inline.assert.can_get_local()
     assert(debug, "Cannot use inline parser: debug global does not exist")
 
-    assert(debug.getlocal, "Cannot use inline parser: debug.getlocal does not exist")
+    assert(debug_getlocal, "Cannot use inline parser: debug.getlocal does not exist")
 
-    assert(type(debug.getlocal) == "function", "Cannot use inline parser: debug.getlocal is not a function")
+    assert(type(debug_getlocal) == "function", "Cannot use inline parser: debug.getlocal is not a function")
 
     local im_a_local = "Hello World!"
 
-    local name, value = debug.getlocal(1, 1)
+    local name, value = debug_getlocal(1, 1)
 
-    assert(name == "im_a_local" and value == "Hello World!",
+    -- we can't make assertions as to the name of this variable (formerly
+    -- im_a_local) because it could have been renamed in a minification step
+    assert(type(name) == "string" and value == "Hello World!",
         "Cannot use inline parser: debug.getlocal API changed")
 end
 
@@ -197,14 +203,14 @@ function Inline:transpile_decorator(chunk, stackoffset)
 
     local inline_luax = function(...)
         -- get hook & mask on debug ( if any ) to re-insert
-        local prev_hook, prev_mask = debug.gethook()
+        local prev_hook, prev_mask = debug_gethook()
 
         local inner_locals, inner_names
 
         -- get locals as they come
-        debug.sethook(function()
+        debug_sethook(function()
             -- I don't even need name here! yippee!!
-            local info = debug.getinfo(2, "f")
+            local info = debug_getinfo(2, "f")
 
             if info.func == chunk then
                 inner_locals, inner_names = get_locals(3)
@@ -213,7 +219,7 @@ function Inline:transpile_decorator(chunk, stackoffset)
 
         local tag = chunk(...)
 
-        debug.sethook(prev_hook, prev_mask)
+        debug_sethook(prev_hook, prev_mask)
 
         local t = type(tag)
 
@@ -273,7 +279,7 @@ function Inline:transpile_string(tag, stackoffset)
     local stack_height = 2 
     local src
     repeat 
-        local info = debug.getinfo(stack_height + stackoffset, "lS")
+        local info = debug_getinfo(stack_height + stackoffset, "lS")
 
         if info.source ~= "=[C]" then
             src = info.source:sub(2) .. ":" .. info.currentline
