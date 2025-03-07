@@ -1,3 +1,9 @@
+local io_open = (io or {}).open
+
+if not io_open then
+    return function (l) return l end
+end
+
 --- Try to get the local definition of a function. 
 --- fails softly. assumes lua chunk is unminified.
 ---@param location string

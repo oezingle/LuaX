@@ -3,10 +3,11 @@ local HookState = require("src.util.HookState")
 local ipairs_with_nil = require("src.util.ipairs_with_nil")
 local traceback = require("src.util.debug.traceback")
 local DrawGroup = require("src.util.Renderer.DrawGroup")
+local table_pack = require("src.util.polyfill.table.pack")
 
 local get_component_name = require("src.util.debug.get_component_name")
 
-local this_file = (...)
+local this_file = table_pack(...)[1]
 
 ---@alias LuaX.ComponentInstance.ChangeHandler fun(element: LuaX.ElementNode | nil)
 
@@ -79,6 +80,8 @@ function FunctionComponentInstance:render(props)
             -- errors bubble up nicely.
             return false, nil
         end
+
+        err = tostring(err)
 
         -- match everything up to 2 lines before the function. Inline, xpcall, then component.
         local err_trunc = err:match("(.*)[\n\r].-[\n\r].-[\n\r].-in function '" .. this_file .. ".-'")

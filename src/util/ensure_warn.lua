@@ -44,13 +44,15 @@ local function color_warn(...)
     end
 end
 
+local os_getenv = (os or {}).getenv
+
 local function ensure_warn()
     -- some lua environments provide warn()
     if warn then
         return
     end
 
-    local term = os.getenv("TERM") or ""
+    local term = os_getenv and os_getenv("TERM") or ""
 
     if term:match("xterm") then
         warn = color_warn

@@ -62,7 +62,7 @@ local function collect_locals (text)
     local node, err = Parser.parse(text)
 
     if not node then
-        error("Unable to collect locals - are you sure your code is syntactically correct?\n" .. err)
+        error("Unable to collect locals - are you sure your code is syntactically correct?\n" .. tostring(err))
     end
 
     ---@type string[]
