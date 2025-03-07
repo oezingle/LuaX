@@ -1,4 +1,9 @@
----@class LuaX
+---@class LuaX : LuaX.Runtime
+---@field register fun() Register the LuaX loader
+---@field Parser LuaX.Parser.V3
+---@field transpile { from_path: (fun(path: string): string), from_string: (fun(content: string, source?: string): string), inline: (fun(tag: string): string)|(fun(fn: function): function) }
+---@operator call:function
+---@class LuaX.Runtime
 ---@field Renderer LuaX.Renderer
 ---@field Children LuaX.Children
 ---@field NativeElement LuaX.NativeElement
@@ -16,10 +21,6 @@
 ---@field use_ref LuaX.Hooks.UseRef
 ---@field use_state LuaX.Hooks.UseState
 ---@field use_suspense LuaX.Hooks.UseSuspense
----@field register fun() Register the LuaX loader
----@field Parser LuaX.Parser.V3
----@field transpile { from_path: (fun(path: string): string), from_string: (fun(content: string, source?: string): string), inline: (fun(tag: string): string)|(fun(fn: function): function) }
----@operator call:function
 ---@class LuaX.Portal : Log.BaseFunctions
 ---@field Inlet LuaX.Component<LuaX.PropsWithChildren>
 ---@field Outlet LuaX.Component
@@ -151,8 +152,8 @@
 ---@field set_lowercase fun(lowercase: boolean)
 ---@class LuaX.GtkElement.LGI_V3 : LuaX.GtkElement
 ---@class LuaX.WiboxElement : LuaX.NativeElement
----@field texts WiboxText[]
----@class WiboxText : LuaX.NativeTextElement
+---@field texts LuaX.WiboxText[]
+---@class LuaX.WiboxText : LuaX.NativeTextElement
 ---@field protected parent LuaX.WiboxElement
 ---@field value string
 ---@class LuaX.XMLElement : LuaX.NativeElement
