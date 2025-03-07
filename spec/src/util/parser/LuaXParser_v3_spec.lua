@@ -411,11 +411,11 @@ describe("LuaXParser (v3)", function()
     end)
 
     it("parses lua-style multi-line comments", function()
-        local code = [[
+        local code = [=[
             <>
-                --[[ I am just a comment! ]] .. "]]" .. [[
+                --[[ I am just a comment! ]]
             </>
-        ]]
+        ]=]
 
         local parser = LuaXParser(code)
 
@@ -425,6 +425,20 @@ describe("LuaXParser (v3)", function()
         assert.equal("comment", node.children[1].type)
     end)
 
+    it("parses funny lua-style multi-line comments", function()
+        local code = [=[
+            <>
+                --[==[ I am just a comment! ]==]
+            </>
+        ]=]
+
+        local parser = LuaXParser(code)
+
+        local node = parser:parse_tag()
+
+        assert.equal(1, #node.children)
+        assert.equal("comment", node.children[1].type)
+    end)
 
     it("transpiles HTML-style comments", function()
         local code = [[
@@ -452,6 +466,36 @@ describe("LuaXParser (v3)", function()
 
         local transpiled = parser:transpile_tag()
         assert.truthy(transpiled:match("^%s*$"))
+    end)
+
+    it("parses comments in props", function ()
+        local code = [[
+            <Element 
+                --commented
+            />
+        ]]
+
+        local parser = LuaXParser(code)
+
+        local node = parser:parse_tag()
+
+        assert.Nil(next(node.props))
+    end)
+
+    it("parses multiline comments in props", function ()
+        local code = [[
+            <Element 
+                --[=[
+                    commented 
+                ]=]
+            />
+        ]]
+
+        local parser = LuaXParser(code)
+
+        local node = parser:parse_tag()
+
+        assert.Nil(next(node.props))
     end)
 
     it("doesn't have an inline indent issue", function()
@@ -596,7 +640,36 @@ describe("LuaXParser (v3)", function()
         parser:transpile()
     end)
 
-    -- TODO FIXME - spec for parsing comment literals - eg {--[[ Hello World! ]]}
+    it("Parses tags with single-line comments", function ()
+        local code = [[
+            <Element>
+                -- I am commenting!
+                <Child />
+            </Element>
+        ]]
+
+        local parser = LuaXParser(code)
+
+        local node = parser:parse_tag()
+
+        assert.equal("Child", node.children[2].name)
+    end)
+
+    it("Parses tags with multi-line comments", function ()
+        local code = [[
+            <Element>
+                --[=[ I am commenting! ]=]
+                <Child />
+            </Element>
+        ]]
+
+        local parser = LuaXParser(code)
+
+        local node = parser:parse_tag()
+
+        assert.equal("Child", node.children[2].name)
+    end)
+
 
     do
         local components = {

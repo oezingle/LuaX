@@ -9,15 +9,13 @@ local table_pack            = require("src.util.polyfill.table.pack")
 local table_unpack          = require("src.util.polyfill.table.unpack")
 
 -- Get the require path of this module
-local require_path
+local require_path = table_pack(...)[1]
 do
-    if table_pack(...)[1] == (arg or {})[1] then
+    if require_path == (arg or {})[1] then
         print("LuaXParser must be imported")
 
         os.exit(1)
     end
-
-    require_path = (...)
 end
 
 ---@class LuaX.Language.Node.Comment
@@ -46,6 +44,7 @@ local LuaXParser     = class("LuaXParser (V3)")
 
 local collect_locals = require("src.util.parser.transpile.collect_locals")(LuaXParser)
 
+-- TODO FIXME use whatever name LuaX was imported via
 ---@param export_name string
 ---@return string
 local function luax_export(export_name)
@@ -192,11 +191,12 @@ function LuaXParser:get_comment_regions()
     local old_pos = self:get_cursor()
     self:set_cursor(1)
     while true do
-        local s_start, s_end = self:text_find(".-%-%-")
+        local _, s_end = self:text_find(".-%-%-")
 
-        if not (s_start and s_end) then
+        if not s_end then
             break
         end
+        local s_start = s_end - 1
 
         self:set_cursor(s_end)
 
@@ -204,7 +204,7 @@ function LuaXParser:get_comment_regions()
         if multiline_match then
             local _, multi_end = self:text_find("]%1]", multiline_match)
 
-            s_end = multi_end
+            s_end = multi_end + 1
         else
             local line_match = self:text_match("([^\n\r]-)[\n\r]")
 
@@ -218,14 +218,15 @@ function LuaXParser:get_comment_regions()
 end
 
 ---@param pos integer
+---@return { [1]: integer, [2]: integer }?
 function LuaXParser:is_in_comment(pos)
     for _, region in pairs(self.comment_regions) do
         if region[1] <= pos and region[2] >= pos then
-            return true
+            return region
         end
     end
 
-    return false
+    return nil
 end
 
 --- Get the next token. Returns the token string, or nil if no token is found
@@ -555,11 +556,11 @@ do
         return value
     end
 
-    --- TODO rename - 'literal' here means text children, but parse_text_children feels too similar to parse_text
-    --- Parse a child that is a literal - either a lua block (in {}) or just text
+    -- TODO this code is terrible.
+    --- Parse a child that is not a tag - either a lua block (in {}), a comment, or just text
     ---@protected
     ---@return LuaX.Language.Node[]
-    function LuaXParser:parse_literal()
+    function LuaXParser:parse_non_tag()
         local tokenstack = TokenStack(self.text)
             :set_pos(self:get_cursor())
             :set_requires_literal(true)
@@ -589,7 +590,7 @@ do
                     break
                 elseif current == "-" and self.text:sub(pos):match("^%-%-+>") then
                     -- This pattern is somewhat slow but that's ok, slowness at compile time is ok.
-                    -- found comment end
+                    -- found HTML-esque comment end
                     break
                 elseif current == "{" then
                     -- no-op
@@ -618,22 +619,27 @@ do
         local nodes = {}
 
         for i, slice in ipairs(slices) do
+            -- Trim whitespace with indent
             local value = table.concat(slice.chars, "")
                 :gsub("\n" .. self.indent, "\n")
                 :gsub("^" .. self.indent, "")
 
+            -- trim leading newline
             if i == 1 then
                 value = value:gsub("^%s-[\n\r]", "")
             end
+            -- trim trailing newline
             if i == #slices then
                 value = value:gsub("[\n\r]%s-$", "")
             end
 
             -- check if this literal isn't just whitespace
             if not value:match("^%s*$") then
+                local _, non_ws_start = self.text:find("%S", slice.start)
+
                 if slice.is_luablock then
                     value = self:evaluate_literal(value)
-                elseif value:match("^%s*%-%-") then
+                elseif non_ws_start and self:is_in_comment(non_ws_start) then
                     -- this is a comment
 
                     ---@diagnostic disable-next-line:cast-local-type
@@ -670,7 +676,7 @@ do
 
                 table.insert(nodes, node)
             else
-                local new_nodes = self:parse_literal()
+                local new_nodes = self:parse_non_tag()
 
                 for _, node in ipairs(new_nodes) do
                     table.insert(nodes, node)
@@ -687,12 +693,14 @@ do
         local props = {}
 
         while not self:text_match("^%s*>") and not self:text_match("^%s*/%s*>") do
-            -- skip comments
-            self:move_to_pattern_end("^%s*%-%-%[%[.-%]%]")
-            self:move_to_pattern_end("^%s*%-%-.-[\n\r]")
-
-            -- ensure that prop names will not start with whitespace
+            -- skip whitespace
             self:move_to_pattern_end("^%s*")
+
+            -- skip comments
+            local comment = self:is_in_comment(self:get_cursor())
+            if comment then
+                self:set_cursor(comment[2])
+            end
 
             -- Capture entire prop value, unless it contains spaces
             -- Spaces are resolved by using a TokenStack
