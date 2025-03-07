@@ -174,8 +174,8 @@ syntactic sugar to avoid rewriting the component's name in its end tag.
 ### Literals
 
 Curly braces {} within an element's property values or child content signify to
-the LuaX parser that the enclosed value should be handled as a block of Lua
-code. The [Properties](#properties) and [Child text and Child
+the LuaX parser that the enclosed value should be handled as a block of Lua or
+LuaX code. The [Properties](#properties) and [Child text and Child
 literals](#child-text-and-child-literals) sections of this document provide more
 context as to how literal values in each case are handled. This section intends
 to provide understanding as to how literals are parsed. 
@@ -185,6 +185,9 @@ instead only checking for a matching end brace. Of course, braces may be
 contained within the literal value. The parser tracks uses of brackets, braces,
 and strings, in order to properly determine the ending position of the literal.
 
+LuaX may be contained in a literal only if the literal starts and ends with `<`
+and `>` respectively. Therefore, `{<Element />}` is valid but `{ <Element /> }`
+is not. This may change in the future.
 
 <br/>
 
@@ -202,7 +205,6 @@ The parser allows different comment formats under different conditions:
 - While parsing properties, the parser supports Lua-style comments
 - While parsing literals, the parser supports Lua-style comments
 - While parsing child content, the parser supports Lua-style and HTML-style comments
-
 
 <br/>
 
