@@ -32,7 +32,7 @@ local function env_aware_require(modpath)
         error(err)
     end
 
-    if _VERSION:match("%d.%d") == "5.1" then        
+    if _VERSION:match("%d.%d") == "5.1" then
         ---@diagnostic disable-next-line:deprecated
         setfenv(chunk, _ENV)
     end
@@ -45,20 +45,24 @@ local function env_aware_require(modpath)
 end
 
 local function parser_shim()
-    -- push new env so the real package.loaded isn't polluted.
-    _ENV          = setmetatable({
-        package = setmetatable({
-            loaded = {
-                -- This list is minimal for my use case.
-                table = table,
-                string = string
-            }
-        }, { __index = package }),
-        require = env_aware_require
-    }, { __index = _G })
+    local package, require = package, require
 
-    local package = _ENV.package
-    local require = _ENV.require
+    if not _IS_BUNDLED then
+        -- push new env so the real package.loaded isn't polluted.
+        _ENV          = setmetatable({
+            package = setmetatable({
+                loaded = {
+                    -- This list is minimal for my use case.
+                    table = table,
+                    string = string
+                }
+            }, { __index = package }),
+            require = env_aware_require
+        }, { __index = _G })
+
+        package = _ENV.package
+        require = _ENV.require
+    end
 
 
     package.loaded["ext.op"]                 = require("lib.lua-ext.op")
