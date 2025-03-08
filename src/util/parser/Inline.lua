@@ -71,14 +71,14 @@ end
 ---@param env table
 ---@param src string?
 function Inline.easy_load(chunk, env, src)
-    local chunkname = "inline LuaX"
+    local chunkname = "inline LuaX " .. src
 
     local get_output, err = load(chunk, chunkname, nil, env)
 
     if not get_output then
         err = tostring(err)
         if src then
-            err = err:gsub("%[string \"inline LuaX\"%]:1", src)
+            err = err:gsub("%[string \"inline LuaX .-\"%]:%d+", src)
         end
 
         error(string.format("Error loading transpiled LuaX.\ntranspilation:\n%s\n\n%s", chunk, err))
@@ -91,7 +91,7 @@ function Inline.easy_load(chunk, env, src)
     else
         -- TODO try much harder to get current actual line number
 
-        local file, err = ret:match("%[string \"inline LuaX\"%]:1:%s*(.*)$")
+        local file, err = ret:match("%[string \"inline LuaX .-\"%]:%d+:%s*(.*)$")
 
         local new_err = string.format("error in inline LuaX in %s: %s", file, tostring(err))
 
