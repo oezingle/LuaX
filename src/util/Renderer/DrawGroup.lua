@@ -45,7 +45,13 @@ function DrawGroup.unref(group)
 end
 
 function DrawGroup.current()
-    return RenderInfo.get().draw_group
+    local info = RenderInfo.get()
+
+    if not info then
+        return nil
+    end
+    
+    return info.draw_group
 end
 
 ---@param group LuaX.DrawGroup.Group?
