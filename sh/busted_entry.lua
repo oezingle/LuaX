@@ -35,4 +35,7 @@ if env == "production" then
     -- TODO FIXME tag tests that require debug (ie Inline), retest where
     -- debug=nil with only non-debug. test Inline for post-transpile without
     -- debug.
+else
+    ---@diagnostic disable-next-line:lowercase-global
+    inspect = require("lib.inspect.inspect")
 end
