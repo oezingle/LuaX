@@ -128,7 +128,6 @@ function NativeElement:set_prop_safe(prop, value)
     else
         prop_method(self, prop, value)
     end
-    prop_method(self, prop, value)
 end
 
 function NativeElement:get_prop_safe(prop)
