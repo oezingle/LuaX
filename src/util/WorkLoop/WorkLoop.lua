@@ -70,13 +70,18 @@ function WorkLoop:run_once()
 
     -- TODO tie in calling function somehow? for traceback
     local cb = item[1]
-    -- luajit has problems with understanding how long tables are. 10 is an arbitrary choice.
-    ---@diagnostic disable-next-line:undefined-global
-    local upper = jit and 10 or nil
+
+    -- lua < 5.4 have problems with understanding how long tables are. 10 is an arbitrary choice.
+    local upper = (_VERSION:match("%d%.%d") or "") < "5.4" and 10 or nil
+
     local ok, err = xpcall(cb, traceback, table_unpack(item, 2, upper))
 
     if not ok then
-        ok, err = pcall(DrawGroup.error, nil, err)
+        local group = DrawGroup.current()
+
+        if group then
+            ok, err = pcall(DrawGroup.error, group, err)            
+        end
     end
 
     if not ok then
