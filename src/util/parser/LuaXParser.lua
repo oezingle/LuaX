@@ -208,7 +208,7 @@ function LuaXParser:get_comment_regions()
         else
             local line_match = self:text_match("([^\n\r]-)[\n\r]")
 
-            s_end = s_end + #line_match
+            s_end = s_end + #line_match + 1
         end
 
         table.insert(self.comment_regions, { s_start, s_end })
@@ -699,7 +699,7 @@ do
             -- skip comments
             local comment = self:is_in_comment(self:get_cursor())
             if comment then
-                self:set_cursor(comment[2])
+                self:set_cursor(comment[2] + 1)
             end
 
             -- Capture entire prop value, unless it contains spaces
@@ -856,6 +856,9 @@ do
         -- TODO why is this -2??? By my logic it should be -1?
         -- replace any start text, move cursor
         self:text_replace_range_move_c(luax_start - 2, token.replacer, table_unpack(captured))
+
+        -- recalculate comments, as the line above has likely moved them.
+        self:get_comment_regions()
 
         self:transpile_tag()
 
