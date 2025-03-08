@@ -44,37 +44,17 @@ for k, v in pairs(runtime) do
     export[k] = v
 end
 
-local element_implementations = {}
-
--- Load any enabled targets
--- TODO this code is AWFUL. Find a fix compatible with the web bundler.
-do
-    if not SKIP_TARGET_WiboxElement then
-        local ok, err = pcall(function()
-            element_implementations.WiboxElement = require("src.util.NativeElement.WiboxElement")
-        end)
-        if not ok then
-            element_implementations.WiboxElement = err
-        end
-    end
-    if not SKIP_TARGET_GtkElement then
-        local ok, err = pcall(function()
-            element_implementations.GtkElement = require("src.util.NativeElement.GtkElement")
-        end)
-        if not ok then
-            element_implementations.GtkElement = err
-        end
-    end
-    if not SKIP_TARGET_WebElement then
-        local ok, err = pcall(function()
-            element_implementations.WebElement = require("src.util.NativeElement.WebElement")
-        end)
-        if not ok then
-            element_implementations.WebElement = err
-        end
-    end
-end
-
+local element_implementations = {
+    WiboxElement = function ()
+        return require("src.util.NativeElement.WiboxElement")
+    end,
+    GtkElement = function ()
+        return require("src.util.NativeElement.GtkElement")
+    end,
+    WebElement = function ()
+        return require("src.util.NativeElement.WebElement")
+    end,
+}
 
 setmetatable(export, {
     __call = function(t, tag)
@@ -82,10 +62,8 @@ setmetatable(export, {
     end,
     __index = function(_, k)
         local implementation = element_implementations[k]
-        if type(implementation) == "string" then
-            error(implementation)
-        else
-            return implementation
+        if implementation then
+            return implementation()
         end
     end
 })
