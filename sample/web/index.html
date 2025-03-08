@@ -1,7 +1,7 @@
 <html>
 
 <head>
-    <title>LuaX on the web!</title>
+    <title>Unrendered</title>
 
     <script src="fengari-web.js"></script>
 </head>
@@ -27,6 +27,9 @@
 
         local document = require("js").global.document
 
+        local components = require("components")
+        local ApplicationTitle = components.ApplicationTitle
+
         local root_div = document:querySelector("#content")
         assert(root_div ~= null, "No div to mount")
         local root = WebElement.get_root(root_div)
@@ -41,6 +44,8 @@
 
             return [[
                 <>
+                    <ApplicationTitle>LuaX on the web!</ApplicationTitle>
+
                     <h1>
                         This site is built with LuaX and Fengari!
                     </h1>

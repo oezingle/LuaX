@@ -54,10 +54,6 @@ const getLuaX = () => {
                 // hardwire _IS_BUNDLED to true
                 content = content.replace(/_IS_BUNDLED/g, "true")
 
-                // Skip all targets but web
-                content = content.replace(/SKIP_TARGET_WiboxElement/g, "true")
-                content = content.replace(/SKIP_TARGET_GtkElement/g, "true")
-
                 // remove shebang
                 const pat_shebang = /^[\n\r]*#![^\n\r]*/gm
                 
@@ -68,16 +64,20 @@ const getLuaX = () => {
         })
     }
 
-    LuaX_bundle = luamin.minify(LuaX_bundle)
+    // LuaX_bundle = luamin.minify(LuaX_bundle)
 
     return LuaX_bundle
 }
-//fs.writeFile(path.join(thisDir, "LuaX_bundle.lua"), getLuaX())
+// fs.writeFile(path.join(thisDir, "LuaX_bundle.lua"), getLuaX())
 
 app.use(morgan("tiny"))
 
 app.get("/fengari-web.js", (req, res) => {
     res.sendFile(path.join(thisDir, "/fengari-web.js"))
+})
+
+app.get("/lua/5.3/components.lua", (req, res) => {
+    res.sendFile(path.join(thisDir, "/components.lua"))
 })
 
 app.get("/lua/5.3/LuaX.lua", (req, res) => {
