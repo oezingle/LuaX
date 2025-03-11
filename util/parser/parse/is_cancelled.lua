@@ -1,8 +1,3 @@
-
-
----@param text string
----@param pos integer
----@return boolean
 local function is_cancelled(text,pos) local pos=pos - 1
 local char=text:sub(pos,pos)
 local cancelled=false

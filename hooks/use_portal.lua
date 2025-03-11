@@ -12,7 +12,6 @@ folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "hooks.")
 require(library_root .. "_shim") end
 local use_context=require"lib_LuaX.hooks.use_context"
----@alias LuaX.Hooks.UsePortal fun (name?: string): LuaX.Portal
 local Portal=require"lib_LuaX.Portal"
 local function use_portal(name) local portals=assert(use_context(Portal.Context),"No portals supplied! Are you sure a parent of this component is rendering its Provider?")
 local portal=portals[name or "LuaX.Portal"]

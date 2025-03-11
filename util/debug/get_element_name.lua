@@ -14,19 +14,13 @@ require(library_root .. "_shim") end
 local get_component_name=require"lib_LuaX.util.debug.get_component_name"
 local ElementNode=require"lib_LuaX.util.ElementNode"
 local NativeElement=require"lib_LuaX.util.NativeElement.NativeElement"
----@param element LuaX.ElementNode | LuaX.NativeElement | LuaX.Component | nil
----@return string
 local class=require"lib_LuaX._dep.lib.30log"
 local function get_element_name(element) if element == nil then return "nil" end
 if type(element) == "function" or type(element) == "string" then return get_component_name(element) end
 if type(element) ~= "table" then return string.format("UNKNOWN (type %s)",type(element)) end
----@diagnostic disable-next-line:invisible
 if element.element_node == ElementNode then return get_component_name(element.type) end
----@diagnostic disable-next-line:undefined-field
-if class.isInstance(element) and (element.class == NativeElement or element.class:subclassOf(NativeElement)) then 
-local element=element
-if element.get_type then return element:get_type() end
-return "UNKNOWN (NativeElement)" end
+if class.isInstance(element) and (element.class == NativeElement or element.class:subclassOf(NativeElement)) then local element=element
+return element:get_name() end
 if  # element ~= 0 then return string.format("list(%d)", # element) end
 if next(element) == nil then return "list(nil)" end
 return "UNKNOWN" end

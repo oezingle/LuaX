@@ -1,5 +1,3 @@
----@param stack integer|function
----@return table<string, any> locals, table<string, any> names
 local function get_locals(stack) local locals={}
 local names={}
 local index=1

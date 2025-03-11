@@ -12,18 +12,10 @@ folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "util.WorkLoop.")
 require(library_root .. "_shim") end
 local WorkLoop=require"lib_LuaX.util.WorkLoop"
----@class LuaX.WorkLoop.Gears : LuaX.WorkLoop
 local gears=require"gears"
 local GearsWorkLoop=WorkLoop:extend"GearsWorkLoop"
-function GearsWorkLoop:init() ---@diagnostic disable-next-line:undefined-field
-self.super:init()
+function GearsWorkLoop:init() self.super:init()
 self.timer=gears.timer{["timeout"] = 0.01,["single_shot"] = false,["callback"] = function () self:run_once() end} end
-function GearsWorkLoop:run_once() if self:list_is_empty() then self.is_running=false
-self.timer:stop()
-return  end
-local cb=self:list_dequue()
-cb() end
-function GearsWorkLoop:start() if self.is_running then return  end
-self.is_running=true
-self.timer:start() end
+function GearsWorkLoop:stop() self.timer:stop() end
+function GearsWorkLoop:start() self.timer:start() end
 return GearsWorkLoop

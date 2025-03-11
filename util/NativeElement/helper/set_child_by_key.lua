@@ -11,9 +11,6 @@ package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep)
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "util.NativeElement.helper.")
 require(library_root .. "_shim") end
----@param children_by_key LuaX.NativeElement.ChildrenByKey
----@param key LuaX.Key
----@param child LuaX.NativeElement | nil
 local key_first=require"lib_LuaX.util.key.key_first"
 local function set_child_by_key(children_by_key,key,child) local first,restkey=key_first(key)
 if children_by_key.class then error"set_child_by_key found a NativeElement when it expected an array!" end

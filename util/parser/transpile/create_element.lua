@@ -11,12 +11,6 @@ package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep)
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "util.parser.transpile.")
 require(library_root .. "_shim") end
-
-
-
----@param create_element string? the local name for create_element
----@param type string 
----@param props table
 local stringify_table=require"lib_LuaX.util.parser.transpile.stringify_table"
 local function transpile_create_element(create_element,type,props) create_element=create_element or "create_element"
 local prop_str=stringify_table(props)

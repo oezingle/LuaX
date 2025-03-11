@@ -11,13 +11,11 @@ package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep)
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "util.polyfill.path.")
 require(library_root .. "_shim") end
----@param ... string
 local sep=require"lib_LuaX.util.polyfill.path.sep"
-local function join(...) local elements=table.pack(...)
+local table_pack=require"lib_LuaX.util.polyfill.table.pack"
+local function join(...) local elements=table_pack(...)
 local ret={}
-for i,item in ipairs(elements) do 
-
-local is_first=i == 1
+for i,item in ipairs(elements) do local is_first=i == 1
 if item:sub(1,1) == sep and  not is_first then item=item:sub(2) end
 if item:sub( - 1) == sep then item=item:sub(1, - 2) end
 table.insert(ret,item) end

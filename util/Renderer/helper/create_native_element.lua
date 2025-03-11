@@ -11,13 +11,15 @@ package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep)
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "util.Renderer.helper.")
 require(library_root .. "_shim") end
----@param component LuaX.ElementNode
----@param container LuaX.NativeElement
----@return LuaX.NativeElement
 local ElementNode=require"lib_LuaX.util.ElementNode"
-local function create_native_element(component,container) local NativeElementImplementation=container:get_class()
-local component_type=component.type
-if type(component_type) ~= "string" then error"NativeElement cannot render non-pure component" end
-if ElementNode.is_literal(component) and NativeElementImplementation.create_literal then local value=component.props.value
-return NativeElementImplementation.create_literal(value,container) else return NativeElementImplementation.create_element(component_type) end end
+local function create_native_element(element,container) local NativeElementImplementation=container:get_class()
+local element_type=element.type
+if type(element_type) ~= "string" then error"NativeElement cannot render non-pure component" end
+if ElementNode.is_literal(element) and NativeElementImplementation.create_literal then local value=element.props.value
+return NativeElementImplementation.create_literal(value,container) else local elem=NativeElementImplementation.create_element(element_type)
+elem:set_render_name(element_type)
+local onload=element.props["LuaX::onload"]
+if onload then assert(type(onload) == "function","LuaX::onload value must be a function")
+onload(elem:get_native(),elem) end
+return elem end end
 return create_native_element

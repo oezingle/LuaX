@@ -1,15 +1,11 @@
-
-
----@param location string
+local io_open=(io or {}).open
+if  not io_open then return function (l) return l end end
 local function get_function_name(location) local filename=location:match"^(.-):"
 local linenumber=location:match":(.-)$"
 if  not filename or  not linenumber then return location end
 linenumber=tonumber(linenumber)
 local file=io.open(filename,"r")
 if  not linenumber or  not file then return location end
-
-
-
 for _ = 1,linenumber - 1 do file:read"l" end
 local line=file:read"l"
 local defined_keyword=line:match"function%s*([^%(%s]+)%s*%("
@@ -21,7 +17,6 @@ if defined_decorator then return defined_decorator end
 local defined_method=line:match"function%s*([^:]+:[^%s(]+)%s*"
 if defined_method then return defined_method end
 return location end
----@param location string
 local function_name_cache={}
 local function get_function_name_cached(location) local cached=function_name_cache[location]
 if cached then return cached end

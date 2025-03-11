@@ -12,13 +12,9 @@ folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "util.NativeElement.helper.")
 require(library_root .. "_shim") end
 local key_add=require"lib_LuaX.util.key.key_add"
----@param children_by_key LuaX.NativeElement.ChildrenByKey
----@param key LuaX.Key
----@param elements { element: LuaX.NativeElement, key: LuaX.Key }[]?
 local ipairs_with_nil=require"lib_LuaX.util.ipairs_with_nil"
 local function flatten_children(children_by_key,key,elements) elements=elements or {}
-if  not children_by_key then  elseif children_by_key.class then 
-table.insert(elements,{["key"] = key,["element"] = children_by_key}) else for i,entry in ipairs_with_nil(children_by_key) do local new_key=key_add(key,i)
+if  not children_by_key then  elseif children_by_key.class then table.insert(elements,{["key"] = key,["element"] = children_by_key}) else for i,entry in ipairs_with_nil(children_by_key) do local new_key=key_add(key,i)
 flatten_children(entry,new_key,elements) end end
 return elements end
 return flatten_children

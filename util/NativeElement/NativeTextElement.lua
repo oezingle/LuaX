@@ -12,18 +12,8 @@ folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "util.NativeElement.")
 require(library_root .. "_shim") end
 local NativeElement=require"lib_LuaX.util.NativeElement"
----@class LuaX.NativeTextElement : LuaX.NativeElement
----@field protected parent LuaX.NativeElement
----@field init fun (self: self, props: string, parent: LuaX.NativeElement)
-
-
-
-
----@field get_value fun (self: self): string
----@field set_value fun(self: self, value: string)
 local ElementNode=require"lib_LuaX.util.ElementNode"
 local NativeTextElement=NativeElement:extend"NativeTextElement"
-
 NativeElement._dependencies.NativeTextElement=NativeTextElement
 NativeTextElement.components={}
 function NativeTextElement:init(value,parent) self.parent=parent
@@ -32,9 +22,7 @@ function NativeTextElement:set_prop(prop,value) if prop ~= "value" then error"Li
 self:set_value(value) end
 function NativeTextElement:get_prop(prop) if prop ~= "value" then return nil end
 return self:get_value() end
-
 function NativeTextElement:insert_child() error"NativeTextElement may not have children" end
 function NativeTextElement:delete_child() error"NativeTextElement may not have children" end
-function NativeTextElement:get_type() ---@diagnostic disable-next-line:invisible
-return ElementNode.LITERAL_NODE end
+function NativeTextElement:get_render_name() return ElementNode.LITERAL_NODE end
 return NativeTextElement

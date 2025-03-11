@@ -11,93 +11,75 @@ package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep)
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "util.parser.")
 require(library_root .. "_shim") end
-
 local LuaXParser=require"lib_LuaX.util.parser.LuaXParser"
 local traceback=require"lib_LuaX.util.debug.traceback"
 local get_locals=require"lib_LuaX.util.debug.get_locals"
 local get_function_location=require"lib_LuaX.util.debug.get_function_location"
+local get_global_components=require"lib_LuaX.util.parser.transpile.get_global_components"
 local get_component_name=require"lib_LuaX.util.debug.get_component_name"
 local Fragment=require"lib_LuaX.components.Fragment"
----@class LuaX.Parser.Inline
 local create_element=require"lib_LuaX.create_element"
+local debug=debug or {}
+local debug_getinfo=debug.getinfo
+local debug_gethook=debug.gethook
+local debug_sethook=debug.sethook
+local debug_getlocal=debug.getlocal
 local Inline={["debuginfo"] = {},["transpile_cache"] = {},["assertions"] = {},["assert"] = {},["original_chunks"] = setmetatable({},{["__mode"] = "kv"})}
-function Inline.assert.can_use_decorator() assert(debug.getinfo,"Cannot use inline parser decorator: debug.getinfo does not exist")
-local function test_function() return debug.getinfo(1,"f") end
+function Inline.assert.can_use_decorator() assert(debug_getinfo,"Cannot use inline parser decorator: debug.getinfo does not exist")
+local function test_function() local info=debug_getinfo(1,"f")
+return info end
 local info=test_function()
 assert(info.func == test_function,"Cannot use inline parser decorator: debug.getinfo API changed")
-assert(debug.sethook,"Cannot use inline parser decorator: debug.sethook does not exist")
-assert(debug.gethook,"Cannot use inline parser decorator: debug.gethook does not exist") end
+assert(debug_sethook,"Cannot use inline parser decorator: debug.sethook does not exist")
+assert(debug_gethook,"Cannot use inline parser decorator: debug.gethook does not exist") end
 function Inline.assert.can_get_local() assert(debug,"Cannot use inline parser: debug global does not exist")
-assert(debug.getlocal,"Cannot use inline parser: debug.getlocal does not exist")
-assert(type(debug.getlocal) == "function","Cannot use inline parser: debug.getlocal is not a function")
+assert(debug_getlocal,"Cannot use inline parser: debug.getlocal does not exist")
+assert(type(debug_getlocal) == "function","Cannot use inline parser: debug.getlocal is not a function")
 local im_a_local="Hello World!"
-local name,value=debug.getlocal(1,1)
-assert(name == "im_a_local" and value == "Hello World!","Cannot use inline parser: debug.getlocal API changed") end
----@param chunk string
----@param env table
----@param src string?
-function Inline.easy_load(chunk,env,src) local chunkname="inline LuaX"
-if src then chunkname=chunkname .. " " .. src end
+local name,value=debug_getlocal(1,1)
+assert(type(name) == "string" and value == "Hello World!","Cannot use inline parser: debug.getlocal API changed") end
+function Inline.easy_load(chunk,env,src) local chunkname="inline LuaX " .. src
 local get_output,err=load(chunk,chunkname,nil,env)
-if  not get_output then warn"Transpiled code run:"
-print(chunk)
-error(err) end
-local ok,ret=pcall(get_output)
-if ok then return ret else local file,err=ret:match"%[string \"inline LuaX%s*([^\"]*)\"%]:1:%s*(.*)$"
-local new_err=string.format("LuaX: %s: %s",file,err)
+if  not get_output then err=tostring(err)
+if src then err=err:gsub("%[string \"inline LuaX .-\"%]:%d+",src) end
+error(string.format("Error loading transpiled LuaX.\ntranspilation:\n%s\n\n%s",chunk,err)) end
+local ok,ret=xpcall(get_output,traceback)
+if ok then return ret else local file,err=ret:match"%[string \"inline LuaX .-\"%]:%d+:%s*(.*)$"
+local new_err=string.format("error in inline LuaX in %s: %s",file,tostring(err))
 error(new_err) end end
----@param fn function
-function Inline:lazy_assert(fn) if type(self.assertions[fn]) == "string" then error(self.assertions[fn]) end
+function Inline:cached_assert(fn) if type(self.assertions[fn]) == "string" then error(self.assertions[fn]) end
 local ok,err=xpcall(fn,traceback)
 if ok then self.assertions[fn]=false else self.assertions[fn]=err
 error(err) end end
-
----@param tag string?
----@param locals table
-function Inline:cache_get(tag,locals) if  not tag then return "return nil" end
+function Inline:cache_get(tag,locals,src) if  not tag then return "return nil" end
 local cached=self:cache_find(tag)
 if cached then return cached end
-local parser=LuaXParser.from_inline_string("return " .. tag,nil)
-parser:set_components(locals,"local")
+local parser=LuaXParser.from_inline_string("return " .. tag,src)
+parser:set_handle_variables(function ()  end)
+local globals=get_global_components()
+if globals then parser:set_components(globals,"global") else parser:set_components(locals,"local") end
 local transpiled=parser:transpile()
 self:cache_set(tag,transpiled)
 return transpiled end
----@param tag string
----@param transpiled string
 function Inline:cache_set(tag,transpiled) self.transpile_cache[tag]=transpiled end
 function Inline:cache_find(tag) return self.transpile_cache[tag] end
----@param tag string?
 function Inline:cache_clear(tag) if tag then self.transpile_cache[tag]=nil else self.transpile_cache={} end end
-
 function Inline.print_locals(locals) for k,v in pairs(locals) do print(k,v) end end
----@param chunk function
----@param stackoffset number?
----@return LuaX.FunctionComponent
-function Inline:transpile_decorator(chunk,stackoffset) self:lazy_assert(Inline.assert.can_use_decorator)
-self:lazy_assert(Inline.assert.can_get_local)
+function Inline:transpile_decorator(chunk,stackoffset) self:cached_assert(Inline.assert.can_use_decorator)
+self:cached_assert(Inline.assert.can_get_local)
 local stackoffset=stackoffset or 0
-
----@diagnostic disable-next-line:invisible
 local chunk_locals,chunk_names=get_locals(3 + stackoffset)
 if chunk_locals[LuaXParser.vars.IS_COMPILED.name] then return chunk end
----@diagnostic disable-next-line:invisible
----@diagnostic disable-next-line:invisible
 chunk_locals[LuaXParser.vars.CREATE_ELEMENT.name]=create_element
 chunk_locals[LuaXParser.vars.FRAGMENT.name]=Fragment
 setmetatable(chunk_locals,{["__index"] = _G})
 setmetatable(chunk_names,{["__index"] = _G})
-
-
-
-local inline_luax=function (...) 
-local prev_hook,prev_mask=debug.gethook()
-
+local inline_luax=function (...) local prev_hook,prev_mask=debug_gethook()
 local inner_locals,inner_names
-debug.sethook(function () 
-local info=debug.getinfo(2,"f")
+debug_sethook(function () local info=debug_getinfo(2,"f")
 if info.func == chunk then inner_locals,inner_names=get_locals(3) end end,"r")
 local tag=chunk(...)
-debug.sethook(prev_hook,prev_mask)
+debug_sethook(prev_hook,prev_mask)
 local t=type(tag)
 if t == "table" or t == "nil" then return tag end
 setmetatable(inner_locals,{["__index"] = chunk_locals})
@@ -108,16 +90,9 @@ local node=self.easy_load(element_str,inner_locals,chunk_src)
 return node end
 self.original_chunks[inline_luax]=chunk
 return inline_luax end
-
----@param fn function
 function Inline:get_original_chunk(fn) return self.original_chunks[fn] end
----@param tag string
----@param stackoffset number?
----@return LuaX.ElementNode
-function Inline:transpile_string(tag,stackoffset) self:lazy_assert(self.assert.can_get_local)
-
+function Inline:transpile_string(tag,stackoffset) self:cached_assert(self.assert.can_get_local)
 local stackoffset=stackoffset or 0
----@diagnostic disable-next-line:invisible
 local locals,names=get_locals(3 + stackoffset)
 local vars=LuaXParser.vars
 locals[vars.CREATE_ELEMENT.name]=create_element
@@ -126,22 +101,16 @@ locals[vars.FRAGMENT.name]=Fragment
 names[vars.FRAGMENT.name]=true
 locals[vars.IS_COMPILED.name]=true
 names[vars.IS_COMPILED.name]=true
-local element_str=self:cache_get(tag,names)
+local stack_height=2
+local src
+repeat local info=debug_getinfo(stack_height + stackoffset,"lS")
+if info.source ~= "=[C]" then src=info.source:sub(2) .. ":" .. info.currentline end
+stack_height=stack_height + 1 until src
+local element_str=self:cache_get(tag,names,src)
 local env=setmetatable(locals,{["__index"] = _G})
-return self.easy_load(element_str,env) end
-
-
-
----@overload fun (self: self, input: function): LuaX.Component
----@param input string
----@param stackoffset integer?
----@return LuaX.ElementNode
+return self.easy_load(element_str,env,src) end
 function Inline:transpile(input,stackoffset) local t=type(input)
 if t == "function" then return self:transpile_decorator(input,stackoffset) else return self:transpile_string(input,stackoffset) end end
-
-
-do ---@type { set_Inline: fun(Inline: LuaX.Parser.Inline)}
-
-local get_component_name=get_component_name
+do local get_component_name=get_component_name
 get_component_name.set_Inline(Inline) end
 return Inline

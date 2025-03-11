@@ -11,45 +11,21 @@ package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep)
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "util.NativeElement.")
 require(library_root .. "_shim") end
-
 local class=require"lib_LuaX._dep.lib.30log"
 local FunctionComponentInstance=require"lib_LuaX.util.FunctionComponentInstance"
-
-
-
-
-
-
-
-
-
-
----@class LuaX.NativeElement.Virtual : LuaX.NativeElement
-
----@field protected type LuaX.Component
----@field protected props LuaX.Props
----@field protected new_props boolean
-
----@field render function()
 local deep_equals=require"lib_LuaX.util.deep_equals"
 local VirtualElement=class"LuaX.VirtualElement"
 function VirtualElement:init(component) if type(component) == "function" then self.instance=FunctionComponentInstance(component)
 self.type=component else self.instance=component end end
-function VirtualElement:get_type() return self.type end
+function VirtualElement:get_render_name() return self.type end
 function VirtualElement:set_on_change(callback) self.instance:set_on_change(callback) end
 function VirtualElement:insert_child() error"A VirtualElement should never interact with children" end
----@return LuaX.NativeElement.Virtual
 VirtualElement.delete_child=VirtualElement.insert_child
 function VirtualElement.create_element(type) return VirtualElement(type) end
 function VirtualElement.get_root() error"VirtualElements exist to host non-native components, and therefore cannot be used as root elements" end
-function VirtualElement:set_props(props) 
-
-if deep_equals(props,self.props,2) and props ~= self.props then 
-return  end
+function VirtualElement:set_props(props) if deep_equals(props,self.props,2) and props ~= self.props then return  end
 self.props=props
 self.new_props=true end
----@param force boolean?
----@return boolean did_render, LuaX.ElementNode | LuaX.ElementNode[] | nil result
 function VirtualElement:render(force) if self.new_props or force then local result
 repeat local did_render
 did_render,result=self.instance:render(self.props) until did_render

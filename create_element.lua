@@ -11,11 +11,6 @@ package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep)
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "")
 require(library_root .. "_shim") end
----@nospec
-
----@param component LuaX.Component | LuaX.ElementNode.LiteralNode
----@param props LuaX.Props
---- @return LuaX.ElementNode
 local ElementNode=require"lib_LuaX.util.ElementNode"
 local function create_element(component,props) return ElementNode.create(component,props) end
 return create_element
