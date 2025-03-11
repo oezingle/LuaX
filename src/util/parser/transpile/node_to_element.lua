@@ -20,7 +20,6 @@ local function transpile_node_to_element(node, components, components_mode, crea
         if children and #children >= 1 then
             local str_children = {}
 
-
             for i, child in ipairs(children) do
                 if type(child) == "string" then
                     str_children[i] = "{" .. child .. "}"
