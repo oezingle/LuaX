@@ -17,7 +17,8 @@ function build () {
         -i lgi \
         -i ext -i parser -i table \
         -i bit \
-        -i template.showcode
+        -i template.showcode \
+        -i js
 }
 
 function main () {
