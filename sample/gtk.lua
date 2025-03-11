@@ -9,16 +9,19 @@ do
     end
 end
 
+---@type LuaX
 local LuaX = require("src")
-local GtkElement = require("src.util.NativeElement.GtkElement")
+local GtkElement = LuaX.GtkElement
+local ErrorBoundary = LuaX.ErrorBoundary
+local Suspense = LuaX.Suspense
+local use_context = LuaX.use_context
+local use_suspense = LuaX.use_suspense
 local GLibIdleWorkloop = require("src.util.WorkLoop.GLibIdle")
 
 local lgi = require("lgi")
 local Gtk = lgi.require("Gtk", "3.0")
 local Gio = lgi.Gio
-local Gdk = lgi.Gdk -- looks unused, but our "Semi-legal events" page makes use of Gdk.EventMask
-
--- require("lib.log").level = "trace"
+local GLib = lgi.GLib
 
 warn("@on")
 
@@ -74,27 +77,158 @@ local EasyNotebook = LuaX(function(props)
     ]]
 end)
 
-local ToggleVisibility = LuaX(function()
-    local show, set_show = use_state(true)
+
+
+
+
+
+local map = function(list, cb)
+    local ret = {}
+    for i, item in ipairs(list) do
+        ret[i] = cb(item)
+    end
+    return ret
+end
+
+local MessageContext = LuaX.Context("Hello World!")
+
+local Display = LuaX(function()
+    local message = use_context(MessageContext)
+
+    return [[
+        <LuaX.Gtk.Label>
+            {message}
+        </LuaX.Gtk.Label>
+    ]]
+end)
+
+local ContextPage = LuaX(function()
+    local messages = {
+        { value = "Message 1!" },
+        { value = "Message 2!" },
+        -- Passing a nil value to MessageContext.Provider results in the default value being returned by use_context
+        { value = nil }
+    }
 
     return [[
         <LuaX.Gtk.VBox>
-            <LuaX.Gtk.Label show={show}>
-                Toggle my visibility!
-            </LuaX.Gtk.Label>
-
-            <LuaX.Gtk.Button
-                on_clicked={function ()
-                    set_show(function (show)
-                        return not show
-                    end)
-                end}
-            >
-                Click here
-            </LuaX.Gtk.Button>
+            {map(messages, function (message)
+                return (
+                    <MessageContext.Provider value={message.value} >
+                        <>
+                            <Display />
+                        </>
+                    </MessageContext.Provider>
+                )
+            end)}
         </LuaX.Gtk.VBox>
     ]]
 end)
+
+
+
+
+
+
+
+
+
+
+local ErrorComponent = LuaX(function()
+    return [[
+        <LuaX.Gtk.Button on_clicked={function ()
+            error("Throw up!")
+        end}>
+            I'm going to throw up!
+        </LuaX.Gtk.Button>
+    ]]
+end)
+
+-- If you wish to consume the error with your fallback component, passing the
+-- component (as opposed to an instance of it) to ErrorBoundary will create the
+-- element, passing the error in props
+local ErrorMessage = LuaX(function (props)
+    local err = props.error
+    
+    return [[
+        <LuaX.Gtk.Label>
+            An error occurred {err and " - " .. err or ""}
+        </LuaX.Gtk.Label>
+    ]]
+end)
+
+local ErrorPage = LuaX(function()
+    return [[
+        <LuaX.Gtk.VBox>
+            <ErrorBoundary fallback={ErrorMessage}>
+                <ErrorComponent />
+            </ErrorBoundary>
+        </LuaX.Gtk.VBox>
+    ]]
+end)
+
+
+
+
+
+
+
+
+
+
+local SuspenseComponent = LuaX(function()
+    -- Because Lua doesn't have a default Promises implementation, use_suspense
+    -- returns two functions - suspend() defers rendering, and resolve() does
+    -- the opposite.
+    local suspend, resolve = use_suspense()
+
+    local clicks, set_clicks = use_state(0)
+
+    -- We use GLib.timeout_add to create a 1 second delay every time the click
+    -- count changes.
+    use_effect(function()
+        print("Suspend")
+        suspend()
+
+        GLib.timeout_add(0, 1000, function()
+            print("Resolve")
+            resolve()
+            return false
+        end)
+    end, { clicks })
+
+    return [[
+        <LuaX.Gtk.Button
+            on_clicked={function ()        
+                set_clicks(function (clicks)
+                    return clicks + 1
+                end)
+            end}
+        >
+            Hello World!
+        </LuaX.Gtk.Button>
+    ]]
+end)
+
+local SuspensePage = LuaX(function()
+    return [[
+        <LuaX.Gtk.VBox>
+            <Suspense fallback={<LuaX.Gtk.Spinner LuaX::onload={function (w) w:start() end} />}>
+                <SuspenseComponent />
+            </Suspense>
+        </LuaX.Gtk.VBox>
+    ]]
+end)
+
+
+
+
+
+
+
+
+
+
 
 local App = LuaX(function()
     local clicks, set_clicks = use_state(0)
@@ -105,8 +239,9 @@ local App = LuaX(function()
         <EasyNotebook
             labels={{
                 "Click counter",
-                "Semi-legal events",
-                "Toggle element visibility"
+                "Contexts",
+                "Error boundary",
+                "Suspense"
             }}
         >
             -- page 1: use_state clicking example
@@ -114,12 +249,6 @@ local App = LuaX(function()
                 <LuaX.Gtk.Label>
                     You clicked {clicks} times!
                 </LuaX.Gtk.Label>
-
-                {clicks > 10 and
-                    <LuaX.Gtk.Label>
-                        More than 10!
-                    </LuaX.Gtk.Label>
-                }
 
                 <LuaX.Gtk.Button
                     on_clicked={function ()
@@ -132,33 +261,14 @@ local App = LuaX(function()
                 </LuaX.Gtk.Button>
             </LuaX.Gtk.VBox>
 
-            -- page 2: hacking mouse events!
-            <LuaX.Gtk.VBox>
-                <LuaX.Gtk.Label>
-                    I am normal.
-                </LuaX.Gtk.Label>
+            -- page 2: contexts
+            <ContextPage />
 
-                <LuaX.Gtk.Label
-                    has_window
-                    events={Gdk.EventMask.ALL_EVENTS_MASK}
-                    on_button_press_event={function ()
-                        print("press")
-                    end}
-                    on_button_release_event={function ()
-                        print("release")
-                    end}
-                    on_enter_notify_event={function ()
-                        print("mouse enter")
-                    end}
-                    on_leave_notify_event={function ()
-                        print("mouse leave")
-                    end}
-                >
-                    I consume click events & hover events (though I shouldn't!)
-                </LuaX.Gtk.Label>
-            </LuaX.Gtk.VBox>
+            -- page 3: error boundary
+            <ErrorPage />
 
-            <ToggleVisibility />
+            -- page 4: suspense
+            <SuspensePage />
         </EasyNotebook>
     ]]
 end)
