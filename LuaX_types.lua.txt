@@ -2,11 +2,15 @@
 ---@field register fun() Register the LuaX loader
 ---@field Parser LuaX.Parser.V3
 ---@field transpile { from_path: (fun(path: string): string), from_string: (fun(content: string, source?: string): string), inline: (fun(tag: string): string)|(fun(fn: function): function) }
+---@field NativeElement LuaX.NativeElement
+---@field NativeTextElement LuaX.NativeTextElement
+---@field GtkElement LuaX.GtkElement
+---@field WiboxElement LuaX.WiboxElement
+---@field WebElement LuaX.WebElement
 ---@operator call:function
 ---@class LuaX.Runtime
 ---@field Renderer LuaX.Renderer
 ---@field Children LuaX.Children
----@field NativeElement LuaX.NativeElement
 ---@field create_element fun(type: LuaX.Component, props: LuaX.Props): LuaX.ElementNode
 ---@field clone_element (fun(element: LuaX.ElementNode, props: LuaX.Props): LuaX.ElementNode) | (fun(element: LuaX.ElementNode[], props: LuaX.Props): LuaX.ElementNode[])
 ---@field Fragment LuaX.Component.Fragment
@@ -14,6 +18,7 @@
 ---@field ErrorBoundary LuaX.Component.ErrorBoundary
 ---@field Portal LuaX.Portal
 ---@field Context LuaX.Context
+---@field use_callback LuaX.Hooks.UseCallback
 ---@field use_context LuaX.Hooks.UseContext
 ---@field use_effect LuaX.Hooks.UseEffect
 ---@field use_memo LuaX.Hooks.UseMemo
@@ -31,6 +36,8 @@
 ---@field protected GenericInlet LuaX.Component<LuaX.PropsWithChildren>
 ---@field protected GenericOutlet LuaX.Component
 ---@alias LuaX.Portal.UID number
+---@generic T
+---@alias LuaX.Hooks.UseCallback fun (callback: T, deps: any[]): T
 ---@alias LuaX.Hooks.UseEffect.State { deps: any[]?, on_remove: function? }
 ---@alias LuaX.Hooks.UseEffect fun(callback: (fun(): function?), deps: any[]?)
 ---@alias LuaX.Hooks.UseState.Dispatch<R> fun(new_value: R | (fun(old: R): R))
@@ -173,9 +180,10 @@
 ---@field private count_children_by_key fun(self: self, key: LuaX.Key, ignore_virtual?: boolean): number
 ---@field private set_child_by_key fun(self: self, key: LuaX.Key, child: LuaX.NativeElement | nil)
 ---@field private flatten_children fun(self: self, key: LuaX.Key): { element: LuaX.NativeElement, key: LuaX.Key }[]
----@field set_prop_safe fun (self: self ,prop: string, value: any)
+---@field set_prop_safe fun (self: self, prop: string, value: any)
 ---@field private set_prop_virtual fun (self: self, prop: string, value: any)
 ---@field private _virtual_props table<string, any>
+---@field get_prop_safe fun (self: self, prop: string): any
 ---@field set_render_name fun(self: self, name: string)
 ---@field get_render_name fun(self: self): string name
 ---@field set_prop fun(self: self, prop: string, value: any)
@@ -190,6 +198,8 @@
 ---@field cleanup nil|fun(self: self)
 ---@field components string[]? class static property - components implemented by this class.
 ---@operator call : LuaX.NativeElement
+---@class LuaX.WebElement : LuaX.NativeElement
+---@class LuaX.WebText : LuaX.NativeTextElement
 ---@class LuaX.Renderer : Log.BaseFunctions
 ---@field workloop LuaX.WorkLoop instance of a workloop
 ---@field native_element LuaX.NativeElement class here, not instance
