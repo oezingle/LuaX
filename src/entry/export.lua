@@ -13,6 +13,11 @@ local _VERSION   = "0.5.0-dev"
 ---
 ---@field NativeElement LuaX.NativeElement
 ---@field NativeTextElement LuaX.NativeTextElement
+---
+---@field GtkElement LuaX.GtkElement
+---@field WiboxElement LuaX.WiboxElement
+---@field WebElement LuaX.WebElement
+---
 ---@operator call:function
 
 local export     = {
