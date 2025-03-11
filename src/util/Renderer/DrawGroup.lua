@@ -19,7 +19,7 @@ local DrawGroup = {}
 ---@return LuaX.DrawGroup.Group
 function DrawGroup.create(on_error, on_complete, on_restart)
     return {
-        refs = 1,
+        refs = 0,
         on_error = on_error,
         on_complete = on_complete,
         on_restart = on_restart,
@@ -50,7 +50,7 @@ function DrawGroup.current()
     if not info then
         return nil
     end
-    
+
     return info.draw_group
 end
 
@@ -58,7 +58,11 @@ end
 function DrawGroup.error(group, ...)
     group = group or DrawGroup.current()
 
-    group.on_error(...)
+    if group then
+        group.on_error(...)
+    else
+        error(...)
+    end
 end
 
 return DrawGroup

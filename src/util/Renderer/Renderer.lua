@@ -77,7 +77,7 @@ function Renderer:render_native_component(component, container, key, info)
     -- set props
     for prop, value in pairs(component.props) do
         if
-            -- children are handled differently than other props
+        -- children are handled differently than other props
             prop ~= "children" and
             -- LuaX:: signifies a property that LuaX handles innately.
             prop:sub(1, 6) ~= "LuaX::" and
@@ -286,6 +286,7 @@ function Renderer:render(component, container)
     local group = DrawGroup.create(function(err)
         error(err)
     end, function() end, function() end)
+    DrawGroup.ref(group)
 
     local render_info = {
         key = {},

@@ -16,7 +16,7 @@ local no_op = function() end
 ---@type LuaX.Component.Suspense
 local function Suspense(props)
     local complete, set_complete = use_state(false)
-
+    
     --- Clone RenderInfo so that we don't modify current RenderInfo
     ---@type LuaX.RenderInfo.Info
     local info = use_memo(function()
@@ -59,6 +59,8 @@ local function Suspense(props)
     end, { container })
 
     use_effect(function()
+        DrawGroup.ref(info.draw_group)
+
         ---@diagnostic disable-next-line:invisible
         renderer.workloop:add(renderer.render_keyed_child, renderer, props.children, clone, key, info)
 
