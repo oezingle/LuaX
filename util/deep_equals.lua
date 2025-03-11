@@ -69,5 +69,5 @@ local name_b,val_b=debug_getupvalue(b,i)
 if name_a ~= name_b or  not deep_equals(val_a,val_b,level,traversed) then return false end
 if name_a == nil then break end
 i=i + 1 end
-return true elseif level <= 2 then return false else error"Unable to determine function equality: missing function " end end
+return true elseif level <= 2 then return false else error"Unable to determine function equality: missing function debug.getupvalue" end end
 return deep_equals

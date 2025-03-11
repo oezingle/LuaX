@@ -1,3 +1,5 @@
+local io_open=(io or {}).open
+if  not io_open then return function (l) return l end end
 local function get_function_name(location) local filename=location:match"^(.-):"
 local linenumber=location:match":(.-)$"
 if  not filename or  not linenumber then return location end

@@ -13,9 +13,10 @@ if _VERSION:match"%d.%d" == "5.1" then setfenv(chunk,_ENV) end
 local mod=chunk(modpath,path)
 package.loaded[modpath]=mod
 return mod,path end
-local function parser_shim() _ENV=setmetatable({["package"] = setmetatable({["loaded"] = {["table"] = table,["string"] = string}},{["__index"] = package}),["require"] = env_aware_require},{["__index"] = _G})
-local package=_ENV.package
-local require=_ENV.require
+local function parser_shim() local package,require=package,require
+if  not _IS_BUNDLED then _ENV=setmetatable({["package"] = setmetatable({["loaded"] = {["table"] = table,["string"] = string}},{["__index"] = package}),["require"] = env_aware_require},{["__index"] = _G})
+package=_ENV.package
+require=_ENV.require end
 package.loaded["ext.op"]=require"lib_LuaX._dep.lib.lua-ext.op"
 package.loaded["ext.table"]=require"lib_LuaX._dep.lib.lua-ext.table"
 package.loaded["ext.class"]=require"lib_LuaX._dep.lib.lua-ext.class"

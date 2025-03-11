@@ -13,12 +13,14 @@ local library_root=folder_of_this_file:sub(1, - 1 -  # "util.Renderer.")
 require(library_root .. "_shim") end
 local RenderInfo=require"lib_LuaX.util.Renderer.RenderInfo"
 local DrawGroup={}
-function DrawGroup.create(on_error,on_complete,on_restart) return {["refs"] = 1,["on_error"] = on_error,["on_complete"] = on_complete,["on_restart"] = on_restart} end
+function DrawGroup.create(on_error,on_complete,on_restart) return {["refs"] = 0,["on_error"] = on_error,["on_complete"] = on_complete,["on_restart"] = on_restart} end
 function DrawGroup.ref(group) group.refs=group.refs + 1
 if group.refs <= 1 then group.on_restart() end end
 function DrawGroup.unref(group) group.refs=group.refs - 1
 if group.refs <= 0 then group.on_complete() end end
-function DrawGroup.current() return RenderInfo.get().draw_group end
+function DrawGroup.current() local info=RenderInfo.get()
+if  not info then return nil end
+return info.draw_group end
 function DrawGroup.error(group,...) group=group or DrawGroup.current()
-group.on_error(...) end
+if group then group.on_error(...) else error(...) end end
 return DrawGroup

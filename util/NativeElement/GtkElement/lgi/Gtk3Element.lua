@@ -56,7 +56,7 @@ self:reinsert_trailing_children(after) end end
 function Gtk3Element:cleanup() self.widget:destroy() end
 function Gtk3Element:get_native() return self.widget end
 function Gtk3Element.create_element(name) local elem=name:match"Gtk%.(%S+)"
-assert(elem,"GtkElement must be specified by Gtk.<Name>")
+assert(elem,string.format("GtkElement must be specified by Gtk.<Name> (Could not resolve %q)",name))
 local native=Gtk[elem]()
 assert(native,string.format("No Gtk.%s",elem))
 return Gtk3Element(native,name) end

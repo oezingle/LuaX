@@ -22,7 +22,8 @@ local colors={["YELLOW"] = "\27[33m",["RESET"] = "\27[0m"}
 local function color_warn(...) if test_control_flag(...) then io.stdout:write(colors.YELLOW)
 io.stdout:write(table.concat(table_pack(...),"\9"))
 io.stdout:write(colors.RESET,"\n") end end
+local os_getenv=(os or {}).getenv
 local function ensure_warn() if warn then return  end
-local term=os.getenv"TERM" or ""
+local term=os_getenv and os_getenv"TERM" or ""
 if term:match"xterm" then warn=color_warn else warn=nocolor_warn end end
 return ensure_warn

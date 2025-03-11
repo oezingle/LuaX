@@ -37,7 +37,7 @@ local can_modify,existing_child=can_modify_child(component,container,key)
 local node=nil
 if can_modify then node=existing_child else if existing_child then container:delete_children_by_key(key) end
 node=create_native_element(component,container) end
-for prop,value in pairs(component.props) do if prop ~= "children" and prop:sub(1,6) ~= "LuaX::" and  not deep_equals(value,node:get_prop(prop),2) then node:set_prop_safe(prop,value) end end
+for prop,value in pairs(component.props) do if prop ~= "children" and prop:sub(1,6) ~= "LuaX::" and  not deep_equals(value,node:get_prop_safe(prop),2) then node:set_prop_safe(prop,value) end end
 local children=component.props.children
 local current_children=node:get_children_by_key{} or {}
 if children then local workloop=self.workloop
@@ -88,6 +88,7 @@ if type(info.type) == "string" then assert(type(arg) == info.type and  not class
 classname=classname:match"class '[^']+'" or classname
 assert(class.isInstance(arg),string.format("Expected argument %q to be an instance of %s" .. extra,info.name,classname)) end end
 local group=DrawGroup.create(function (err) error(err) end,function ()  end,function ()  end)
+DrawGroup.ref(group)
 local render_info={["key"] = {},["context"] = {},["draw_group"] = group}
 RenderInfo.set(render_info)
 self.workloop:add(self.render_keyed_child,self,component,container,{1},render_info)

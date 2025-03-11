@@ -43,8 +43,12 @@ local ok=ret[1]
 if  not ok then DrawGroup.error(group,table_unpack(ret,2))
 return  end
 return table_unpack(ret,2) end
-NativeElement_function_cache[value]=fn
+NativeElement_function_cache[fn]=value
 prop_method(self,prop,fn) end else prop_method(self,prop,value) end end
+function NativeElement:get_prop_safe(prop) local value=self:get_prop(prop)
+if type(value) == "function" then local cached=NativeElement_function_cache[value]
+if cached then return cached end end
+return value end
 function NativeElement:get_prop(prop) self._virtual_props=self._virtual_props or {}
 return self._virtual_props[prop] end
 function NativeElement:count_children_by_key(key,include_virtual) return count_children_by_key(self._children_by_key,key,include_virtual) end

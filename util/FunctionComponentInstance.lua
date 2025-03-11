@@ -16,8 +16,9 @@ local HookState=require"lib_LuaX.util.HookState"
 local ipairs_with_nil=require"lib_LuaX.util.ipairs_with_nil"
 local traceback=require"lib_LuaX.util.debug.traceback"
 local DrawGroup=require"lib_LuaX.util.Renderer.DrawGroup"
+local table_pack=require"lib_LuaX.util.polyfill.table.pack"
 local get_component_name=require"lib_LuaX.util.debug.get_component_name"
-local this_file=(...)
+local this_file=table_pack(...)[1]
 local FunctionComponentInstance=class"FunctionComponentInstance"
 local ABORT_CURRENT_RENDER={}
 function FunctionComponentInstance:init(component) self.friendly_name=get_component_name(component)
@@ -35,6 +36,7 @@ local ok,res=xpcall(component,traceback,props)
 HookState.global.set(last_hookstate)
 if  not ok then local err=res
 if err == ABORT_CURRENT_RENDER then return false,nil end
+err=tostring(err)
 local err_trunc=err:match("(.*)[\n\13].-[\n\13].-[\n\13].-in function '" .. this_file .. ".-'")
 if err_trunc then err_trunc=err_trunc:gsub("in upvalue 'chunk'",string.format("in function '%s'",self.friendly_name:match"^%S+"))
 err_trunc="While rendering " .. self.friendly_name .. ":\n" .. err_trunc end

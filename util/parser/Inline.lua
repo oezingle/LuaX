@@ -19,27 +19,32 @@ local get_global_components=require"lib_LuaX.util.parser.transpile.get_global_co
 local get_component_name=require"lib_LuaX.util.debug.get_component_name"
 local Fragment=require"lib_LuaX.components.Fragment"
 local create_element=require"lib_LuaX.create_element"
+local debug=debug or {}
+local debug_getinfo=debug.getinfo
+local debug_gethook=debug.gethook
+local debug_sethook=debug.sethook
+local debug_getlocal=debug.getlocal
 local Inline={["debuginfo"] = {},["transpile_cache"] = {},["assertions"] = {},["assert"] = {},["original_chunks"] = setmetatable({},{["__mode"] = "kv"})}
-function Inline.assert.can_use_decorator() assert(debug.getinfo,"Cannot use inline parser decorator: debug.getinfo does not exist")
-local function test_function() local info=debug.getinfo(1,"f")
+function Inline.assert.can_use_decorator() assert(debug_getinfo,"Cannot use inline parser decorator: debug.getinfo does not exist")
+local function test_function() local info=debug_getinfo(1,"f")
 return info end
 local info=test_function()
 assert(info.func == test_function,"Cannot use inline parser decorator: debug.getinfo API changed")
-assert(debug.sethook,"Cannot use inline parser decorator: debug.sethook does not exist")
-assert(debug.gethook,"Cannot use inline parser decorator: debug.gethook does not exist") end
+assert(debug_sethook,"Cannot use inline parser decorator: debug.sethook does not exist")
+assert(debug_gethook,"Cannot use inline parser decorator: debug.gethook does not exist") end
 function Inline.assert.can_get_local() assert(debug,"Cannot use inline parser: debug global does not exist")
-assert(debug.getlocal,"Cannot use inline parser: debug.getlocal does not exist")
-assert(type(debug.getlocal) == "function","Cannot use inline parser: debug.getlocal is not a function")
+assert(debug_getlocal,"Cannot use inline parser: debug.getlocal does not exist")
+assert(type(debug_getlocal) == "function","Cannot use inline parser: debug.getlocal is not a function")
 local im_a_local="Hello World!"
-local name,value=debug.getlocal(1,1)
-assert(name == "im_a_local" and value == "Hello World!","Cannot use inline parser: debug.getlocal API changed") end
-function Inline.easy_load(chunk,env,src) local chunkname="inline LuaX"
+local name,value=debug_getlocal(1,1)
+assert(type(name) == "string" and value == "Hello World!","Cannot use inline parser: debug.getlocal API changed") end
+function Inline.easy_load(chunk,env,src) local chunkname="inline LuaX " .. src
 local get_output,err=load(chunk,chunkname,nil,env)
 if  not get_output then err=tostring(err)
-if src then err=err:gsub("%[string \"inline LuaX\"%]:1",src) end
+if src then err=err:gsub("%[string \"inline LuaX .-\"%]:%d+",src) end
 error(string.format("Error loading transpiled LuaX.\ntranspilation:\n%s\n\n%s",chunk,err)) end
 local ok,ret=xpcall(get_output,traceback)
-if ok then return ret else local file,err=ret:match"%[string \"inline LuaX\"%]:1:%s*(.*)$"
+if ok then return ret else local file,err=ret:match"%[string \"inline LuaX .-\"%]:%d+:%s*(.*)$"
 local new_err=string.format("error in inline LuaX in %s: %s",file,tostring(err))
 error(new_err) end end
 function Inline:cached_assert(fn) if type(self.assertions[fn]) == "string" then error(self.assertions[fn]) end
@@ -69,12 +74,12 @@ chunk_locals[LuaXParser.vars.CREATE_ELEMENT.name]=create_element
 chunk_locals[LuaXParser.vars.FRAGMENT.name]=Fragment
 setmetatable(chunk_locals,{["__index"] = _G})
 setmetatable(chunk_names,{["__index"] = _G})
-local inline_luax=function (...) local prev_hook,prev_mask=debug.gethook()
+local inline_luax=function (...) local prev_hook,prev_mask=debug_gethook()
 local inner_locals,inner_names
-debug.sethook(function () local info=debug.getinfo(2,"f")
+debug_sethook(function () local info=debug_getinfo(2,"f")
 if info.func == chunk then inner_locals,inner_names=get_locals(3) end end,"r")
 local tag=chunk(...)
-debug.sethook(prev_hook,prev_mask)
+debug_sethook(prev_hook,prev_mask)
 local t=type(tag)
 if t == "table" or t == "nil" then return tag end
 setmetatable(inner_locals,{["__index"] = chunk_locals})
@@ -98,7 +103,7 @@ locals[vars.IS_COMPILED.name]=true
 names[vars.IS_COMPILED.name]=true
 local stack_height=2
 local src
-repeat local info=debug.getinfo(stack_height + stackoffset,"lS")
+repeat local info=debug_getinfo(stack_height + stackoffset,"lS")
 if info.source ~= "=[C]" then src=info.source:sub(2) .. ":" .. info.currentline end
 stack_height=stack_height + 1 until src
 local element_str=self:cache_get(tag,names,src)

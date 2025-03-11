@@ -34,10 +34,11 @@ function WorkLoop:run_once() if self:list_is_empty() then self:stop()
 return  end
 local item=self:list_dequue()
 local cb=item[1]
-local upper=jit and 10 or nil
+local upper=(_VERSION:match"%d%.%d" or "") < "5.4" and 10 or nil
 local ok,err=xpcall(cb,traceback,table_unpack(item,2,upper))
-if  not ok then ok=pcall(DrawGroup.error,nil,err) end
-if  not ok then error("DrawGroup error handler failed.\n" .. err) end end
+if  not ok then local group=DrawGroup.current()
+if group then ok,err=pcall(DrawGroup.error,group,err) end end
+if  not ok then error("DrawGroup error handler failed.\n" .. tostring(err)) end end
 function WorkLoop:safely_start() if self.is_running then return  end
 self.is_running=true
 self:start() end

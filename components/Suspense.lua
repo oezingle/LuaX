@@ -35,7 +35,8 @@ local instance=ret
 instance.insert_child=no_op
 instance.delete_child=no_op
 return instance end,{container})
-use_effect(function () renderer.workloop:add(renderer.render_keyed_child,renderer,props.children,clone,key,info)
+use_effect(function () DrawGroup.ref(info.draw_group)
+renderer.workloop:add(renderer.render_keyed_child,renderer,props.children,clone,key,info)
 renderer.workloop:safely_start() end,{renderer,props.children,clone,key,info})
 use_effect(function () local children=container:flatten_children(key)
 local delete_index=container:count_children_by_key(key)

@@ -21,7 +21,7 @@ if expression.vars then for _,var in ipairs(expression.vars) do table.insert(var
 if expression.exprs then collect_vars(vars,expression.exprs) end end end
 local function collect_locals(text) local text=LuaXParser():set_text(text):set_sourceinfo"collect_locals internal parser":set_components({},"local"):transpile()
 local node,err=Parser.parse(text)
-if  not node then error("Unable to collect locals - are you sure your code is syntactically correct?\n" .. err) end
+if  not node then error("Unable to collect locals - are you sure your code is syntactically correct?\n" .. tostring(err)) end
 local vars={}
 collect_vars(vars,node)
 return list_to_map(vars) end

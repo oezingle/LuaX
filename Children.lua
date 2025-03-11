@@ -15,8 +15,10 @@ local ipairs_with_nil=require"lib_LuaX.util.ipairs_with_nil"
 local Children={}
 function Children.count(children) if  not children then return 0 elseif children.type then return 1 else local count=0
 for _,child in ipairs_with_nil(children) do count=count + Children.count(child) end end end
-function Children.map(children,cb) if  not children or children.type then children={children} end
+function Children.map(children,cb) children=Children.flatten(children)
 local mapped={}
 for i,child in ipairs_with_nil(children) do mapped[i]=cb(child,i) end
 return mapped end
+function Children.flatten(children) if  not children or children.type then children={children} end
+return children end
 return Children
