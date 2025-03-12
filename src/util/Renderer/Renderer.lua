@@ -210,10 +210,7 @@ function Renderer:render_keyed_child(element, container, key, info)
 
     if not element or type(element.type) == "string" then
         self:render_native_component(element, container, key, info)
-
-        -- TODO element.element_node ~= ElementNode equality check might be slow!
-        ---@diagnostic disable-next-line:invisible
-    elseif type(element) == "table" and element.element_node ~= ElementNode then
+    elseif type(element) == "table" and not ElementNode.is(element) then
         -- lists of children are valid children
         local current_children = container:get_children_by_key(key) or {}
 

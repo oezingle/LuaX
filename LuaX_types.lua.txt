@@ -92,7 +92,6 @@
 ---@class LuaX.ElementNode
 ---@field type LuaX.Component
 ---@field props LuaX.Props
----@field protected element_node self
 ---@field inherit_props fun(self: self, inherit_props: LuaX.Props): self
 ---@field create fun(component: LuaX.Component | LuaX.ElementNode.LiteralNode, props: LuaX.Props): self
 ---@field protected LITERAL_NODE LuaX.ElementNode.LiteralNode unique key

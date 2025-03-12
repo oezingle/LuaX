@@ -16,14 +16,11 @@ local get_function_location = require("src.util.debug.get_function_location")
     if local (by number) as opposed to global (by name)
 ]]
 
----TODO FIXME add generics
 ---@class LuaX.ElementNode
 ---
 --- Instance properties
 ---@field type LuaX.Component
 ---@field props LuaX.Props
----
----@field protected element_node self
 ---
 ---@field inherit_props fun(self: self, inherit_props: LuaX.Props): self
 ---@field create fun(component: LuaX.Component | LuaX.ElementNode.LiteralNode, props: LuaX.Props): self
@@ -37,9 +34,8 @@ local ElementNode = {
 ---@param children LuaX.ElementNode.Children
 ---@protected
 function ElementNode.clean_children(children)
-    -- Convert children to list. This getmetatable usage is apparently
-    -- recommended https://github.com/Yonaba/30log/wiki/Instances
-    if not children or type(children) == "string" or children.element_node == ElementNode then
+    -- Convert children to list
+    if not children or type(children) == "string" or ElementNode.is(children) then
         children = { children }
     end
 
@@ -79,10 +75,29 @@ function ElementNode.create(component, props)
     local node = {
         type = component,
         props = props,
-        element_node = ElementNode,
     }
 
     return node
+end
+
+--- Check if a value is an ElementNode
+---@param val any
+---@return boolean
+function ElementNode.is (val)
+    if type(val) ~= "table" then
+        return false
+    end
+
+    local t_type = type(val.type)
+    if t_type ~= "string" and t_type ~= "function" then
+        return false
+    end
+
+    if type(val.props) ~= "table" then
+        return false
+    end
+
+    return true
 end
 
 ---@overload fun (component: LuaX.ElementNode): boolean
