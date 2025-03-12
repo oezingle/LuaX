@@ -64,11 +64,11 @@ return string.format(fmt,self.src,n_line,n_col,tostring(msg),context_line) end
 function LuaXParser:get_comment_regions() self.comment_regions={}
 local old_pos=self:get_cursor()
 self:set_cursor(1)
-while true do local _,s_end=self:text_find".-%-%-"
+while true do local _,s_end=self:text_find"%-%-"
 if  not s_end then break end
 local s_start=s_end - 1
-self:set_cursor(s_end)
-local multiline_match=self:text_match"%[(=*)%["
+self:set_cursor(s_end + 1)
+local multiline_match=self:text_match"^%[(=*)%["
 if multiline_match then local _,multi_end=self:text_find("]%1]",multiline_match)
 s_end=multi_end + 1 else local line_match=self:text_match"([^\n\13]-)[\n\13]"
 s_end=s_end +  # line_match + 1 end

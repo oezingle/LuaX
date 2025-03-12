@@ -14,7 +14,7 @@ require(library_root .. "_shim") end
 local Inline=require"lib_LuaX.util.parser.Inline"
 local LuaXParser=require"lib_LuaX.util.parser.LuaXParser"
 local runtime=require"lib_LuaX.entry.runtime"
-local _VERSION="0.5.0"
+local _VERSION="0.5.1"
 local export={["NativeElement"] = require"lib_LuaX.util.NativeElement",["NativeTextElement"] = require"lib_LuaX.util.NativeElement.NativeTextElement",["register"] = require"lib_LuaX.util.parser.loader.register",["Parser"] = LuaXParser,["transpile"] = {["from_path"] = function (path) return LuaXParser.from_file_path(path):transpile() end,["from_string"] = function (content,source) return LuaXParser.from_file_content(content,source):transpile() end,["inline"] = function (tag) return Inline:transpile(tag) end},["_VERSION"] = _VERSION}
 for k,v in pairs(runtime) do export[k]=v end
 local element_implementations={["WiboxElement"] = function () return require"lib_LuaX.util.NativeElement.WiboxElement" end,["GtkElement"] = function () return require"lib_LuaX.util.NativeElement.GtkElement" end,["WebElement"] = function () return require"lib_LuaX.util.NativeElement.WebElement" end}
