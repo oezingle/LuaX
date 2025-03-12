@@ -1,9 +1,6 @@
 #!/usr/bin/env lua
 
-local ensure_warn = require("src.util.ensure_warn")
 local table_pack  = require("src.util.polyfill.table.pack")
-
-ensure_warn()
 
 -- TODO init 'test' is out-of-date
 

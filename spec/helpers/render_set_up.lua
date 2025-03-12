@@ -1,5 +1,5 @@
 local Renderer = require("src.util.Renderer")
-local XMLElement = require("src.util.NativeElement.XMLElement")
+local XMLElement = require("spec.helpers.XMLElement")
 local create_element = require("src.create_element")
 
 ---@param element LuaX.ElementNode | string | LuaX.FunctionComponent

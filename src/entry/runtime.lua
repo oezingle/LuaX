@@ -1,3 +1,9 @@
+local _VERSION   = "0.5.3"
+
+---@class LuaX.Runtime.Targeted : LuaX.Runtime
+---@field TargetElement LuaX.NativeElement
+---@field TargetWorkLoop LuaX.WorkLoop
+
 ---@class LuaX.Runtime
 --- APIs
 ---@field Renderer LuaX.Renderer
@@ -20,6 +26,8 @@
 ---@field use_ref LuaX.Hooks.UseRef
 ---@field use_state LuaX.Hooks.UseState
 ---@field use_suspense LuaX.Hooks.UseSuspense
+---
+---@field _VERSION string
 local runtime = {
     Renderer       = require("src.util.Renderer"),
     Children       = require("src.Children"),
@@ -41,8 +49,14 @@ local runtime = {
     use_ref        = require("src.hooks.use_ref"),
     use_state      = require("src.hooks.use_state"),
     use_suspense   = require("src.hooks.use_suspense"),
+
+    _VERSION          = _VERSION
 }
 
+-- Set up a passthrough so transpiled inline LuaX works nicely.
+setmetatable(runtime, { __call = function (_, ...) 
+    return ...
+end })
 
 runtime.create_context = runtime.Context.create
 runtime.create_portal  = runtime.Portal.create

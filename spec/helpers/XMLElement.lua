@@ -2,7 +2,7 @@ local NativeElement = require("src.util.NativeElement.NativeElement")
 local split         = require("src.util.polyfill.string.split")
 local ElementNode   = require("src.util.ElementNode")
 
--- TODO improve. a lot.
+-- TODO kill once we have a nicer version
 
 ---@class LuaX.XMLElement : LuaX.NativeElement
 ---@field native { type: string, props: table<string, any>, children: LuaX.XMLElement[] }
@@ -22,12 +22,6 @@ end
 function XMLElement:set_prop(prop, value)
     self.props[prop] = value
 end
-
---[[
-function XMLElement:set_child(index, element)
-    self.children[index] = element
-end
-]]
 
 function XMLElement:insert_child(index, element)
     table.insert(self.children, index, element)

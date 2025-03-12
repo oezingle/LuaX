@@ -80,7 +80,7 @@ end
 ## `.luax` files
 
 Alongside vanilla Lua, LuaX also supports its own `.luax` format. Language
-server support is unfortunately not yet available, but is planned.
+server support is unfortunately not available.
 
 `src/components/MyComponent.luax`
 ```lua

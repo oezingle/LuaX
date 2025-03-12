@@ -23,8 +23,6 @@ local Gtk = lgi.require("Gtk", "3.0")
 local Gio = lgi.Gio
 local GLib = lgi.GLib
 
-warn("@on")
-
 local use_state = LuaX.use_state
 local use_effect = LuaX.use_effect
 
@@ -46,10 +44,6 @@ local EasyNotebook = LuaX(function(props)
 
         if page_count == 0 then
             return
-        end
-
-        if page_count ~= #labels then
-            warn(string.format("EasyNotebook expected %d labels, found %d", page_count, #labels))
         end
 
         local iterations = min(page_count, #labels)
