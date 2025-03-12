@@ -1,3 +1,6 @@
+-- Children manipulation API for components. Children will either be a single
+-- value or a list of multiple, but not multiply nested.
+
 local ipairs_with_nil = require("src.util.ipairs_with_nil")
 
 ---@class LuaX.Children
@@ -17,8 +20,6 @@ function Children.count (children)
         end
     end
 end
-
--- TODO FIXME these APIs seem shitty. What happens if we have doubly nested children?
 
 ---@generic T
 ---@param children LuaX.ElementNode[] | LuaX.ElementNode | nil
