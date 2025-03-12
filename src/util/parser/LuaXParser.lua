@@ -191,16 +191,16 @@ function LuaXParser:get_comment_regions()
     local old_pos = self:get_cursor()
     self:set_cursor(1)
     while true do
-        local _, s_end = self:text_find(".-%-%-")
+        local _, s_end = self:text_find("%-%-")
 
         if not s_end then
             break
         end
         local s_start = s_end - 1
 
-        self:set_cursor(s_end)
+        self:set_cursor(s_end + 1)
 
-        local multiline_match = self:text_match("%[(=*)%[")
+        local multiline_match = self:text_match("^%[(=*)%[")
         if multiline_match then
             local _, multi_end = self:text_find("]%1]", multiline_match)
 

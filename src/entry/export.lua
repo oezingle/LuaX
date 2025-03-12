@@ -3,7 +3,7 @@ local LuaXParser = require("src.util.parser.LuaXParser")
 
 local runtime    = require("src.entry.runtime")
 
-local _VERSION   = "0.5.0"
+local _VERSION   = "0.5.1"
 
 ---@class LuaX : LuaX.Runtime
 --- Parsing
