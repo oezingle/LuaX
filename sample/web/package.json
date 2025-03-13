@@ -1,18 +1,30 @@
 {
-  "name": "luax-web",
+  "name": "webpack",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node server.js"
+    "dev": "concurrently --kill-others \"npx webpack serve --config webpack.config.js\" \"node bundle_lua.js -w\"",
+    "build": "webpack --mode production; NODE_ENV=production node bundle_lua.js",
+    "serve": "node server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "express": "^4.21.2",
+    "fengari": "^0.1.4",
+    "fengari-web": "^0.1.4",
+    "morgan": "^1.10.0",
+    "wasmoon": "^1.16.0",
+    "webpack": "^5.98.0",
+    "webpack-cli": "^6.0.1"
+  },
+  "devDependencies": {
+    "chokidar": "^4.0.3",
+    "concurrently": "^9.1.2",
+    "filesize": "^10.1.6",
     "luabundle": "^1.7.0",
-    "luamin": "^1.0.4",
-    "morgan": "^1.10.0"
+    "webpack-dev-server": "^5.2.0"
   }
 }
