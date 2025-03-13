@@ -147,7 +147,7 @@ do
 
         local globals = get_global_components()
 
-        if next(globals) then
+        if globals and next(globals) then
             return self:set_components(globals, "global")
         end
 
