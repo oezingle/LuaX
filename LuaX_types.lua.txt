@@ -26,6 +26,8 @@
 ---@field use_ref LuaX.Hooks.UseRef
 ---@field use_state LuaX.Hooks.UseState
 ---@field use_suspense LuaX.Hooks.UseSuspense
+---@field _VERSION string
+---@class LuaX.Runtime.Web : LuaX.Runtime
 ---@class LuaX.Portal : Log.BaseFunctions
 ---@field Inlet LuaX.Component<LuaX.PropsWithChildren>
 ---@field Outlet LuaX.Component
