@@ -1,4 +1,10 @@
 
+/**
+ * File: bundle_lua.js
+ * Description: Use quite a few hacky workarounds to bundle multiple Lua or LuaX files as a single one, with hot reloading (-w flag)
+ * Author: Zingle Zingle (https://www.github.com/oezingle)
+ */
+
 const path = require("path")
 const luabundle = require("luabundle")
 const luamin = require('luamin')
@@ -6,8 +12,16 @@ const process = require("process")
 const fs = require("fs")
 const fsp = require("fs/promises")
 const { LuaFactory } = require("wasmoon")
+const { filesize } = require("filesize")
+
+
+const isProd = process.env.NODE_ENV == "production"
+
 
 const LuaXRoot = path.join(__dirname, "../../")
+const bundleOutPath = path.resolve(__dirname, "public/bundle.lua")
+const entrypoint = path.resolve(__dirname, "src/init.lua")
+
 
 const preprocessLua = (content) => {
     // hack to replace chunk-level ... with the module's name
@@ -102,8 +116,6 @@ const parseLuaX = (code) => {
 }
 
 const getBundle = (modules = {}) => {
-    const entrypoint = path.resolve(__dirname, "src/init.lua")
-
     const bundle = luabundle.bundle(entrypoint, {
         paths: [path.join(LuaXRoot, '?.lua'), path.join(LuaXRoot, '?/init.lua'), path.join(__dirname, "src/?.lua"), path.join(__dirname, "src/?/init.lua")],
         ignoredModuleNames: [
@@ -197,17 +209,26 @@ const build_bundle = () => {
             return bundle
         })
         .then(lua_bundle => {
-            if (process.env.NODE_ENV == "production") {
+            if (isProd) {
+                console.log(" -> Applying minification to lua bundle")
+
                 lua_bundle = luamin.minify(lua_bundle)
             }
 
             return lua_bundle
         })
         .then(lua_bundle => {
-            return fsp.writeFile(path.resolve(__dirname, "public/bundle.lua"), lua_bundle)
+            return fsp.writeFile(bundleOutPath, lua_bundle)
         })
         .then(() => {
             console.log("Done lua bundle")
+        })
+        .then(() => {
+            if (isProd) {
+                fsp.stat(bundleOutPath).then(({ size }) => {
+                    console.log(`Lua bundle is ${filesize(size)}`)
+                })
+            }
         })
 }
 
@@ -229,7 +250,7 @@ if (process.argv[2]?.match(/\s?\-w/g)) {
             const module = modules[path]
 
             if (!module) {
-                console.log(`Ignoring ${path} - could not find in modules`)
+                console.log(`Ignoring ${path} - did not find it to be required`)
 
                 return
             }
@@ -247,10 +268,13 @@ if (process.argv[2]?.match(/\s?\-w/g)) {
                         build_bundle()
                     }
                 })
+                .catch((err) => {
+                    console.log("An error occurred while hot-bundling")
+
+                    console.error(err)
+                })
         } else {
             console.log("Ignoring module change - module list not loaded")
         }
-
-        // build_bundle()
     })
 }
