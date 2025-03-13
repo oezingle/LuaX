@@ -2,7 +2,7 @@ local NativeElement = require("src.util.NativeElement")
 local NativeTextElement = require("src.util.NativeElement.NativeTextElement")
 
 local js = require("js")
-local document = js.global.document
+local document = assert(js.global.document, "Could not load document - is this file running in a browser?")
 local null = js.null
 
 ---@class LuaX.WebElement : LuaX.NativeElement
