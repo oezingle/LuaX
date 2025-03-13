@@ -3,8 +3,6 @@ var path = require('path');
 module.exports = {
     entry: {
         index: './src/index.js',
-        wasmoon: 'wasmoon',
-        fengari: 'fengari-web'
     },
     output: {
         path: path.resolve(__dirname, "public"),
