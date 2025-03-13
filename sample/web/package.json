@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently --kill-others \"npx webpack serve --config webpack.config.js\" \"node bundle_lua.js -w\"",
+    "dev": "concurrently --kill-others \"npx webpack serve --mode development --config webpack.config.js\" \"node bundle_lua.js -w\"",
     "build": "webpack --mode production; NODE_ENV=production node bundle_lua.js",
     "serve": "node server.js"
   },

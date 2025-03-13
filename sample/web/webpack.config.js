@@ -15,8 +15,6 @@ module.exports = {
             index: '/'
         },
     },
-    devtool: 'inline-source-map',
-    mode: "development",
     resolve: {
         fallback: {
             path: false,
