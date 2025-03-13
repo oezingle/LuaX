@@ -43,6 +43,10 @@ local runtime = {
     use_suspense   = require("src.hooks.use_suspense"),
 }
 
+-- Set up a passthrough so transpiled inline LuaX works nicely.
+setmetatable(runtime, { __call = function (_, ...) 
+    return ...
+end })
 
 runtime.create_context = runtime.Context.create
 runtime.create_portal  = runtime.Portal.create
