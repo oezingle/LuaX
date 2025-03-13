@@ -3,8 +3,6 @@ local LuaXParser = require("src.util.parser.LuaXParser")
 
 local runtime    = require("src.entry.runtime")
 
-local _VERSION   = "0.5.1"
-
 ---@class LuaX : LuaX.Runtime
 --- Parsing
 ---@field register fun() Register the LuaX loader
@@ -40,8 +38,6 @@ local export     = {
             return Inline:transpile(tag)
         end
     },
-
-    _VERSION          = _VERSION
 }
 
 -- copy fields directly

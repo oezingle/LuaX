@@ -1,3 +1,5 @@
+local _VERSION   = "0.5.2"
+
 ---@class LuaX.Runtime
 --- APIs
 ---@field Renderer LuaX.Renderer
@@ -20,6 +22,8 @@
 ---@field use_ref LuaX.Hooks.UseRef
 ---@field use_state LuaX.Hooks.UseState
 ---@field use_suspense LuaX.Hooks.UseSuspense
+---
+---@field _VERSION string
 local runtime = {
     Renderer       = require("src.util.Renderer"),
     Children       = require("src.Children"),
@@ -41,6 +45,8 @@ local runtime = {
     use_ref        = require("src.hooks.use_ref"),
     use_state      = require("src.hooks.use_state"),
     use_suspense   = require("src.hooks.use_suspense"),
+
+    _VERSION          = _VERSION
 }
 
 -- Set up a passthrough so transpiled inline LuaX works nicely.
