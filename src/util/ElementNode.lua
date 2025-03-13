@@ -1,5 +1,7 @@
 local ipairs_with_nil = require("src.util.ipairs_with_nil")
 local get_function_location = require("src.util.debug.get_function_location")
+local warn = require("src.util.polyfill.warn")
+
 
 ---@alias LuaX.ElementNode.LiteralNode string
 
@@ -83,7 +85,7 @@ end
 --- Check if a value is an ElementNode
 ---@param val any
 ---@return boolean
-function ElementNode.is (val)
+function ElementNode.is(val)
     if type(val) ~= "table" then
         return false
     end
@@ -103,11 +105,11 @@ end
 ---@overload fun (component: LuaX.ElementNode): boolean
 ---@param component LuaX.Component
 ---@return boolean
-function ElementNode.is_literal (component)
+function ElementNode.is_literal(component)
     if type(component) == "table" then
         return ElementNode.is_literal(component.type)
     end
-    
+
     return component == ElementNode.LITERAL_NODE
 end
 

@@ -69,7 +69,4 @@ setmetatable(export, {
     end
 })
 
-local ensure_warn = require("src.util.ensure_warn")
-ensure_warn()
-
 return export

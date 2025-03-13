@@ -7,6 +7,7 @@ local TokenStack             = require("src.util.parser.parse.TokenStack")
 local escape                 = require("src.util.polyfill.string.escape")
 local table_pack             = require("src.util.polyfill.table.pack")
 local table_unpack           = require("src.util.polyfill.table.unpack")
+local warn                   = require("src.util.polyfill.warn")
 
 ---@class LuaX.Language.Node.Comment
 ---@field type "comment"

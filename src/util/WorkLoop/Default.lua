@@ -1,4 +1,5 @@
 local WorkLoop = require("src.util.WorkLoop")
+local warn = require("src.util.polyfill.warn")
 
 ---@class LuaX.WorkLoop.Default : LuaX.WorkLoop
 local DefaultWorkLoop = WorkLoop:extend("DefaultWorkLoop")
