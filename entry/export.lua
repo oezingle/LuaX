@@ -14,12 +14,9 @@ require(library_root .. "_shim") end
 local Inline=require"lib_LuaX.util.parser.Inline"
 local LuaXParser=require"lib_LuaX.util.parser.LuaXParser"
 local runtime=require"lib_LuaX.entry.runtime"
-local _VERSION="0.5.0"
-local export={["NativeElement"] = require"lib_LuaX.util.NativeElement",["NativeTextElement"] = require"lib_LuaX.util.NativeElement.NativeTextElement",["register"] = require"lib_LuaX.util.parser.loader.register",["Parser"] = LuaXParser,["transpile"] = {["from_path"] = function (path) return LuaXParser.from_file_path(path):transpile() end,["from_string"] = function (content,source) return LuaXParser.from_file_content(content,source):transpile() end,["inline"] = function (tag) return Inline:transpile(tag) end},["_VERSION"] = _VERSION}
+local export={["NativeElement"] = require"lib_LuaX.util.NativeElement",["NativeTextElement"] = require"lib_LuaX.util.NativeElement.NativeTextElement",["register"] = require"lib_LuaX.util.parser.loader.register",["Parser"] = LuaXParser,["transpile"] = {["from_path"] = function (path) return LuaXParser.from_file_path(path):transpile() end,["from_string"] = function (content,source) return LuaXParser.from_file_content(content,source):transpile() end,["inline"] = function (tag) return Inline:transpile(tag) end}}
 for k,v in pairs(runtime) do export[k]=v end
-local element_implementations={["WiboxElement"] = function () return require"lib_LuaX.util.NativeElement.WiboxElement" end,["GtkElement"] = function () return require"lib_LuaX.util.NativeElement.GtkElement" end,["WebElement"] = function () return require"lib_LuaX.util.NativeElement.WebElement" end}
-setmetatable(export,{["__call"] = function (t,tag) return t.transpile.inline(tag) end,["__index"] = function (_,k) local implementation=element_implementations[k]
+local possibly_unstable_exports={["WiboxElement"] = function () return require"lib_LuaX.util.NativeElement.WiboxElement" end,["GtkElement"] = function () return require"lib_LuaX.util.NativeElement.GtkElement" end,["WebElement"] = function () return require"lib_LuaX.util.NativeElement.WebElement" end,["GLibIdleWorkloop"] = function () return require"lib_LuaX.util.WorkLoop.GLibIdle" end,["WebWorkLoop"] = function () return require"lib_LuaX.util.WorkLoop.Web" end}
+setmetatable(export,{["__call"] = function (t,tag) return t.transpile.inline(tag) end,["__index"] = function (_,k) local implementation=possibly_unstable_exports[k]
 if implementation then return implementation() end end})
-local ensure_warn=require"lib_LuaX.util.ensure_warn"
-ensure_warn()
 return export

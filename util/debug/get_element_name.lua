@@ -18,7 +18,7 @@ local class=require"lib_LuaX._dep.lib.30log"
 local function get_element_name(element) if element == nil then return "nil" end
 if type(element) == "function" or type(element) == "string" then return get_component_name(element) end
 if type(element) ~= "table" then return string.format("UNKNOWN (type %s)",type(element)) end
-if element.element_node == ElementNode then return get_component_name(element.type) end
+if ElementNode.is(element) then return get_component_name(element.type) end
 if class.isInstance(element) and (element.class == NativeElement or element.class:subclassOf(NativeElement)) then local element=element
 return element:get_name() end
 if  # element ~= 0 then return string.format("list(%d)", # element) end

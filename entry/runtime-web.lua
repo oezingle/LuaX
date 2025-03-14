@@ -9,13 +9,9 @@ for _ in folder_of_this_file:gmatch"%.%." do pwd=pwd:gsub("[/\\][^/\\]+[/\\]?$",
 pwd=pwd .. sep
 package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep) end
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
-local library_root=folder_of_this_file:sub(1, - 1 -  # "util.WorkLoop.")
+local library_root=folder_of_this_file:sub(1, - 1 -  # "entry.")
 require(library_root .. "_shim") end
-local WorkLoop=require"lib_LuaX.util.WorkLoop"
-local gears=require"gears"
-local GearsWorkLoop=WorkLoop:extend"GearsWorkLoop"
-function GearsWorkLoop:init() self.super:init()
-self.timer=gears.timer{["timeout"] = 0.01,["single_shot"] = false,["callback"] = function () self:run_once() end} end
-function GearsWorkLoop:stop() self.timer:stop() end
-function GearsWorkLoop:start() self.timer:start() end
-return GearsWorkLoop
+local runtime=require"lib_LuaX.entry.runtime"
+runtime.WebElement=require"lib_LuaX.util.NativeElement.WebElement"
+runtime.WebWorkLoop=require"lib_LuaX.util.WorkLoop.Web"
+return runtime

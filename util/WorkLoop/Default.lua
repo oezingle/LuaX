@@ -12,6 +12,7 @@ folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "util.WorkLoop.")
 require(library_root .. "_shim") end
 local WorkLoop=require"lib_LuaX.util.WorkLoop"
+local warn=require"lib_LuaX.util.polyfill.warn"
 local DefaultWorkLoop=WorkLoop:extend"DefaultWorkLoop"
 function DefaultWorkLoop:init(opts) opts=opts or {}
 if  not opts.supress_warning then warn("LuaX Renderer is using a default (synchronous) work loop! " .. "This is not recommended as it will freeze " .. "the main thread until rendering is done.") end

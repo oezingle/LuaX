@@ -13,8 +13,9 @@ local library_root=folder_of_this_file:sub(1, - 1 -  # "util.")
 require(library_root .. "_shim") end
 local ipairs_with_nil=require"lib_LuaX.util.ipairs_with_nil"
 local get_function_location=require"lib_LuaX.util.debug.get_function_location"
+local warn=require"lib_LuaX.util.polyfill.warn"
 local ElementNode={["LITERAL_NODE"] = "LUAX_LITERAL_NODE"}
-function ElementNode.clean_children(children) if  not children or type(children) == "string" or children.element_node == ElementNode then children={children} end
+function ElementNode.clean_children(children) if  not children or type(children) == "string" or ElementNode.is(children) then children={children} end
 local children=children
 for i,_ in ipairs_with_nil(children) do local child=children[i]
 local child_type=type(child)
@@ -23,8 +24,13 @@ child=ElementNode.create(ElementNode.LITERAL_NODE,{["value"] = tostring(child)})
 children[i]=child end
 return children end
 function ElementNode.create(component,props) props.children=ElementNode.clean_children(props.children)
-local node={["type"] = component,["props"] = props,["element_node"] = ElementNode}
+local node={["type"] = component,["props"] = props}
 return node end
+function ElementNode.is(val) if type(val) ~= "table" then return false end
+local t_type=type(val.type)
+if t_type ~= "string" and t_type ~= "function" then return false end
+if type(val.props) ~= "table" then return false end
+return true end
 function ElementNode.is_literal(component) if type(component) == "table" then return ElementNode.is_literal(component.type) end
 return component == ElementNode.LITERAL_NODE end
 return ElementNode

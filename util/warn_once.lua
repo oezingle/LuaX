@@ -11,6 +11,7 @@ package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep)
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "util.")
 require(library_root .. "_shim") end
+local warn=require"lib_LuaX.util.polyfill.warn"
 local table_pack=require"lib_LuaX.util.polyfill.table.pack"
 local warn_history={}
 local function warn_once(...) local strs={}

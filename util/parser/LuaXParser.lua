@@ -19,14 +19,17 @@ local TokenStack=require"lib_LuaX.util.parser.parse.TokenStack"
 local escape=require"lib_LuaX.util.polyfill.string.escape"
 local table_pack=require"lib_LuaX.util.polyfill.table.pack"
 local table_unpack=require"lib_LuaX.util.polyfill.table.unpack"
-local require_path=table_pack(...)[1]
-do if require_path == (arg or {})[1] then print"LuaXParser must be imported"
-os.exit(1) end end
+local warn=require"lib_LuaX.util.polyfill.warn"
 local LuaXParser=class"LuaXParser (V3)"
 local collect_locals=require"lib_LuaX.util.parser.transpile.collect_locals"(LuaXParser)
-local function luax_export(export_name) local luax_root=require_path:gsub("%.util%.parser%.LuaXParser$","")
-return string.format("require(%q)[%q]",luax_root,export_name) end
-LuaXParser.vars={["FRAGMENT"] = {["name"] = "_LuaX_Fragment",["value"] = luax_export"Fragment",["required"] = false},["IS_COMPILED"] = {["name"] = "_LuaX_is_compiled",["value"] = "true",["required"] = false},["CREATE_ELEMENT"] = {["name"] = "_LuaX_create_element",["value"] = luax_export"create_element",["required"] = false}}
+LuaXParser.luax_require_name="LuaX"
+function LuaXParser.set_luax_require_name(name) LuaXParser.luax_require_name=name
+local function luax_export(export_name) return string.format("require(%q)[%q]",LuaXParser.luax_require_name,export_name) end
+LuaXParser.vars={["FRAGMENT"] = {["name"] = "_LuaX_Fragment",["value"] = luax_export"Fragment",["required"] = false},["IS_COMPILED"] = {["name"] = "_LuaX_is_compiled",["value"] = "true",["required"] = false},["CREATE_ELEMENT"] = {["name"] = "_LuaX_create_element",["value"] = luax_export"create_element",["required"] = false}} end
+local require_path=table_pack(...)[1]
+do if require_path == (arg or {})[1] then print"LuaXParser must be imported"
+os.exit(1) else local assumed_luax_root=require_path:gsub("%.util%.parser%.LuaXParser$","")
+LuaXParser.set_luax_require_name(assumed_luax_root) end end
 function LuaXParser:init(text) if text then self:set_text(text) end
 self:set_sourceinfo()
 self:set_cursor(1)
@@ -45,7 +48,7 @@ self.components={["names"] = components,["mode"] = mode}
 return self end
 function LuaXParser:auto_set_components() assert(self.text,"Parser input text must be set before components names are queried")
 local globals=get_global_components()
-if globals then return self:set_components(globals,"global") end
+if globals and next(globals) then return self:set_components(globals,"global") end
 local locals=collect_locals(self.text)
 locals[self.vars.FRAGMENT.name]=true
 return self:set_components(locals,"local") end end
@@ -64,11 +67,11 @@ return string.format(fmt,self.src,n_line,n_col,tostring(msg),context_line) end
 function LuaXParser:get_comment_regions() self.comment_regions={}
 local old_pos=self:get_cursor()
 self:set_cursor(1)
-while true do local _,s_end=self:text_find".-%-%-"
+while true do local _,s_end=self:text_find"%-%-"
 if  not s_end then break end
 local s_start=s_end - 1
-self:set_cursor(s_end)
-local multiline_match=self:text_match"%[(=*)%["
+self:set_cursor(s_end + 1)
+local multiline_match=self:text_match"^%[(=*)%["
 if multiline_match then local _,multi_end=self:text_find("]%1]",multiline_match)
 s_end=multi_end + 1 else local line_match=self:text_match"([^\n\13]-)[\n\13]"
 s_end=s_end +  # line_match + 1 end
@@ -81,22 +84,18 @@ for _,token in ipairs(tokens) do local ret=table_pack(self:text_find(token.patte
 local range_start=ret[1]
 local range_end=ret[2]
 local captured=table_pack(table_unpack(ret,3))
-if range_start and range_end and  not self:is_in_comment(range_start) then table.insert(matches,{["token"] = token,["captured"] = captured,["range_start"] = range_start,["range_end"] = range_end}) end end
+if range_start and range_end and  not self:is_in_comment(range_start) and self.text:sub(range_end + 1,range_end + 1) ~= "=" then table.insert(matches,{["token"] = token,["captured"] = captured,["range_start"] = range_start,["range_end"] = range_end}) end end
 table.sort(matches,function (match_a,match_b) return match_a.range_end < match_b.range_end end)
 local match=matches[1]
 if match then return match.token,match.captured,match.range_start,match.range_end end
 return nil end
-function LuaXParser:get_indent() local default_slice=self.text:sub(1,self:get_cursor())
-local default_indent=default_slice:match"[\n\13](%s*).-$" or ""
-local indent=""
-local pre_tag_indent=self:text_match"^[%S\n\13]-([^%S\n\13]*)"
-if  # pre_tag_indent ~= 0 and  # default_indent ~= 0 then local one_indent=pre_tag_indent:gsub("^" .. default_indent,"")
-indent=pre_tag_indent .. one_indent else indent=self:text_match">[\n\13](%s-)[%S\n\13]" or "" end
-return indent end
-do function LuaXParser:move_to_next_token() local _,_,token_pos=self:get_next_token()
-if  not token_pos then error(self:error"Unable to determine next token") end
-self:set_cursor(token_pos) end
-function LuaXParser:move_to_pattern_end(pattern) local find=table_pack(self:text_find(pattern))
+function LuaXParser:get_indent() local indent_slice=self.text:sub(1,self:get_cursor() - 1)
+local block,pre_tag=indent_slice:match"[\n\13](%s*)[^\n\13]-[\n\13]+(%s*)$"
+if block and pre_tag then local one_indent=pre_tag:gsub("^" .. block,"")
+local indent=pre_tag .. one_indent
+return indent else local indent=self:text_match">[\n\13](%s-)[%S\n\13]"
+return indent or "" end end
+do function LuaXParser:move_to_pattern_end(pattern) local find=table_pack(self:text_find(pattern))
 table.remove(find,1)
 local pattern_end=table.remove(find,1)
 if  not pattern_end then return false end
@@ -110,17 +109,18 @@ function LuaXParser:move_cursor(chars) self:set_cursor(self:get_cursor() + chars
 function LuaXParser:is_at_end() return self:get_cursor() ==  # self.text end
 function LuaXParser:get_text() return self.text end
 function LuaXParser:has_transpiled() return self.vars.IS_COMPILED.required end end
-do function LuaXParser:text_find(pattern,...) local args=table_pack(...)
-for i,arg in ipairs(args) do pattern=pattern:gsub("%%" .. tostring(i),arg) end
+do function LuaXParser.replace_groups(text,...) local args=table_pack(...)
+for i,arg in ipairs(args) do text=text:gsub("%%" .. tostring(i),arg) end
+return text end
+function LuaXParser:text_find(pattern,...) pattern=self.replace_groups(pattern,...)
 return self.text:find(pattern,self:get_cursor()) end
-function LuaXParser:text_match(pattern,...) local args=table_pack(...)
-for i,arg in ipairs(args) do pattern=pattern:gsub("%%" .. tostring(i),arg) end
+function LuaXParser:text_match(pattern,...) pattern=self.replace_groups(pattern,...)
 return self.text:match(pattern,self:get_cursor()) end
-function LuaXParser:text_replace_range(range_start,range_end,replacer,...) local args=table_pack(...)
-for i,arg in ipairs(args) do replacer=replacer:gsub("%%" .. tostring(i),arg) end
+function LuaXParser:text_replace_range(range_start,range_end,replacer,...) replacer=self.replace_groups(replacer,...)
 self.text=self.text:sub(1,range_start - 1) .. replacer .. self.text:sub(range_end + 1) end
 function LuaXParser:text_replace_range_c(range_end,replacer,...) self:text_replace_range(self:get_cursor(),range_end,replacer,...) end
-function LuaXParser:text_replace_range_move(range_start,range_end,replacer,...) self:text_replace_range(range_start,range_end,replacer,...)
+function LuaXParser:text_replace_range_move(range_start,range_end,replacer,...) replacer=self.replace_groups(replacer,...)
+self:text_replace_range(range_start,range_end,replacer)
 self:set_cursor(range_start +  # replacer) end
 function LuaXParser:text_replace_range_move_c(range_end,replacer,...) self:text_replace_range_move(self:get_cursor(),range_end,replacer,...) end end
 do function LuaXParser:set_handle_variables(on_set_variable) self.on_set_variable=on_set_variable
@@ -152,7 +152,9 @@ function LuaXParser:parse_non_tag() local tokenstack=TokenStack(self.text):set_p
 local slices={}
 while true do local pos=tokenstack:get_pos()
 tokenstack:run_once()
-tokenstack:run_until_empty()
+local ok,err=pcall(tokenstack.run_until_empty,tokenstack)
+if  not ok then err=tostring(err)
+error(self:error(err)) end
 if tokenstack:get_pos() > pos + 1 then table.insert(slices,{["is_luablock"] = true,["chars"] = {self.text:sub(pos + 1,tokenstack:get_pos() - 2)},["start"] = pos + 1}) else local current=self.text:sub(pos,pos)
 if current == "<" then break elseif current == "-" and self.text:sub(pos):match"^%-%-+>" then break elseif current == "{" then  else local last_slice=slices[ # slices]
 if  not last_slice or last_slice.is_luablock == true then table.insert(slices,{["is_luablock"] = false,["chars"] = {},["start"] = pos})
@@ -186,12 +188,12 @@ self:set_cursor(tokenstack:get_pos())
 props[prop_name]=prop_value else props[prop]=true
 self:move_cursor( # prop) end end end
 return props end
-function LuaXParser:parse_tag() self.indent=self:get_indent()
-self:move_to_pattern_end"^%s*"
+function LuaXParser:parse_tag() self:move_to_pattern_end"^%s*"
+self.indent=self:get_indent()
 local tag_name
 local is_fragment=self:move_to_pattern_end"^<%s*>"
 if is_fragment then tag_name=self.vars.FRAGMENT.name
-self.vars.FRAGMENT.required=true else tag_name=self:move_to_pattern_end"^<%s*([^%s/>]+)"
+self.vars.FRAGMENT.required=true else tag_name=self:move_to_pattern_end"^<%s*([^%s\"'/>]+)"
 assert(tag_name,self:error"Cannot find tag name")
 assert(type(tag_name) == "string","Tag pattern does not capture") end
 local is_comment=tag_name:match"^!%-%-+"
@@ -200,8 +202,8 @@ local props=is_propsless and {} or self:parse_props()
 local no_children=self:move_to_pattern_end"^%s*/%s*>"
 if  not (is_propsless or no_children) then assert(self:move_to_pattern_end"^%s*>",self:error"Cannot find end of props") end
 local children=no_children and {} or self:parse_text()
-if is_fragment then assert(self:move_to_pattern_end"^%s*<%s*/%s*>",self:error"Cannot find fragment end") elseif is_comment then assert(self:move_to_pattern_end"^%s*%-%-+>",self:error"Cannot find comment end") else local patt="^%s*<%s*/%s*" .. escape(tag_name) .. "%s*>"
-assert(no_children or self:move_to_pattern_end(patt),self:error("Cannot find ending tag for %q",tag_name)) end
+if is_fragment then assert(self:move_to_pattern_end"^%s*<%s*/%s*>",self:error"Cannot find fragment end") elseif is_comment then assert(self:move_to_pattern_end"^%s*%-%-+>",self:error"Cannot find comment end") else local end_tag_pattern="^%s*<%s*/%s*" .. escape(tag_name) .. "%s*>"
+assert(no_children or self:move_to_pattern_end(end_tag_pattern),self:error("Cannot find ending tag for %q",tag_name)) end
 if is_comment then return {["type"] = "comment"} end
 return {["type"] = "element",["name"] = tag_name,["props"] = props,["children"] = children} end end
 do function LuaXParser:transpile_tag() self.vars.CREATE_ELEMENT.required=true
@@ -213,10 +215,10 @@ self:text_replace_range_move(self.current_block_start,self:get_cursor(),transpil
 self.current_block_start=nil
 self:set_required_variables()
 return self.text end
-function LuaXParser:transpile_once() local token,captured,_,luax_start=self:get_next_token()
-if  not token or  not luax_start then return false end
-self:move_to_next_token()
-self:text_replace_range_move_c(luax_start - 2,token.replacer,table_unpack(captured))
+function LuaXParser:transpile_once() local token,captured,token_start,luax_start=self:get_next_token()
+if  not (token and captured and token_start and luax_start) then return false end
+self:set_cursor(token_start)
+self:text_replace_range_move(token_start,luax_start - 1,token.replacer,table_unpack(captured))
 self:get_comment_regions()
 self:transpile_tag()
 local _,luax_end=self:text_find(token.end_pattern,table_unpack(captured))

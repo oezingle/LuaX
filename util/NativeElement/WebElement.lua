@@ -14,7 +14,7 @@ require(library_root .. "_shim") end
 local NativeElement=require"lib_LuaX.util.NativeElement"
 local NativeTextElement=require"lib_LuaX.util.NativeElement.NativeTextElement"
 local js=require"js"
-local document=js.global.document
+local document=assert(js.global.document,"Could not load document - is this file running in a browser?")
 local null=js.null
 local WebElement=NativeElement:extend"WebElement (fengari)"
 function WebElement:init(node) self.node=node

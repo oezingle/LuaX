@@ -11,8 +11,6 @@ package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep)
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "")
 require(library_root .. "_shim") end
-local ensure_warn=require"lib_LuaX.util.ensure_warn"
 local table_pack=require"lib_LuaX.util.polyfill.table.pack"
-ensure_warn()
 if table_pack(...)[1] ~= (arg or {})[1] then return require"lib_LuaX.entry.export" else local cmd=require"lib_LuaX.cmd.cmd"
 cmd() end

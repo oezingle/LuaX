@@ -71,7 +71,7 @@ if did_render then DrawGroup.ref(info.draw_group)
 self.workloop:add(self.render_keyed_child,self,render_result,container,render_key,info) end
 RenderInfo.set(old)
 self.workloop:safely_start() end
-function Renderer:render_keyed_child(element,container,key,info) if  not element or type(element.type) == "string" then self:render_native_component(element,container,key,info) elseif type(element) == "table" and element.element_node ~= ElementNode then local current_children=container:get_children_by_key(key) or {}
+function Renderer:render_keyed_child(element,container,key,info) if  not element or type(element.type) == "string" then self:render_native_component(element,container,key,info) elseif type(element) == "table" and  not ElementNode.is(element) then local current_children=container:get_children_by_key(key) or {}
 if current_children.class and class.isClass(current_children.class) then container:delete_children_by_key(key)
 current_children={} end
 local size=max( # current_children, # element)
@@ -93,4 +93,5 @@ local render_info={["key"] = {},["context"] = {},["draw_group"] = group}
 RenderInfo.set(render_info)
 self.workloop:add(self.render_keyed_child,self,component,container,{1},render_info)
 self.workloop:safely_start() end
+Renderer.Info=RenderInfo
 return Renderer

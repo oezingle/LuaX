@@ -19,10 +19,9 @@ local Context=require"lib_LuaX.Context"
 local use_context=require"lib_LuaX.hooks.use_context"
 local create_element=require"lib_LuaX.create_element"
 local map=require"lib_LuaX.util.polyfill.list.map"
-if warn then warn"Portals are an experimental feature and are subject to change until the next minor release" end
 local Portal=class"LuaX.Portal"
 function Portal:unique() return math.random(0xFFFF) end
-local rtfm="Portal is a class that must be instanciated before use:\n    local MyPortal = Portal()\n\n    return (\n        <>\n            <MyPortal.Outlet />\n\n            <MyPortal.Inlet>\n                Hello World!\n            </MyPortal.Inlet>\n        </>\n    )\n\nconsider reading doc/Portals.md\n"
+local rtfm="Portal is a class that must be instanciated before use:\n    local MyPortal = Portal()\n\nRender into a portal using MyPortal.Inlet and display that result\nusing MyPortal.Outlet. consider reading doc/Portals.md\n"
 Portal.Inlet=function () error(rtfm) end
 Portal.Outlet=Portal.Inlet
 function Portal:init(name) self.name=name

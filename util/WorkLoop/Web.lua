@@ -9,10 +9,15 @@ for _ in folder_of_this_file:gmatch"%.%." do pwd=pwd:gsub("[/\\][^/\\]+[/\\]?$",
 pwd=pwd .. sep
 package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep) end
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
-local library_root=folder_of_this_file:sub(1, - 1 -  # "util.NativeElement.GtkElement.")
+local library_root=folder_of_this_file:sub(1, - 1 -  # "util.WorkLoop.")
 require(library_root .. "_shim") end
-local warn=require"lib_LuaX.util.polyfill.warn"
-local vanilla_require=require
-local require=function (path) local ok,ret=pcall(vanilla_require,path)
-if ok then return ret else warn(ret) end end
-return require"lib_LuaX.util.NativeElement.GtkElement.lgi.Gtk3Element" or error"No GtkElement implementation loaded successfully. To see the errors created by these implementations, use warn(\"@on\") before loading this file."
+local WorkLoop=require"lib_LuaX.util.WorkLoop.WorkLoop"
+local js=require"js"
+local setInterval=js.global.setInterval
+local clearInterval=js.global.clearInterval
+local WebWorkLoop=WorkLoop:extend"WebWorkLoop"
+function WebWorkLoop:start() self.interval=setInterval(function () self:run_once() end, - 1) end
+function WebWorkLoop:stop() clearInterval(self.interval)
+self.interval=nil
+self.is_running=false end
+return WebWorkLoop

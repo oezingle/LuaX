@@ -1,2 +1,2 @@
-local keywords={"and","break","do","else","elseif","end","false","for","function","if","in","local","nil","not","or","repeat","return","then","true","until","while"}
+local keywords={"and","not","or","return"}
 return keywords
