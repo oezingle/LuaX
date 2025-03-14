@@ -45,7 +45,7 @@ for k, v in pairs(runtime) do
     export[k] = v
 end
 
-local element_implementations = {
+local possibly_unstable_exports = {
     WiboxElement = function ()
         return require("src.util.NativeElement.WiboxElement")
     end,
@@ -55,6 +55,13 @@ local element_implementations = {
     WebElement = function ()
         return require("src.util.NativeElement.WebElement")
     end,
+
+    GLibIdleWorkloop = function ()
+        return require("src.util.WorkLoop.GLibIdle")
+    end,
+    WebWorkLoop = function ()
+        return require("src.util.WorkLoop.Web")
+    end,
 }
 
 setmetatable(export, {
@@ -62,7 +69,7 @@ setmetatable(export, {
         return t.transpile.inline(tag)
     end,
     __index = function(_, k)
-        local implementation = element_implementations[k]
+        local implementation = possibly_unstable_exports[k]
         if implementation then
             return implementation()
         end
