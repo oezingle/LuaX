@@ -1,4 +1,4 @@
-local RenderInfo = require "src.util.Renderer.RenderInfo"
+local RenderInfo = require("src.util.Renderer.RenderInfo")
 
 ---@generic T
 ---@alias LuaX.Hooks.UseContext fun(context: LuaX.Context<T>): T
