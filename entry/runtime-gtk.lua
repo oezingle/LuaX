@@ -9,10 +9,13 @@ for _ in folder_of_this_file:gmatch"%.%." do pwd=pwd:gsub("[/\\][^/\\]+[/\\]?$",
 pwd=pwd .. sep
 package.path=package.path .. string.format(";%s?.lua;%s?%sinit.lua",pwd,pwd,sep) end
 folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
-local library_root=folder_of_this_file:sub(1, - 1 -  # "hooks.")
+local library_root=folder_of_this_file:sub(1, - 1 -  # "entry.")
 require(library_root .. "_shim") end
-local RenderInfo=require"lib_LuaX.util.Renderer.RenderInfo"
-local function use_context(context) local info=assert(RenderInfo.get(),"Not currently rendering a component!")
-local contexts=assert(info.context,"Could not get contexts")
-return contexts[context] or context.default end
-return use_context
+local runtime=require"lib_LuaX.entry.runtime"
+local GtkElement=require"lib_LuaX.util.NativeElement.GtkElement"
+runtime.GtkElement=GtkElement
+runtime.TargetElement=GtkElement
+local GLibIdleWorkLoop=require"lib_LuaX.util.WorkLoop.GLibIdle"
+runtime.GLibIdleWorkLoop=GLibIdleWorkLoop
+runtime.TargetWorkLoop=GLibIdleWorkLoop
+return runtime

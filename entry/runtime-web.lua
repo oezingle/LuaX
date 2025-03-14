@@ -12,6 +12,10 @@ folder_of_this_file=folder_of_this_file:gsub("[/\\]","."):gsub("^%.+","") end
 local library_root=folder_of_this_file:sub(1, - 1 -  # "entry.")
 require(library_root .. "_shim") end
 local runtime=require"lib_LuaX.entry.runtime"
-runtime.WebElement=require"lib_LuaX.util.NativeElement.WebElement"
-runtime.WebWorkLoop=require"lib_LuaX.util.WorkLoop.Web"
+local WebElement=require"lib_LuaX.util.NativeElement.WebElement"
+runtime.WebElement=WebElement
+runtime.TargetElement=WebElement
+local WebWorkLoop=require"lib_LuaX.util.WorkLoop.Web"
+runtime.WebWorkLoop=WebWorkLoop
+runtime.TargetWorkLoop=WebWorkLoop
 return runtime
