@@ -1,5 +1,9 @@
 local _VERSION   = "0.5.2"
 
+---@class LuaX.Runtime.Targeted : LuaX.Runtime
+---@field TargetElement LuaX.NativeElement
+---@field TargetWorkLoop LuaX.WorkLoop
+
 ---@class LuaX.Runtime
 --- APIs
 ---@field Renderer LuaX.Renderer

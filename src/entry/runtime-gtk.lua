@@ -1,5 +1,5 @@
 
----@class LuaX.Runtime.Web : LuaX.Runtime
+---@class LuaX.Runtime.Gtk : LuaX.Runtime.Targeted
 local runtime = require("src.entry.runtime")
 
 local GtkElement = require("src.util.NativeElement.GtkElement")

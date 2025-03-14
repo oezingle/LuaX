@@ -1,5 +1,5 @@
 
----@class LuaX.Runtime.Web : LuaX.Runtime
+---@class LuaX.Runtime.Web : LuaX.Runtime.Targeted
 local runtime = require("src.entry.runtime")
 
 local WebElement = require("src.util.NativeElement.WebElement")
