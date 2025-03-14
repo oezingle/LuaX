@@ -1,4 +1,4 @@
-local XMLElement     = require("src.util.NativeElement.XMLElement")
+local XMLElement     = require("spec.helpers.XMLElement")
 local Renderer       = require("src.util.Renderer")
 local create_element = require("src.create_element")
 local use_state      = require('src.hooks.use_state')
