@@ -16,10 +16,11 @@ local NativeElement         = require("src.util.NativeElement.NativeElement")
 local max = math.max
 
 ---@class LuaX.Renderer : Log.BaseFunctions
----@field workloop LuaX.WorkLoop instance of a workloop
----@field native_element LuaX.NativeElement class here, not instance
----@field set_workloop fun (self: self, workloop: LuaX.WorkLoop): self set workloop using either a class or an instance
+---@field protected workloop LuaX.WorkLoop instance of a workloop
+---@field  set_workloop fun (self: self, workloop: LuaX.WorkLoop): self set workloop using either a class or an instance
 ---@field render fun(self: self, component: LuaX.ElementNode, container: LuaX.NativeElement)
+---
+---@field Info LuaX.RenderInfo
 ---
 ---@operator call: LuaX.Renderer
 local Renderer = class("Renderer")
@@ -297,5 +298,7 @@ function Renderer:render(component, container)
 
     self.workloop:safely_start()
 end
+
+Renderer.Info = RenderInfo
 
 return Renderer
