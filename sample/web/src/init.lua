@@ -4,6 +4,7 @@ local null = js.null
 
 local LuaX = require("LuaX")
 local WebElement = LuaX.WebElement
+local WebWorkLoop = LuaX.WebWorkLoop
 local use_state = LuaX.use_state
 
 -- Import polyfills
@@ -50,7 +51,7 @@ local function main()
     end)
 
     local app = LuaX.create_element(App, {})
-    local renderer = LuaX.Renderer()
+    local renderer = LuaX.Renderer(WebWorkLoop)
 
     renderer:render(app, root)
 end
