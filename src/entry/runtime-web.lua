@@ -2,8 +2,12 @@
 ---@class LuaX.Runtime.Web : LuaX.Runtime
 local runtime = require("src.entry.runtime")
 
-runtime.WebElement = require("src.util.NativeElement.WebElement")
+local WebElement = require("src.util.NativeElement.WebElement")
+runtime.WebElement = WebElement
+runtime.TargetElement = WebElement
 
-runtime.WebWorkLoop = require("src.util.WorkLoop.Web")
+local WebWorkLoop = require("src.util.WorkLoop.Web")
+runtime.WebWorkLoop = WebWorkLoop
+runtime.TargetWorkLoop = WebWorkLoop
 
 return runtime
