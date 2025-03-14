@@ -6,7 +6,7 @@ local document = assert(js.global.document, "Could not load document - is this f
 local null = js.null
 
 ---@class LuaX.WebElement : LuaX.NativeElement
-local WebElement = NativeElement:extend("WebElement (fengari)")
+local WebElement = NativeElement:extend("LuaX.WebElement")
 
 function WebElement:init(node)
     self.node = node
