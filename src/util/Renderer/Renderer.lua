@@ -17,7 +17,7 @@ local max = math.max
 
 ---@class LuaX.Renderer : Log.BaseFunctions
 ---@field protected workloop LuaX.WorkLoop instance of a workloop
----@field  set_workloop fun (self: self, workloop: LuaX.WorkLoop): self set workloop using either a class or an instance
+---@field set_workloop fun (self: self, workloop: LuaX.WorkLoop): self set workloop using either a class or an instance
 ---@field render fun(self: self, component: LuaX.ElementNode, container: LuaX.NativeElement)
 ---
 ---@field Info LuaX.RenderInfo
