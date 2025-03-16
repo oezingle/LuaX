@@ -37,7 +37,7 @@ if  not self.events_registered[event] then local listeners=self.event_listeners
 self.node:addEventListener(event,function (e) local listener=listeners[event]
 if listener then listener(e) end end)
 self.events_registered[event]=true end
-self.event_listeners[event]=value else self.node:setAttribute(prop,value) end end
+self.event_listeners[event]=value elseif prop == "style" then for k,v in pairs(value) do self.node.style[k]=tostring(v) end else self.node:setAttribute(prop,value) end end
 function WebElement:get_prop(prop) return self.node.attributes[prop] end
 function WebElement.get_root(native) assert(native ~= null,"WebElement root may not be null")
 return WebElement(native) end
