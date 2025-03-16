@@ -71,6 +71,10 @@ function WebElement:set_prop(prop, value)
         end
 
         self.event_listeners[event] = value
+    elseif prop == "style" then
+        for k, v in pairs(value) do
+            self.node.style[k] = tostring(v)
+        end
     else
         self.node:setAttribute(prop, value)
     end
