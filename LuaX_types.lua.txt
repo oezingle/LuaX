@@ -1,3 +1,4 @@
+---@class LuaX.Runtime.Gtk : LuaX.Runtime.Targeted
 ---@class LuaX : LuaX.Runtime
 ---@field register fun() Register the LuaX loader
 ---@field Parser LuaX.Parser.V3
@@ -8,6 +9,9 @@
 ---@field WiboxElement LuaX.WiboxElement
 ---@field WebElement LuaX.WebElement
 ---@operator call:function
+---@class LuaX.Runtime.Targeted : LuaX.Runtime
+---@field TargetElement LuaX.NativeElement
+---@field TargetWorkLoop LuaX.WorkLoop
 ---@class LuaX.Runtime
 ---@field Renderer LuaX.Renderer
 ---@field Children LuaX.Children
@@ -27,7 +31,7 @@
 ---@field use_state LuaX.Hooks.UseState
 ---@field use_suspense LuaX.Hooks.UseSuspense
 ---@field _VERSION string
----@class LuaX.Runtime.Web : LuaX.Runtime
+---@class LuaX.Runtime.Web : LuaX.Runtime.Targeted
 ---@class LuaX.Portal : Log.BaseFunctions
 ---@field Inlet LuaX.Component<LuaX.PropsWithChildren>
 ---@field Outlet LuaX.Component
@@ -199,7 +203,7 @@
 ---@class LuaX.WebText : LuaX.NativeTextElement
 ---@class LuaX.Renderer : Log.BaseFunctions
 ---@field protected workloop LuaX.WorkLoop instance of a workloop
----@field  set_workloop fun (self: self, workloop: LuaX.WorkLoop): self set workloop using either a class or an instance
+---@field set_workloop fun (self: self, workloop: LuaX.WorkLoop): self set workloop using either a class or an instance
 ---@field render fun(self: self, component: LuaX.ElementNode, container: LuaX.NativeElement)
 ---@field Info LuaX.RenderInfo
 ---@operator call: LuaX.Renderer
