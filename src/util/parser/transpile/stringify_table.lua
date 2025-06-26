@@ -1,4 +1,4 @@
-local ipairs_with_nil = require "src.util.ipairs_with_nil"
+local ipairs_with_nil = require("src.util.ipairs_with_nil")
 
 ---@param input any
 ---@return string

@@ -108,7 +108,6 @@ local function deep_equals(a, b, level, traversed)
             return false
         end
 
-        -- TODO can I use mt ~= mt here? genuinely unsure!
         -- check mt
         if not deep_equals(getmetatable(a), getmetatable(b), level, traversed) then
             return false

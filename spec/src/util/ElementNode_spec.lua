@@ -82,19 +82,9 @@ describe("ElementNode", function()
         assert.equal(element.props.prop2, 2)
     end)
 
-    it("gives metatable still", function()
+    it("identifies ElementNodes", function()
         local node = ElementNode.create("test_element", {})
 
-        ---@diagnostic disable-next-line:invisible
-        assert.equal(ElementNode, node.element_node)
-    end)
-
-    -- TODO FIXME move to special/
-    it("doesn't waste memory", function()
-        local a = ElementNode.create("div", {})
-        local b = ElementNode.create("div", {})
-
-        ---@diagnostic disable-next-line:invisible
-        assert.equal(a.element_node, b.element_node)
+        assert.True(ElementNode.is(node))
     end)
 end)

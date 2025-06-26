@@ -1,15 +1,13 @@
----@type LuaX
+
+---@type LuaX.Runtime
 local LuaX = require("LuaX")
-local Children = LuaX.Children
-local use_memo = LuaX.use_memo
 local use_effect = LuaX.use_effect
+local use_memo = LuaX.use_memo
+local Children = LuaX.Children
 
-local components = {}
+local document = require("js").global.document
 
-local js = require("js")
-local document = js.global.document
-
-components.ApplicationTitle = LuaX(function(props)
+local Title = function (props)
     local title = use_memo(function()
         return table.concat(Children.map(props.children, function(child)
             return tostring(child.props.value)
@@ -23,7 +21,6 @@ components.ApplicationTitle = LuaX(function(props)
         return function ()
             document.title = old
         end
-    end, { title })
-end)
+    end, { title })end
 
-return components
+return Title

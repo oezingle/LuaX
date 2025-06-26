@@ -16,10 +16,11 @@ local NativeElement         = require("src.util.NativeElement.NativeElement")
 local max = math.max
 
 ---@class LuaX.Renderer : Log.BaseFunctions
----@field workloop LuaX.WorkLoop instance of a workloop
----@field native_element LuaX.NativeElement class here, not instance
+---@field protected workloop LuaX.WorkLoop instance of a workloop
 ---@field set_workloop fun (self: self, workloop: LuaX.WorkLoop): self set workloop using either a class or an instance
 ---@field render fun(self: self, component: LuaX.ElementNode, container: LuaX.NativeElement)
+---
+---@field Info LuaX.RenderInfo
 ---
 ---@operator call: LuaX.Renderer
 local Renderer = class("Renderer")
@@ -210,10 +211,7 @@ function Renderer:render_keyed_child(element, container, key, info)
 
     if not element or type(element.type) == "string" then
         self:render_native_component(element, container, key, info)
-
-        -- TODO element.element_node ~= ElementNode equality check might be slow!
-        ---@diagnostic disable-next-line:invisible
-    elseif type(element) == "table" and element.element_node ~= ElementNode then
+    elseif type(element) == "table" and not ElementNode.is(element) then
         -- lists of children are valid children
         local current_children = container:get_children_by_key(key) or {}
 
@@ -300,5 +298,7 @@ function Renderer:render(component, container)
 
     self.workloop:safely_start()
 end
+
+Renderer.Info = RenderInfo
 
 return Renderer
