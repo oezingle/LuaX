@@ -18,8 +18,7 @@ local function get_element_name(element)
         return string.format("UNKNOWN (type %s)", type(element))
     end
 
-    ---@diagnostic disable-next-line:invisible
-    if element.element_node == ElementNode then
+    if ElementNode.is(element) then
         return get_component_name(element.type)
     end
 

@@ -25,11 +25,10 @@ local function get_function_name(location)
     -- seek to that line
     -- I'd use file:seek() but we don't know char count, just line.
     -- This is probably the cheapest way to achieve this
-    for _ = 1, linenumber - 1 do
-        file:read("l")
+    local line
+    for _ = 1, linenumber do
+        line = file:read("l")
     end
-
-    local line = file:read("l")
 
     local defined_keyword = line:match("function%s*([^%(%s]+)%s*%(")
     if defined_keyword then

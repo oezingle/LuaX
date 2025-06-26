@@ -26,7 +26,7 @@ local function bake_tokens()
         {
             -- Capture here to keep whitespace & allow indent features to work nicely.
             pattern = "return%s*%[(=*)%[(%s*)<",
-            replacer = "return %2",
+            replacer = "return%2",
             end_pattern = "%s*%]%1%]",
             end_replacer = ""
         },
@@ -40,8 +40,13 @@ local function bake_tokens()
 
     for _, keyword in ipairs(keywords) do
         table.insert(tokens, {
-            pattern = keyword .. "%s*<",
-            replacer = keyword .. " "
+            pattern = "([%s%(%)%[%]])" .. keyword .. "(%s*)<",
+            replacer = "%1" .. keyword .. "%2"
+        })
+        
+        table.insert(tokens, {
+            pattern = "^" .. keyword .. "(%s*)<",
+            replacer = keyword .. "%1"
         })
     end
 

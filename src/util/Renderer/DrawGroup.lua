@@ -1,4 +1,4 @@
-local RenderInfo = require "src.util.Renderer.RenderInfo"
+local RenderInfo = require("src.util.Renderer.RenderInfo")
 
 ---@alias LuaX.DrawGroup.OnComplete fun()
 ---@alias LuaX.DrawGroup.OnRestart fun()

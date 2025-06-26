@@ -8,11 +8,6 @@ local create_element = require("src.create_element")
 
 local map            = require("src.util.polyfill.list.map")
 
-if warn then
-    -- I'm ignoring major.minor.patch for Portals for now.
-    warn("Portals are an experimental feature and are subject to change until the next minor release")
-end
-
 ---@class LuaX.Portal : Log.BaseFunctions
 ---
 ---@field Inlet LuaX.Component<LuaX.PropsWithChildren>
@@ -26,7 +21,7 @@ end
 ---@field protected GenericProvider LuaX.Component<LuaX.PropsWithChildren>
 ---@field protected GenericInlet LuaX.Component<LuaX.PropsWithChildren>
 ---@field protected GenericOutlet LuaX.Component
-local Portal = class("LuaX.Portal")
+local Portal         = class("LuaX.Portal")
 
 ---@alias LuaX.Portal.UID number
 
@@ -47,17 +42,8 @@ local rtfm = [[
 Portal is a class that must be instanciated before use:
     local MyPortal = Portal()
 
-    return (
-        <>
-            <MyPortal.Outlet />
-
-            <MyPortal.Inlet>
-                Hello World!
-            </MyPortal.Inlet>
-        </>
-    )
-
-consider reading doc/Portals.md
+Render into a portal using MyPortal.Inlet and display that result
+using MyPortal.Outlet. consider reading doc/Portals.md
 ]]
 Portal.Inlet = function() error(rtfm) end
 Portal.Outlet = Portal.Inlet

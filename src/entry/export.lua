@@ -3,8 +3,6 @@ local LuaXParser = require("src.util.parser.LuaXParser")
 
 local runtime    = require("src.entry.runtime")
 
-local _VERSION   = "0.5.1"
-
 ---@class LuaX : LuaX.Runtime
 --- Parsing
 ---@field register fun() Register the LuaX loader
@@ -19,7 +17,6 @@ local _VERSION   = "0.5.1"
 ---@field WebElement LuaX.WebElement
 ---
 ---@operator call:function
-
 local export     = {
     NativeElement     = require("src.util.NativeElement"),
     NativeTextElement = require("src.util.NativeElement.NativeTextElement"),
@@ -40,8 +37,6 @@ local export     = {
             return Inline:transpile(tag)
         end
     },
-
-    _VERSION          = _VERSION
 }
 
 -- copy fields directly
@@ -49,7 +44,9 @@ for k, v in pairs(runtime) do
     export[k] = v
 end
 
-local element_implementations = {
+-- Generally NativeElement implementations are not simultaneously loadable.
+-- To get around this, we load them lazily in export's metatable's __index
+local possibly_unstable_exports = {
     WiboxElement = function ()
         return require("src.util.NativeElement.WiboxElement")
     end,
@@ -59,21 +56,27 @@ local element_implementations = {
     WebElement = function ()
         return require("src.util.NativeElement.WebElement")
     end,
+
+    GLibIdleWorkloop = function ()
+        return require("src.util.WorkLoop.GLibIdle")
+    end,
+    WebWorkLoop = function ()
+        return require("src.util.WorkLoop.Web")
+    end,
 }
 
 setmetatable(export, {
     __call = function(t, tag)
         return t.transpile.inline(tag)
     end,
-    __index = function(_, k)
-        local implementation = element_implementations[k]
+    __index = function(t, k)
+        local implementation = possibly_unstable_exports[k]
         if implementation then
+            t[k] = implementation
+            
             return implementation()
         end
     end
 })
-
-local ensure_warn = require("src.util.ensure_warn")
-ensure_warn()
 
 return export

@@ -1,4 +1,4 @@
-local key_first = require "src.util.key.key_first"
+local key_first = require("src.util.key.key_first")
 
 ---@param children_by_key LuaX.NativeElement.ChildrenByKey
 ---@param key LuaX.Key

@@ -2,11 +2,11 @@ local NativeElement = require("src.util.NativeElement")
 local NativeTextElement = require("src.util.NativeElement.NativeTextElement")
 
 local js = require("js")
-local document = js.global.document
+local document = assert(js.global.document, "Could not load document - is this file running in a browser?")
 local null = js.null
 
 ---@class LuaX.WebElement : LuaX.NativeElement
-local WebElement = NativeElement:extend("WebElement (fengari)")
+local WebElement = NativeElement:extend("LuaX.WebElement")
 
 function WebElement:init(node)
     self.node = node
@@ -71,6 +71,10 @@ function WebElement:set_prop(prop, value)
         end
 
         self.event_listeners[event] = value
+    elseif prop == "style" then
+        for k, v in pairs(value) do
+            self.node.style[k] = tostring(v)
+        end
     else
         self.node:setAttribute(prop, value)
     end

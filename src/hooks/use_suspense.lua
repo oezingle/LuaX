@@ -1,5 +1,5 @@
-local DrawGroup = require "src.util.Renderer.DrawGroup"
-local use_memo  = require "src.hooks.use_memo"
+local DrawGroup = require("src.util.Renderer.DrawGroup")
+local use_memo  = require("src.hooks.use_memo")
 
 ---@alias LuaX.Hooks.UseSuspense fun(): (suspend: fun(), resolve: fun())
 

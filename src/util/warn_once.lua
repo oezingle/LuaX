@@ -1,6 +1,8 @@
 --- Can't be tested because of warn() usage
 ---@nospec
 
+local warn = require("src.util.polyfill.warn")
+
 local table_pack = require("src.util.polyfill.table.pack")
 
 local warn_history = {}
