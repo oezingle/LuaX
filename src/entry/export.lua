@@ -17,7 +17,6 @@ local runtime    = require("src.entry.runtime")
 ---@field WebElement LuaX.WebElement
 ---
 ---@operator call:function
-
 local export     = {
     NativeElement     = require("src.util.NativeElement"),
     NativeTextElement = require("src.util.NativeElement.NativeTextElement"),
@@ -45,6 +44,8 @@ for k, v in pairs(runtime) do
     export[k] = v
 end
 
+-- Generally NativeElement implementations are not simultaneously loadable.
+-- To get around this, we load them lazily in export's metatable's __index
 local possibly_unstable_exports = {
     WiboxElement = function ()
         return require("src.util.NativeElement.WiboxElement")
@@ -68,9 +69,11 @@ setmetatable(export, {
     __call = function(t, tag)
         return t.transpile.inline(tag)
     end,
-    __index = function(_, k)
+    __index = function(t, k)
         local implementation = possibly_unstable_exports[k]
         if implementation then
+            t[k] = implementation
+            
             return implementation()
         end
     end

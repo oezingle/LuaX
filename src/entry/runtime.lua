@@ -1,4 +1,4 @@
-local _VERSION   = "0.5.2"
+local _VERSION   = "0.5.3"
 
 ---@class LuaX.Runtime.Targeted : LuaX.Runtime
 ---@field TargetElement LuaX.NativeElement
