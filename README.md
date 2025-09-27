@@ -43,7 +43,4 @@ See the [`sample/`](./sample/) directory
 
 # Documentation
 
-Developers familiar with React will find LuaX very familiar, but some semantics
-have changed - most notably Portals. The [`doc/`](./doc/) directory contains
-help articles for new LuaX developers. We recommend first-time LuaX users read
-[Rendering](./doc/rendering.md) first.
+Documentation is now in the [wiki](https://github.com/oezingle/LuaX/wiki)
