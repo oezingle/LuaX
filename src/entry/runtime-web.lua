@@ -10,4 +10,8 @@ local WebWorkLoop = require("src.util.WorkLoop.Web")
 runtime.WebWorkLoop = WebWorkLoop
 runtime.TargetWorkLoop = WebWorkLoop
 
+local WebWorkLoop = require("src.util.WorkLoop.Web")
+runtime.WebWorkLoop = WebWorkLoop
+runtime.TargetWorkLoop = WebWorkLoop
+
 return runtime
